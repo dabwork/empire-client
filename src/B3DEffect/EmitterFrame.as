@@ -1,3 +1,5 @@
+// Copyright (C) 2013 Elemental Games. All rights reserved.
+
 package B3DEffect
 {
 import Base.*;

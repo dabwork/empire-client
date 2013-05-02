@@ -1,4 +1,6 @@
-﻿package Engine
+﻿// Copyright (C) 2013 Elemental Games. All rights reserved.
+
+package Engine
 {
 	import flash.utils.*;
 

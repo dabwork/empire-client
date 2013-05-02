@@ -1,4 +1,6 @@
-﻿package Empire
+﻿// Copyright (C) 2013 Elemental Games. All rights reserved.
+
+package Empire
 {
 	import flash.display.Shape;
 

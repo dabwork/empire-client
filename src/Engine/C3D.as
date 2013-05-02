@@ -1,3 +1,5 @@
+// Copyright (C) 2013 Elemental Games. All rights reserved.
+
 package Engine {
 // http://wscg.zcu.cz/wscg2005/Papers_2005/Short/B61-full.pdf
 // http://code.google.com/p/kri/wiki/Quaternions
