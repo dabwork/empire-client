@@ -959,14 +959,14 @@ public class Hyperspace extends HyperspaceBase
 			else if (m_SysModify == 3) m_LightPlanetRotate -= 1.0 * Space.ToRad;
 
 		} else if (e.keyCode == 72 && !EM.IsFocusInput()) { // H
-			if (Hangar.Self.visible) {
+/*			if (Hangar.Self.visible) {
 				Hangar.Self.Hide();
 				EM.ItfUpdate();
 			} else {
 				EM.FormHideAll();
 				Hangar.Self.Show();
 				EM.ItfUpdate();
-			}
+			}*/
 		}
 	}
 
@@ -1288,6 +1288,7 @@ public class Hyperspace extends HyperspaceBase
 					user = UserList.Self.GetUser(ship.m_Owner);
 					if (user != null) str = EM.Txt_CotlOwnerName(0, user.m_Id) + "\n";
 					str += DebugTextForShip(ship);
+//if(ship.m_Owner == 3) trace(str);
 				}
 				hs.SetText(str);
 				
@@ -2083,6 +2084,7 @@ Math.sqrt(
 					ship.m_TargetId = sl.LoadDword();
 				}
 				if (fl & 4) {
+					var oldstate:uint = ship.m_State;
 					ship.m_VerState = buf.readUnsignedByte();
 					ship.m_State = sl.LoadDword();
 					ship.m_StateTime = sl.LoadDword();
@@ -2106,6 +2108,13 @@ Math.sqrt(
 						fleet.m_Fuel = sl.LoadInt();
 						fleet.m_HP = sl.LoadInt();
 						fleet.m_Shield = sl.LoadInt();
+					}
+					if ((oldstate & SpaceShip.StateLive) == 0 && (ship.m_State & SpaceShip.StateLive) != 0/* && (fl & 1) == 0*/) {
+						ship.m_RecvFull = false;
+						ship.m_VerOrder = 0;
+						ship.m_VerState = 0;
+						ship.m_VerSet = 0;
+						//m_WaitRecvFull = true;
 					}
 //trace("fuel:",fleet.m_Fuel);
 				}

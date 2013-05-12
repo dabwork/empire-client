@@ -133,13 +133,18 @@ public class Effect
 		m_EmitterList.length = 0;
 
 		m_Texture = null;
-		m_QuadBatch.free();
+		ClearGraph();
 
 		m_Style = null;
 		m_TextureStyle = null;
 		m_Frame = 0;
 		m_TimeOst = 0;
 		m_FirstFrame = true;
+	}
+	
+	public function ClearGraph():void
+	{
+		m_QuadBatch.free();
 	}
 
 	public function PAdd():EffectParticle 

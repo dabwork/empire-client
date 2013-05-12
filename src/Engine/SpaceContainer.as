@@ -116,6 +116,7 @@ public class SpaceContainer extends SpaceEntity
 				}
 			}
 		}
+//trace(m_SpeedX, m_SpeedY);
 
 /*		if (m_CenterId == 0) return;
 

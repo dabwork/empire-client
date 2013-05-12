@@ -1520,7 +1520,7 @@ public class FormPlanet extends Sprite
 				if(EM.IsWinMaxEnclave() || EM.IsWinOccupyHomeworld()) obj = EM.m_FormMenu.Add(Common.Txt.CotlCaptureAndControl);
 				else obj = EM.m_FormMenu.Add(Common.Txt.CotlBuyControl);
 				//if (EM.m_CotlType == Common.CotlTypeRich && EM.CntFriendGroup(planet, Server.Self.m_UserId, Common.RaceNone, false)>0 && EM.IsBattle(planet, Server.Self.m_UserId, Common.RaceNone, false, true)) obj.Disable = true;
-				if (EM.IsWinOccupyHomeworld() && (EM.m_GameTime*1000 > EM.m_ServerCalcTime || EM.CntFriendGroup(planet,Server.Self.m_UserId,Common.RaceNone,false)<=0 || EM.IsBattle(planet,Server.Self.m_UserId,Common.RaceNone,false,true))) obj.Disable = true;
+				if (EM.IsWinOccupyHomeworld() && (EM.m_GameTime * 1000 > EM.m_ServerCalcTime || EM.CntFriendGroup(planet, Server.Self.m_UserId, Common.RaceNone, false) <= 0 || EM.IsBattle(planet, Server.Self.m_UserId, Common.RaceNone, false, true))) obj.Disable = true;
 				else if (EM.IsWinMaxEnclave() && pc < EM.m_OpsWinScore) obj.Disable = true;
 				else obj.Fun = clickBuyControl; //EM.MsgBuyControl;
 

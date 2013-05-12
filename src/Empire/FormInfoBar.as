@@ -269,9 +269,11 @@ public class FormInfoBar extends Sprite
 		y = EM.stage.stageHeight - BarHeight;
 		
 		graphics.clear();
+		
+		var chatshow:Boolean = m_ChatOpen && EmpireMap.Self.m_ItfChat;
 
 		sme = 0;
-		if (m_ChatOpen) sme = EM.m_FormChat.m_SizeX;
+		if (chatshow) sme = EM.m_FormChat.m_SizeX;
 
 		graphics.beginFill(0x000000, 0.8);
 		graphics.drawRect(sme, 0, EM.stage.stageWidth - sme, BarHeight);
@@ -282,10 +284,10 @@ public class FormInfoBar extends Sprite
 		m_ButChatOpen.x = 5;
 		m_ButChatOpen.y = 1;
 
-		m_ButChatOpen.visible = (!m_ChatOpen) && EmpireMap.Self.m_ItfChat;
-		m_ButChatClose.visible = (m_ChatOpen) && EmpireMap.Self.m_ItfChat;
+		m_ButChatOpen.visible = (!chatshow) && EmpireMap.Self.m_ItfChat;
+		m_ButChatClose.visible = (chatshow) && EmpireMap.Self.m_ItfChat;
 
-		if (m_ChatOpen) sme = m_ButChatClose.x + m_ButChatClose.width;
+		if (chatshow) sme = m_ButChatClose.x + m_ButChatClose.width;
 		else sme = m_ButChatOpen.x + m_ButChatOpen.width;
 		
 		m_SoundRadioUIOn.x = sme;

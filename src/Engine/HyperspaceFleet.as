@@ -491,6 +491,14 @@ public class HyperspaceFleet extends HyperspaceEntity
 		//m_ZoneX = ship.m_ZoneX;
 		//m_ZoneY = ship.m_ZoneY;
 
+		if (ship.m_ClearSmooth) {
+			ship.m_ClearSmooth = false;
+			m_PosSmooth.Clear();
+			m_AngleSmooth.Clear();
+			m_PitchSmooth.Clear();
+			m_RollSmooth.Clear();
+		}
+
 		if (m_ZoneX != ship.m_ZoneX || m_ZoneY != ship.m_ZoneY) m_PosSmooth.AddOffset(HS.SP.m_ZoneSize * (m_ZoneX - ship.m_ZoneX), HS.SP.m_ZoneSize * (m_ZoneY - ship.m_ZoneY), 0.0);
 		m_ZoneX = ship.m_ZoneX;
 		m_ZoneY = ship.m_ZoneY;

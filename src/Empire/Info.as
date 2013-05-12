@@ -2324,7 +2324,7 @@ public class Info extends Sprite
 			y++;
 		}
 
-		if ((planet.m_Flag & Planet.PlanetFlagWormholeOpen)) {
+		if ((planet.m_Flag & Planet.PlanetFlagWormholeOpen) && (planet.m_Flag & Planet.PlanetFlagNoCapture) == 0) {
 			if ((EM.m_CotlType == Common.CotlTypeCombat || EM.m_CotlType == Common.CotlTypeProtect) && (EM.m_OpsFlag & (Common.OpsFlagWormholeLong | Common.OpsFlagWormholeFast | Common.OpsFlagWormholeRoam)) == 0) {}
 			else if(!(planet.m_Flag & Planet.PlanetFlagStabilizer)) {
 				t=(planet.m_NeutralCooldown-EM.m_ServerCalcTime)/1000;
@@ -3157,7 +3157,7 @@ public class Info extends Sprite
 					if ((EM.m_CotlType == Common.CotlTypeProtect || EM.m_CotlType == Common.CotlTypeCombat) && Common.ItemIsFinalLoop(pi.m_Type)) cnt *= EM.m_OpsModuleMul;
 				}
 
-				if ((planet.m_Flag & Planet.PlanetFlagRich) != 0) cnt *= 3;
+				if ((planet.m_Flag & Planet.PlanetFlagRich) != 0) cnt *= Common.PlanetRichMul;
 
 				str = BaseStr.FormatBigInt(cnt);
 

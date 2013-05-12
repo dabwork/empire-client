@@ -105,6 +105,7 @@ public class HyperspaceContainer extends HyperspaceEntity
 		m_PosSmooth.Add(HS.m_CurTime + 200, cont.m_PosX, cont.m_PosY, cont.m_PosZ);
 		m_Vis = cont.m_Vis && (cont.m_Flag & SpaceContainer.FlagNoMove) == 0 && (cont.m_Flag & SpaceContainer.FlagDestroy) == 0;
 		
+//trace(cont.m_SpeedX, cont.m_SpeedY);
 		m_SpeedX = cont.m_SpeedX;
 		m_SpeedY = cont.m_SpeedY;
 
@@ -143,8 +144,10 @@ public class HyperspaceContainer extends HyperspaceEntity
 	public function GraphTakt(step:Number):void
 	{
 		var s:Number = Math.sqrt(m_SpeedX * m_SpeedX + m_SpeedY * m_SpeedY);
+		if (s > 2.0) s = 2.0;
 		if(s) {
 			s *= 0.0005 * step;
+//trace(s, 0.0005 * step, m_SpeedX, m_SpeedY);
 			m_Angle = BaseMath.AngleNorm(m_Angle + s);
 			m_Pitch = BaseMath.AngleNorm(m_Pitch + s);
 			m_Roll = BaseMath.AngleNorm(m_Roll + s);

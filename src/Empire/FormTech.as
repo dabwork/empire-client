@@ -361,7 +361,12 @@ public class FormTech extends Sprite
 						FormMessageBox.Run(Common.Txt.TechNeedPrev,Common.Txt.ButClose);
 						return;
 					}
-					if (m_Map.PlusarTech()) { }
+					if (IsNeedCadet(i)) {
+						m_Map.m_Info.Hide();
+						FormMessageBox.Run(Common.Txt.TechNeedCadet,Common.Txt.ButClose);
+						return;
+					}
+					else if (m_Map.PlusarTech()) { }
 					else if(IsNeedPlusar(i)) {
 						m_Map.m_Info.Hide();
 						FormMessageBox.Run(Common.Txt.TechNeedPlusar,Common.Txt.ButClose);
@@ -521,6 +526,24 @@ public class FormTech extends Sprite
 			if(cnt<2) return false;
 		}
 		return true;
+	}
+	
+	public function IsNeedCadet(i:int):Boolean
+	{
+		if(i<0 || i>=32) return false;
+
+		var dir:int = Common.TechDir[32 * m_TechCur + i];
+		if (dir == 0) return false;
+
+		var lvl:int = CalcDirLvl(dir);
+
+		if (lvl < 2) return false;
+		
+		var user:User = UserList.Self.GetUser(Server.Self.m_UserId);
+		if (user == null) return true;
+		var r:int = (user.m_Flag & Common.UserFlagRankMask) >> Common.UserFlagRankShift;
+		if (r < Common.UserRankCadet) return true;
+		return false;
 	}
 
 	public function IsNeedPlusar(i:int):Boolean

@@ -44,6 +44,8 @@ public class HyperspaceShuttle extends HyperspaceEntity
 	
 	public var m_EngineOn:Boolean = false;
 	public var m_EnginePower:Number = 0.0;
+	public var m_EngineOff:Boolean = false;
+	public var m_EngineFactor:Number = 0.0;
 	
 	public var m_Radius:Number = 0;
 	public var m_ShadowLength:Number = 0.0;
@@ -179,6 +181,16 @@ public class HyperspaceShuttle extends HyperspaceEntity
 
 		m_EngineOn = (ship.m_SpeedMoveX * ship.m_SpeedMoveX + ship.m_SpeedMoveY * ship.m_SpeedMoveY + ship.m_SpeedMoveZ * ship.m_SpeedMoveZ) > 0.5;
 		if (ship.m_PFlag & (SpaceShip.PFlagInOrbitCotl | SpaceShip.PFlagInOrbitPlanet)) m_EngineOn = false;
+		
+		m_EngineOff = (ship.m_PFlag & SpaceShip.PFlagInDock) != 0;
+		
+		if (ship.m_ClearSmooth) {
+			ship.m_ClearSmooth = false;
+			m_PosSmooth.Clear();
+			m_AngleSmooth.Clear();
+			m_PitchSmooth.Clear();
+			m_RollSmooth.Clear();
+		}
 
 		if (m_ZoneX != ship.m_ZoneX || m_ZoneY != ship.m_ZoneY) m_PosSmooth.AddOffset(HS.SP.m_ZoneSize * (m_ZoneX - ship.m_ZoneX), HS.SP.m_ZoneSize * (m_ZoneY - ship.m_ZoneY), 0.0);
 		m_ZoneX = ship.m_ZoneX;
@@ -246,6 +258,12 @@ public class HyperspaceShuttle extends HyperspaceEntity
 			if (m_EnginePower > 0.0) m_EnginePower = Math.max(0.0, m_EnginePower - 0.001 * dt);
 		}
 
+		if (!m_EngineOff) {
+			if (m_EngineFactor < 1.0) m_EngineFactor = Math.min(1.0, m_EngineFactor + 0.001 * dt);
+		} else {
+			if (m_EngineFactor > 0.0) m_EngineFactor = Math.max(0.0, m_EngineFactor - 0.001 * dt);
+		}
+
 		var upsrc:Vector3D = m_World.transformVector(new Vector3D(0.0, 0.0, 1.0));
 
 		if (!m_ReadyEffect && IsMeshLoaded()) {
@@ -259,6 +277,11 @@ public class HyperspaceShuttle extends HyperspaceEntity
 		for (i = 0; i < m_EffectList.length; i++) {
 			obj = m_EffectList[i];
 			if (obj.m_Effect is Effect) {
+				//if (m_EngineOff) {
+				//	(obj.m_Effect as Effect).ClearGraph();
+				//	continue;
+				//}
+
 				pos = m_World.transformVector(obj.m_Pos);
 				dir = m_World.deltaTransformVector(obj.m_Dir);
 
@@ -271,7 +294,7 @@ public class HyperspaceShuttle extends HyperspaceEntity
 				//ef.SetNormal(dir.x, dir.y, dir.z);
 				ef.SetPathDist(100);
 				ef.SetPos(pos.x, pos.y, pos.z);
-				ef.SetA(obj.m_Size);
+				ef.SetA(obj.m_Size * m_EngineFactor);
 				ef.SetB(m_EnginePower * 0.5 * Math.min(3.0, 1.0/*m_Forsage*/));
 
 				var dirx:Vector3D = dir.crossProduct(upsrc);
@@ -302,6 +325,10 @@ public class HyperspaceShuttle extends HyperspaceEntity
 				(obj.m_Effect as Effect).GraphTakt(dt);
 
 			} else if (obj.m_Effect is HyperspaceEngine) {
+				if (m_EngineOff) {
+					HyperspaceEngine(obj.m_Effect).free();
+					continue;
+				}
 				pos = m_World.transformVector(obj.m_Pos);
 				pos.x += HS.m_CamPos.x;
 				pos.y += HS.m_CamPos.y;
@@ -406,9 +433,9 @@ public class HyperspaceShuttle extends HyperspaceEntity
 
 				obj = m_EffectList[i];
 				if (obj.m_Effect is Effect) {
-					(obj.m_Effect as Effect).Draw(HS.m_CurTime, HS.m_MatViewPer, HS.m_MatView, HS.m_MatViewInv, HS.m_FactorScr2WorldDist);
+					if (m_EngineFactor > 0) (obj.m_Effect as Effect).Draw(HS.m_CurTime, HS.m_MatViewPer, HS.m_MatView, HS.m_MatViewInv, HS.m_FactorScr2WorldDist);
 				} else if (obj.m_Effect is HyperspaceEngine) {
-					HyperspaceEngine(obj.m_Effect).Draw();
+					if(!m_EngineOff) HyperspaceEngine(obj.m_Effect).Draw();
 				}
 			}
 		}

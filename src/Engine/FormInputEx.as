@@ -165,6 +165,14 @@ public class FormInputEx extends FormStd
 		return ItemObj(m_LastItem) as CtrlInput;
 	}
 	
+	public function AddBut(txt:String):CtrlBut
+	{
+		FinItem();
+		m_ColX = LocCallX;
+		m_LastItem = ItemBut(txt);
+		return ItemObj(m_LastItem) as CtrlBut;
+	}
+
 	public var m_ColorPickerInput:CtrlInput = null;
 	
 	public function AddColorPicker(clr:uint):CtrlInput

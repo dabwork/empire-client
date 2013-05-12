@@ -75,6 +75,7 @@ public class SpaceShip extends SpaceEntity
 	public var m_ServerCorrectionDist:Number = 0;
 	public var m_ServerCorrectionFactor:Number = 0;
 	public var m_ServerCorrectionTakt:Number = 0;
+	public var m_ClearSmooth:Boolean = true;
 
 	public var m_Order:uint = 0;
 	public var m_OrderTargetId:uint = 0;
@@ -691,6 +692,13 @@ public class SpaceShip extends SpaceEntity
 				m_PId = 0;
 				m_PDist = 0;
 				break;
+
+			} else if (!(tgt_ship.m_State & SpaceShip.StateLive)) {
+				m_PFlag &= ~PFlagInDock;
+				m_PFlag |= PFlagUndock;
+				m_PTimer = int(2.0 * tgt_ship.DockPathLen((m_PFlag >> 16) & 255, true) / (m_SpeedReal)) << 16;
+				break;
+				
 			} else {
 				DockDir((m_PFlag >> 16) & 255, m_TVec);
 				tgt_ship.DockCalcPos(0.0, m_TVec.x, m_TVec.y, m_TVec.z, (m_PFlag >> 16) & 255, true, m_TPos, m_TVec);
@@ -1082,6 +1090,9 @@ public class SpaceShip extends SpaceEntity
 			m_DesX = posx + dirx * r;
 			m_DesY = posy + diry * r;
 			m_DesZ = posz;
+			m_PlaceX = m_DesX;
+			m_PlaceY = m_DesY;
+			m_PlaceZ = m_DesZ;
 
 			m_PlaceAngle = BaseMath.AngleNorm(Math.atan2( -dirx, -diry) + Number(m_OrderAngle) * (2.0 * Space.pi / 65536.0));
 
@@ -1987,6 +1998,8 @@ public class SpaceShip extends SpaceEntity
 				m_ServerCorrectionDist = 0;
 				m_ServerCorrectionFactor = 0;
 				m_ServerCorrectionTakt = 0;
+				
+				m_ClearSmooth = true;
 				
 				return;
 //			}

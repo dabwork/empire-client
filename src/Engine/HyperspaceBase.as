@@ -25,6 +25,8 @@ public class HyperspaceBase extends Sprite
 	public static const ZForFullZ:Number = 0.2; // Пространство в z буфере для полной сцены
 	public static const ZForFar:Number = 0.00; // Z пространство для дальнего плана
 	
+	public var m_FonVis:Boolean = true;
+	
 	public var m_RootFleetId:uint = 0;
 	public var m_CurTime:Number = 0;
 	public var m_ServerTime:Number = 0;
@@ -821,33 +823,35 @@ public class HyperspaceBase extends Sprite
 		C3D.Context.setColorMask(true, true, true, true);
 		C3D.Context.setCulling(Context3DTriangleFace.NONE);
 
-		var adx:Number = 0;// 1900 / 2;// EM.m_CurTime / 50;
-		var ady:Number = adx;
-		
-		var bgx:Number = m_CamZoneX * m_ZoneSize + m_CamPos.x;
-		var bgy:Number = m_CamZoneY * m_ZoneSize + m_CamPos.y;
-		if (m_CamPos.z != 0.0) {
-			m_TPos.x = m_CamPos.x; m_TPos.y = m_CamPos.y; m_TPos.z = 0;
-			m_TDir.x = 0.0; m_TDir.y = 0.0; m_TDir.z = 1.0;
-			PlaneFromPointNormal(m_TPos, m_TDir, m_TPlane);
-			m_TPos.x = m_CamPos.x + m_View.x;
-			m_TPos.y = m_CamPos.y + m_View.y;
-			m_TPos.z = m_CamPos.z + m_View.z;
-			if (PlaneIntersectionLine(m_TPlane, m_CamPos, m_TPos, m_TDir)) {
-				bgx = m_CamZoneX * m_ZoneSize + m_TDir.x;
-				bgy = m_CamZoneY * m_ZoneSize + m_TDir.y;
+		if(m_FonVis) {
+			var adx:Number = 0;// 1900 / 2;// EM.m_CurTime / 50;
+			var ady:Number = adx;
+			
+			var bgx:Number = m_CamZoneX * m_ZoneSize + m_CamPos.x;
+			var bgy:Number = m_CamZoneY * m_ZoneSize + m_CamPos.y;
+			if (m_CamPos.z != 0.0) {
+				m_TPos.x = m_CamPos.x; m_TPos.y = m_CamPos.y; m_TPos.z = 0;
+				m_TDir.x = 0.0; m_TDir.y = 0.0; m_TDir.z = 1.0;
+				PlaneFromPointNormal(m_TPos, m_TDir, m_TPlane);
+				m_TPos.x = m_CamPos.x + m_View.x;
+				m_TPos.y = m_CamPos.y + m_View.y;
+				m_TPos.z = m_CamPos.z + m_View.z;
+				if (PlaneIntersectionLine(m_TPlane, m_CamPos, m_TPos, m_TDir)) {
+					bgx = m_CamZoneX * m_ZoneSize + m_TDir.x;
+					bgy = m_CamZoneY * m_ZoneSize + m_TDir.y;
+				}
 			}
-		}
 
-		m_BG.Draw( bgx + adx, bgy + ady, 0);
-		//m_BG.Draw( m_CamZoneX * m_ZoneSize + m_CamPos.x + adx, m_CamZoneY * m_ZoneSize + m_CamPos.y + ady, 1);
-		m_BG.Draw( bgx + adx, bgy + ady, 2);
+			m_BG.Draw( bgx + adx, bgy + ady, 0);
+			//m_BG.Draw( m_CamZoneX * m_ZoneSize + m_CamPos.x + adx, m_CamZoneY * m_ZoneSize + m_CamPos.y + ady, 1);
+			m_BG.Draw( bgx + adx, bgy + ady, 2);
 
 //			m_BG.Draw( (m_CamPos.x + adx) / 6, (m_CamPos.y + ady) / 6, 0);
 //			m_BG.Draw( (m_CamPos.x + adx + 500) / 5 , (m_CamPos.y + ady + 500) / 5, 1);
 //			m_BG.Draw( (m_CamPos.x + adx + 1000) / 4, (m_CamPos.y + ady + 1000) / 4, 2);
 
 		//m_BG.Draw( m_CamPos.x / 2 + 1500, m_CamPos.y / 2 + 1500);
+		}
 
 		// Pass.Cotl
 		C3D.Context.setDepthTest(false, Context3DCompareMode.ALWAYS);

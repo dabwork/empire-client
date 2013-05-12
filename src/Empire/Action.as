@@ -2138,8 +2138,9 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 				EM.m_FormHint.Show(Common.Txt.WarningNeedReloadReactor, Common.WarningHideTime); 
 				return false;
 			}
-			
-			if(!EM.AccessControl(planet.m_PortalOwner)) { EM.m_FormHint.Show(Common.Txt.WarningNoPortalOwner,Common.WarningHideTime); return false; }
+
+			if(!EM.IsFriendEx(planet,ship.m_Owner,Common.RaceNone,planet.m_PortalOwner,Common.RaceNone)) { EM.m_FormHint.Show(Common.Txt.WarningNoPortalOwner,Common.WarningHideTime); return false; }
+			//if(!EM.AccessControl(planet.m_PortalOwner)) { EM.m_FormHint.Show(Common.Txt.WarningNoPortalOwner,Common.WarningHideTime); return false; }
 
 //			for(i=0;i<Common.ShipOnPlanetMax;i++) {
 //				ship2=planet.m_Ship[i];
@@ -3201,7 +3202,7 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 			cotl2 = EM.HS.GetCotl(EM.m_RootCotlId);
 			if (cotl2 == null) { EM.m_FormHint.Show(Common.Txt.WarningFleetFar, Common.WarningHideTime); return false; }
 
-			if (cotl2.m_ProtectTime > EM.GetServerGlobalTime()) { EM.m_FormHint.Show(Common.Txt.WarningCotlProtectOnlyHome, Common.WarningHideTime); return false;  }
+			if (cotl2.m_ProtectTime > (EM.GetServerGlobalTime() + 15 * 60 * 1000)) { EM.m_FormHint.Show(Common.Txt.WarningCotlProtectOnlyHome, Common.WarningHideTime); return false;  }
 
 			break;
 		}
@@ -3227,7 +3228,7 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 			}
 
 //			if (EM.IsWinMaxEnclave()) { EM.m_FormHint.Show(Common.Txt.WarningCotlOnlyBase, Common.WarningHideTime); return false; }
-			if ((EM.m_GameState & Common.GameStateDevelopment) == 0 && cotl2.m_ProtectTime > EM.GetServerGlobalTime()) { EM.m_FormHint.Show(Common.Txt.WarningCotlProtectOnlyHome, Common.WarningHideTime); return false;  }
+			if ((EM.m_GameState & Common.GameStateDevelopment) == 0 && cotl2.m_ProtectTime > (EM.GetServerGlobalTime() + 15 * 60 * 1000)) { EM.m_FormHint.Show(Common.Txt.WarningCotlProtectOnlyHome, Common.WarningHideTime); return false;  }
 
 			break;
 		}

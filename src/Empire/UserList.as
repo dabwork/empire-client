@@ -204,6 +204,10 @@ public class UserList extends EventDispatcher
 			user.m_CombatId = sl.LoadDword();
 			user.m_PowerMul = sl.LoadDword();
 			user.m_ManufMul = sl.LoadDword();
+			if (userid & Common.OwnerAI) {
+				user.m_LootMul = sl.LoadDword();
+				user.m_LootForPlayerMul = sl.LoadDword();
+			}
 			if(user.m_Id!=Server.Self.m_UserId) {
 				for (i = 0; i < Common.TechCnt; i++) user.m_Tech[i] = sl.LoadDword();
 

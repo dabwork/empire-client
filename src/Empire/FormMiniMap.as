@@ -263,6 +263,7 @@ public class FormMiniMap extends Sprite
 
 	public function Hide():void
 	{
+		if (!visible) return;
 		MouseUnlock();
 		m_TimerShipPlayer.stop();
 		m_TimeScale.stop();
@@ -301,6 +302,8 @@ public class FormMiniMap extends Sprite
 
 	public function Show():void
 	{
+		if (visible) return;
+
 		EM.FloatTop(this);
 
 		visible=true;
@@ -2763,7 +2766,8 @@ if((t5 - t0) > 50 && EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("!SLOW.MM
 	{
 //trace(1);
 		m_OpenFull=!m_OpenFull;
-		if(visible) {
+		if (visible) {
+			Hide();
 			Show();
 			EM.m_GoOpen=false;
 			if(m_OpenFull) ScrollToView();
@@ -2774,7 +2778,8 @@ if((t5 - t0) > 50 && EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("!SLOW.MM
 	private function MiniMapPlanet(...args):void
 	{
 		m_ShowPlanet=!m_ShowPlanet;
-		if(visible) {
+		if (visible) {
+			Hide();
 			Show();
 			ScrollToView();
 		}
@@ -2783,7 +2788,8 @@ if((t5 - t0) > 50 && EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("!SLOW.MM
 	private function MiniMapShip(...args):void
 	{
 		m_ShowShip=!m_ShowShip;
-		if(visible) {
+		if (visible) {
+			Hide();
 			Show();
 			ScrollToView();
 		}
@@ -2792,7 +2798,8 @@ if((t5 - t0) > 50 && EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("!SLOW.MM
 	private function MiniMapRes(...args):void
 	{
 		m_ShowRes=!m_ShowRes;
-		if(visible) {
+		if (visible) {
+			Hide();
 			Show();
 		}
 	}
@@ -2800,7 +2807,8 @@ if((t5 - t0) > 50 && EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("!SLOW.MM
 	private function MiniMapScaleDefault(...args):void
 	{
 		m_ScaleKof=m_ScaleKofDefault;
-		if(visible) {
+		if (visible) {
+			Hide();
 			Show();
 		}
 		ShipPlayerQuery(true);

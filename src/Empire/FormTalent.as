@@ -375,7 +375,7 @@ public class FormTalent extends Sprite
 					}
 					if(m_Owner == Server.Self.m_UserId) {
 						if (m_Map.PlusarTech()) { }
-						else if(IsNeedPlusar(i)) {
+						else if (IsNeedPlusar(i)) {
 							m_Map.m_Info.Hide();
 							FormMessageBox.Run(Common.Txt.TechNeedPlusar,Common.Txt.ButClose);
 							return;

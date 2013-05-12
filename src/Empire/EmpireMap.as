@@ -25,7 +25,7 @@ import Empire.FormDialog;
 
 public class EmpireMap extends StdMap
 {
-	public static const GameVersion:int = 177;
+	public static const GameVersion:int = 179;
 	public static const GameVersionSub:int = 0;// String = "";
 
 	public var RunFromLocal:Boolean = true;
@@ -388,6 +388,7 @@ public class EmpireMap extends StdMap
 	public var m_Set_Explosion:Boolean=true;
 	public var m_Set_VisOn:Boolean = false;
 	public var m_Set_Unprintable:Boolean = true;
+	public var m_Set_FonVis:Boolean = true;
 	public var m_Set_ScopeVis:Boolean = true;
 	public var m_Set_FPSOn:Boolean=false;
 	public var m_Set_FPSMax:int = 100;
@@ -2039,15 +2040,15 @@ event_touchmove_cnt = 0;
 				while(true) {
 					if (m_CurPlanetNum < 0) break;
 
-					if(m_MoveSectorX==m_CurSectorX && m_MoveSectorY==m_CurSectorY && m_MovePlanetNum==m_CurPlanetNum) {
+					if (m_MoveSectorX == m_CurSectorX && m_MoveSectorY == m_CurSectorY && m_MovePlanetNum == m_CurPlanetNum) {
 						MouseUnlock();
-						m_MoveMap=false;
-						m_Action=ActionNone;
-						CalcPick(mouseX,mouseY);
+						m_MoveMap = false;
+						m_Action = ActionNone;
+						CalcPick(mouseX, mouseY);
 						break;
 					}
 
-					SendAction("emportal",""+m_MoveSectorX+"_"+m_MoveSectorY+"_"+m_MovePlanetNum+"_"+m_MoveShipNum+"_"+m_CurSectorX+"_"+m_CurSectorY+"_"+m_CurPlanetNum);
+					SendAction("emportal", "" + m_MoveSectorX + "_" + m_MoveSectorY + "_" + m_MovePlanetNum + "_" + m_MoveShipNum + "_" + m_CurSectorX + "_" + m_CurSectorY + "_" + m_CurPlanetNum);
 
 					MouseUnlock();
 					m_Action=ActionNone;
@@ -2834,14 +2835,14 @@ event_touchmove_cnt = 0;
 				}
 
 			} else if (e.keyCode == 72 && !IsFocusInput()) { // H
-				if (Hangar.Self.visible) {
+/*				if (Hangar.Self.visible) {
 					Hangar.Self.Hide();
 					ItfUpdate();
 				} else {
 					FormHideAll();
 					Hangar.Self.Show();
 					ItfUpdate();
-				}
+				}*/
 			}
 
 			break;
@@ -4882,6 +4883,7 @@ var t01:int = getTimer();
 
 			if (m_Hangar.visible) {
 			} else if (HS.visible) {
+				HS.m_FonVis = m_Set_FonVis;
 				HS.Draw();
 			} else {
 				Draw();
@@ -5410,6 +5412,7 @@ if((t15 - t00) > 50 && EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("!SLOW.
 								//if(ship.m_Owner!=m_MoveOwner) break;
 								if (ship.m_Type == Common.ShipTypeFlagship) break;
 								if (Common.IsBase(ship.m_Type)) break;
+								if (curship >= planet.ShipOnPlanetLow) break;
 							} else {
 								if ((ship.m_Type != Common.ShipTypeFlagship) && (ship.m_Type != Common.ShipTypeQuarkBase)) break;
 							}
@@ -6654,10 +6657,10 @@ tg:			var t0:int = getTimer();
 	public function ItfUpdate():void
 	{
 		var itffleet:Boolean = m_ItfFleet;
-		var itfchat:Boolean = m_ItfChat;
+		var itfchat:Boolean = m_ItfChat && m_FormInfoBar.m_ChatOpen;
 		var itfbattle:Boolean = m_ItfBattle;
 		var itfradar:Boolean = HS.visible && (m_StateConnect >= 1);
-		var itfminimap:Boolean = !HS.visible && (m_StateConnect >= 1);
+		var itfminimap:Boolean = !HS.visible && (m_StateConnect >= 1) && (m_SectorCntX > 0);
 		var itfcptbar:Boolean = (m_StateConnect >= 1);
 		var itfquestbar:Boolean = (m_StateConnect >= 1);
 
@@ -6668,7 +6671,7 @@ tg:			var t0:int = getTimer();
 			itfcptbar = false;
 			itfquestbar = false;
 		}
-		
+
 		if (itffleet && !m_FormFleetBar.visible) { m_FormFleetBar.Show(); }
 		else if (!itffleet && m_FormFleetBar.visible) { m_FormFleetBar.Hide(); }
 
@@ -10372,7 +10375,7 @@ at flash.net::URLLoader/onComplete()*/
 					m_LoadUserAfterActionNo_Time=Common.GetTime();
 				}
 			} else if(ac.m_Type==Action.ActionTypeResearch) {
-				if(ac.Process()) {
+				if (ac.Process()) {
 					if(ac.m_Id==Server.Self.m_UserId) m_LoadUserAfterActionNo=SendActionEx(m_RootCotlId,"emresearch",""+ac.m_Kind.toString()+"_"+ac.m_TargetNum.toString());
 					else m_LoadUserAfterActionNo=SendAction("emresearch",""+ac.m_Kind.toString()+"_"+ac.m_TargetNum.toString()+"_"+ac.m_Id.toString());
 					m_LoadUserAfterActionNo_Time=Common.GetTime();
@@ -13147,22 +13150,30 @@ at flash.net::URLLoader/onComplete()*/
 		var kof_p:int = 0;
 		var kof_n:int = 0;
 		var kof_q:int = 0;
+		
+		var exist_p:Boolean = false;
+		var exist_n:Boolean = false;
 
-		for(i=0;i<Common.TechCnt;i++) {
-			val=user.m_Tech[i];
-			cur=0;
-			for(u=0;u<32;u++,val=val>>1) {
-				if(val & 1) {
+		for (i = 0; i < Common.TechCnt; i++) {
+			val = user.m_Tech[i];
+			cur = 0;
+
+			if(userid==Server.Self.m_UserId && allow_research && m_UserResearchLeft > 0 && m_UserResearchTech == i) {
+				val |= 1 << m_UserResearchDir;
+			}
+			
+			for (u = 0; u < 32; u++, val = val >> 1) {
+				if (val & 1) {
 					cur++;
 					kof++;
-					if(cur>2 && Common.TechCost(i,3)!=0) kof_p++;
-					if (cur > 2 && Common.TechCost(i, 4) != 0) kof_n++;
+					if (cur >= 2 && Common.TechCost(i, 3) != 0) { kof_p++; if (tech == i) exist_p = true; }
+					if (cur >= 2 && Common.TechCost(i, 4) != 0) { kof_n++; if (tech == i) exist_n = true; }
 					if (Common.TechCost(i, 5) != 0 && tech == i) kof_q++;
 				}
 			}
 		}
 
-		if(userid==Server.Self.m_UserId) {
+/*		if(userid==Server.Self.m_UserId) {
 			if(allow_research && m_UserResearchLeft>0) {
 				kof++;
 
@@ -13190,7 +13201,7 @@ at flash.net::URLLoader/onComplete()*/
 					kof_q++;
 				}
 			} 
-		}
+		}*/
 
 		var ar:Array=null;
 		if(tech==Common.TechProgress) ar=Common.TechProgressCost;
@@ -13215,29 +13226,41 @@ at flash.net::URLLoader/onComplete()*/
 		ra[0] = ar[0] * kof;
 		ra[1] = ar[1] * kof;
 		ra[2] = ar[2] * kof;
+		if (exist_p) ra[3] = ar[3] * kof_p;
+		if (exist_n) ra[4] = ar[4] * kof_n;
 		ra[5] = ar[5] * kof_q;
-
-		if(Common.TechCost(tech,3)!=0) {
+		
+/*		if(Common.TechCost(tech,3)!=0) {
 			val=user.m_Tech[tech];
-			cur=0;
+			cur = 0;
+			
+			if(userid==Server.Self.m_UserId && allow_research && m_UserResearchLeft > 0 && m_UserResearchTech == tech) {
+				val |= 1 << m_UserResearchDir;
+			}
+
 			for(u=0;u<32;u++,val=val>>1) {
 				if(val & 1) {
 					cur++;
-					if(cur>=2) { ra[3]=ar[3]*kof_p; break; }
+					if (cur >= 2) { ra[3] = ar[3] * kof_p; break; }
 				}
 			}
 		}
 
 		if(Common.TechCost(tech,4)!=0) {
 			val=user.m_Tech[tech];
-			cur=0;
+			cur = 0;
+			
+			if(userid==Server.Self.m_UserId && allow_research && m_UserResearchLeft > 0 && m_UserResearchTech == tech) {
+				val |= 1 << m_UserResearchDir;
+			}
+
 			for(u=0;u<32;u++,val=val>>1) {
 				if(val & 1) {
 					cur++;
-					if(cur>=2) { ra[4]=ar[4]*kof_n; break; }
+					if (cur >= 2) { ra[4] = ar[4] * kof_n; break; }
 				}
 			}
-		}
+		}*/
 
 		return ra;
 	}
@@ -14527,7 +14550,9 @@ at flash.net::URLLoader/onComplete()*/
 			str += "Team=" + user.m_Team.toString() + "\n";
 			str += "Race=" + Common.RaceSysName[user.m_Race] + "\n";
 			str += "PowerMul=" + Math.round(user.m_PowerMul * 100 / 256).toString() + "\n";
-			str += "ManufMul=" + Math.round(user.m_ManufMul * 100 / 256).toString() + "\n";
+			str += "ManufMul=" + user.m_ManufMul.toString() + "\n";
+			str += "LootMul=" + Math.round(user.m_LootMul * 100 / 256).toString() + "\n";
+			str += "LootFPMul=" + Math.round(user.m_LootForPlayerMul * 100 / 256).toString() + "\n";
 			//str += "AutoProgress=" + ((user.m_Flag & Common.UserFlagAutoProgress) != 0).toString() + "\n";
 			str += "PlayerControl=" + ((user.m_Flag & Common.UserFlagPlayerControl) != 0).toString() + "\n";
 			str += "VisAll=" + ((user.m_Flag & Common.UserFlagVisAll) != 0).toString() + "\n";
@@ -14807,6 +14832,8 @@ at flash.net::URLLoader/onComplete()*/
 			if (user != null && BaseStr.IsTagEqNCEng(name, 0, name.length, "Team")) cu.Team = int(val);
 			if (user != null && BaseStr.IsTagEqNCEng(name, 0, name.length, "PowerMul")) cu.PowerMul = Math.round(int(val) * 256 / 100);
 			if (user != null && BaseStr.IsTagEqNCEng(name, 0, name.length, "ManufMul")) cu.ManufMul = int(val);
+			if (user != null && BaseStr.IsTagEqNCEng(name, 0, name.length, "LootMul")) cu.LootMul = Math.round(int(val) * 256 / 100);
+			if (user != null && BaseStr.IsTagEqNCEng(name, 0, name.length, "LootFPMul")) cu.LootForPlayerMul = Math.round(int(val) * 256 / 100);
 			if (user != null && BaseStr.IsTagEqNCEng(name, 0, name.length, "Race")) {
 				for (i = 0; i < Common.RaceSysName.length; i++) {
 					if (BaseStr.IsTagEqNCEng(val, 0, val.length, Common.RaceSysName[i])) { cu.Race = i; break; }
@@ -14898,6 +14925,8 @@ at flash.net::URLLoader/onComplete()*/
 			if (cu.Race != undefined) user.m_Race = cu.Race;
 			if (cu.PowerMul != undefined) user.m_PowerMul = cu.PowerMul;
 			if (cu.ManufMul != undefined) user.m_ManufMul = cu.ManufMul;
+			if (cu.LootMul != undefined) user.m_LootMul = cu.LootMul;
+			if (cu.LootForPlayerMul != undefined) user.m_LootForPlayerMul = cu.LootForPlayerMul;
 			if(cu.AutoProgress!=undefined) {
 				user.m_Flag &= ~(Common.UserFlagAutoProgress);
 				if (cu.AutoProgress) user.m_Flag |= Common.UserFlagAutoProgress;
@@ -14938,6 +14967,14 @@ at flash.net::URLLoader/onComplete()*/
 			d+="--"+boundary+"\r\n";
 			d+="Content-Disposition: form-data; name=\"mmul\"\r\n\r\n";
 			d += user.m_ManufMul.toString() + "\r\n"
+
+			d+="--"+boundary+"\r\n";
+			d+="Content-Disposition: form-data; name=\"loot\"\r\n\r\n";
+			d += user.m_LootMul.toString() + "\r\n"
+
+			d+="--"+boundary+"\r\n";
+			d+="Content-Disposition: form-data; name=\"lootfp\"\r\n\r\n";
+			d += user.m_LootForPlayerMul.toString() + "\r\n"
 
 			d += "--" + boundary + "\r\n";
 			d += "Content-Disposition: form-data; name=\"flag\"\r\n\r\n";
@@ -15451,7 +15488,7 @@ Log("a:",a);
 						if (ship.m_Type) {
 							u = StatUserGet(ul, ship.m_Owner);
 							if (u.Ships[ship.m_Type] == undefined) u.Ships[ship.m_Type] = 0;
-							u.Ships[ship.m_Type] += ship.m_Cnt++;
+							u.Ships[ship.m_Type] += ship.m_Cnt;
 
 							if (ship.m_ItemType) {
 								if (u.GoodsShip[ship.m_ItemType] == undefined) u.GoodsShip[ship.m_ItemType] = 0;
@@ -16632,7 +16669,7 @@ Log("a:",a);
 		else if (owner == Common.OwnerAI1) newcode += "OwnerAI1";
 		else if (owner == Common.OwnerAI2) newcode += "OwnerAI2";
 		else if (owner == Common.OwnerAI3) newcode += "OwnerAI3";
-		else newcode += "OwnerAI0";
+		else newcode += "0";// "OwnerAI0";
 		newcode += ",";
 		newcode += "0x" + key.toString(16);
 		newcode += ",";
@@ -17161,6 +17198,7 @@ Log("a:",a);
 	public function EditMapOptionsAI(obj:Object, owner:uint):void
 	{
 		var i:int;
+		var but:CtrlBut;
 		
 		var user:User=UserList.Self.GetUser(owner);
 		if(user==null) return;
@@ -17171,6 +17209,9 @@ Log("a:",a);
 		FI.caption = Common.TxtEdit.OwnerOptions + " (" + (owner & 15).toString() + ")";
 		//FI.SetColSize(0, 0, 100);
 		//FI.SetColSize(0, 2, 80);
+
+		FI.TabAdd("main");
+		FI.tab = 0;
 
 		FI.AddLabel(Common.TxtEdit.Name + ":");
 		FI.Col();
@@ -17201,25 +17242,47 @@ Log("a:",a);
 		FI.AddLabel(Common.TxtEdit.ManufMul + ":");
 		FI.Col();
 		FI.AddInput((user.m_ManufMul).toString(), 6, true, 0, false);
+		
+		FI.AddLabel(Common.TxtEdit.LootMul + ":");
+		FI.Col();
+		FI.AddInput(Math.round(user.m_LootMul * 100 / 256).toString(), 6, true, 0, false);
+
+		FI.AddLabel(Common.TxtEdit.LootForPlayerMul + ":");
+		FI.Col();
+		FI.AddInput(Math.round(user.m_LootForPlayerMul * 100 / 256).toString(), 6, true, 0, false);
 
 		FI.AddCheckBox((user.m_Flag & Common.UserFlagVisAll) != 0, Common.TxtEdit.VisAll);
 //		FI.AddCheckBox((user.m_Flag & Common.UserFlagAutoProgress) != 0, Common.TxtEdit.AutoProgress);
 		FI.AddCheckBox((user.m_Flag & Common.UserFlagPlayerControl) != 0, Common.TxtEdit.PlayerControl);
 		FI.AddCheckBox((user.m_Flag & Common.UserFlagImportIfEnemy) != 0, Common.TxtEdit.ImportIfEnemy);
 
+		FI.TabAdd("cpt");
+
 		FI.AddLabel(Common.TxtEdit.CptAI0 + ":");
 		FI.Col();
 		var cpt0i:CtrlInput = FI.AddInput(Txt_CptName(Server.Self.m_CotlId, owner, 0xffffff00 | ((owner & 15) << 4) | (0)), 15, true, Server.Self.m_Lang, false);
+		cpt0i.widthMin = 200;
+		FI.Col();
+		but = FI.AddBut("TECH");
+		but.addEventListener(MouseEvent.CLICK, EditMapOptionsAICpt0);
 
 		FI.AddLabel(Common.TxtEdit.CptAI1 + ":");
 		FI.Col();
 		var cpt1i:CtrlInput = FI.AddInput(Txt_CptName(Server.Self.m_CotlId, owner, 0xffffff00 | ((owner & 15) << 4) | (1)), 15, true, Server.Self.m_Lang, false);
+		cpt1i.widthMin = 200;
+		FI.Col();
+		but = FI.AddBut("TECH");
+		but.addEventListener(MouseEvent.CLICK, EditMapOptionsAICpt1);
 
 		FI.AddLabel(Common.TxtEdit.CptAI2 + ":");
 		FI.Col();
 		var cpt2i:CtrlInput = FI.AddInput(Txt_CptName(Server.Self.m_CotlId, owner, 0xffffff00 | ((owner & 15) << 4) | (2)), 15, true, Server.Self.m_Lang, false);
-		
-		var btn0:CtrlBut = new CtrlBut();
+		cpt2i.widthMin = 200;
+		FI.Col();
+		but = FI.AddBut("TECH");
+		but.addEventListener(MouseEvent.CLICK, EditMapOptionsAICpt2);
+
+/*		var btn0:CtrlBut = new CtrlBut();
 		btn0.caption = "TECH";
 		btn0.addEventListener(MouseEvent.CLICK, EditMapOptionsAICpt0);
 		FI.CtrlAdd(btn0);
@@ -17232,11 +17295,11 @@ Log("a:",a);
 		var btn2:CtrlBut = new CtrlBut();
 		btn2.caption = "TECH";
 		btn2.addEventListener(MouseEvent.CLICK, EditMapOptionsAICpt2);
-		FI.CtrlAdd(btn2);
+		FI.CtrlAdd(btn2);*/
 
 		FI.Run(EditMapOptionsAISend,Common.TxtEdit.ButEdit,StdMap.Txt.ButCancel);
 
-		cpt0i.width = cpt0i.width - btn0.width - 10;
+/*		cpt0i.width = cpt0i.width - btn0.width - 10;
 		btn0.x = FI.contentX + cpt0i.x + cpt0i.width + 10;
 		btn0.y = FI.contentY + cpt0i.y;
 
@@ -17246,7 +17309,7 @@ Log("a:",a);
 
 		cpt2i.width = cpt2i.width - btn2.width - 10;
 		btn2.x = FI.contentX + cpt2i.x + cpt2i.width + 10;
-		btn2.y = FI.contentY + cpt2i.y;
+		btn2.y = FI.contentY + cpt2i.y;*/
 	}
 	
 	public function EditMapOptionsAICpt0(e:Event):void
@@ -17287,6 +17350,8 @@ Log("a:",a);
 		user.m_Race = FI.GetInt(no++);
 		user.m_PowerMul = Math.round(FI.GetInt(no++) * 256 / 100);
 		user.m_ManufMul = FI.GetInt(no++);
+		user.m_LootMul = Math.round(FI.GetInt(no++) * 256 / 100);
+		user.m_LootForPlayerMul = Math.round(FI.GetInt(no++) * 256 / 100);
 		user.m_Flag &= ~(Common.UserFlagAutoProgress | Common.UserFlagPlayerControl | Common.UserFlagVisAll | Common.UserFlagImportIfEnemy);
 		if (FI.GetInt(no++) != 0) user.m_Flag |= Common.UserFlagVisAll;
 //		if (FI.GetInt(no++) != 0) user.m_Flag |= Common.UserFlagAutoProgress;
@@ -17319,6 +17384,14 @@ Log("a:",a);
 		d+="--"+boundary+"\r\n";
 		d+="Content-Disposition: form-data; name=\"mmul\"\r\n\r\n";
 		d += user.m_ManufMul.toString() + "\r\n"
+
+		d+="--"+boundary+"\r\n";
+		d+="Content-Disposition: form-data; name=\"loot\"\r\n\r\n";
+		d += user.m_LootMul.toString() + "\r\n"
+
+		d+="--"+boundary+"\r\n";
+		d+="Content-Disposition: form-data; name=\"lootfp\"\r\n\r\n";
+		d += user.m_LootForPlayerMul.toString() + "\r\n"
 
 		d+="--"+boundary+"\r\n";
 		d+="Content-Disposition: form-data; name=\"flag\"\r\n\r\n";
@@ -18750,7 +18823,7 @@ Log("a:",a);
 						}
 					}
 
-					if ((planet.m_Flag & Planet.PlanetFlagRich) != 0) cnt *= 3;
+					if ((planet.m_Flag & Planet.PlanetFlagRich) != 0) cnt *= Common.PlanetRichMul;
 
 					if(Common.ItemIsFinalLoop(itemtype)) {
 						if ((m_Access & Common.AccessPlusarModule) && (ownerid == Server.Self.m_UserId && PlusarManuf())) {
@@ -19316,7 +19389,7 @@ var t02:int = getTimer();
 		var clr:uint = m_BG.m_Cfg.FillColor;
 		C3D.Context.clear(C3D.ClrToFloat * ((clr >> 16) & 255), C3D.ClrToFloat * ((clr >> 8) & 255), C3D.ClrToFloat * ((clr) & 255), 0, 1.0, 0);
 
-		if (m_BG.Prepare()) {
+		if (m_Set_FonVis && m_BG.Prepare()) {
 			for (i = -1; i < 4; i++) m_BG.Draw(OffsetX, OffsetY, i);
 		}
 

@@ -59,6 +59,8 @@ public class User
 	public var m_Team:int = 0;
 	public var m_PowerMul:uint = 0;
 	public var m_ManufMul:uint = 0;
+	public var m_LootMul:uint = 0;
+	public var m_LootForPlayerMul:uint = 0;
 
 	public var m_Tech:Vector.<uint> = new Vector.<uint>(Common.TechCnt, true);
 	public var m_Cpt:Array = null;

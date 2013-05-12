@@ -703,16 +703,16 @@ public class FormNews extends Sprite
 
 			if (!EM.HS.visible) EM.m_FormInfoBar.clickGalaxy(null);
 			if (EM.HS.visible) {
-				EM.FormHideAll();
+//				EM.FormHideAll();
 
-				if (EM.m_FormHist.visible) EM.m_FormHist.Hide();
-				EM.m_FormHist.m_CotlId=Server.Self.m_CotlId;
-				EM.m_FormHist.Show();
-				EM.m_FormHist.ChangeMode(EM.m_FormHist.m_ModeFind);
+//				if (EM.m_FormHist.visible) EM.m_FormHist.Hide();
+//				EM.m_FormHist.m_CotlId=Server.Self.m_CotlId;
+//				EM.m_FormHist.Show();
+//				EM.m_FormHist.ChangeMode(EM.m_FormHist.m_ModeFind);
 
-				if(n.m_Type == NewsTypeImport) EM.m_FormHist.m_FindQuery.text = Common.Txt.FindImportKeyword + " " + Common.Txt.FindCotlKeyword + " " + EM.Txt_CotlOwnerName(0, user.m_Id);
-				else EM.m_FormHist.m_FindQuery.text = Common.Txt.FindExportKeyword + " " + Common.Txt.FindCotlKeyword + " " + EM.Txt_CotlOwnerName(0, user.m_Id);
-				EM.m_FormHist.clickFind(null);
+//				if(n.m_Type == NewsTypeImport) EM.m_FormHist.m_FindQuery.text = Common.Txt.FindImportKeyword + " " + Common.Txt.FindCotlKeyword + " " + EM.Txt_CotlOwnerName(0, user.m_Id);
+//				else EM.m_FormHist.m_FindQuery.text = Common.Txt.FindExportKeyword + " " + Common.Txt.FindCotlKeyword + " " + EM.Txt_CotlOwnerName(0, user.m_Id);
+//				EM.m_FormHist.clickFind(null);
 			}
 
 		} else if (n.m_Type == NewsTypeCotlCapture || n.m_Type == NewsTypeCotlCtrl || n.m_Type == NewsTypeCotlPrepare) {
@@ -723,13 +723,16 @@ public class FormNews extends Sprite
 			if (EM.HS.visible) {
 				EM.FormHideAll();
 				
-				if (EM.m_FormHist.visible) EM.m_FormHist.Hide();
-				EM.m_FormHist.m_CotlId=Server.Self.m_CotlId;
-				EM.m_FormHist.Show();
-				EM.m_FormHist.ChangeMode(EM.m_FormHist.m_ModeFind);
+				if (EmpireMap.Self.m_FormStorage.m_CotlId == 0) EmpireMap.Self.m_FormStorage.m_CotlId = Server.Self.m_CotlId;
+				EmpireMap.Self.m_FormStorage.SearchCotl(str);
+				
+//				if (EM.m_FormHist.visible) EM.m_FormHist.Hide();
+//				EM.m_FormHist.m_CotlId=Server.Self.m_CotlId;
+//				EM.m_FormHist.Show();
+//				EM.m_FormHist.ChangeMode(EM.m_FormHist.m_ModeFind);
 
-				EM.m_FormHist.m_FindQuery.text = Common.Txt.FindCotlKeyword + " " + str;
-				EM.m_FormHist.clickFind(null);
+//				EM.m_FormHist.m_FindQuery.text = Common.Txt.FindCotlKeyword + " " + str;
+//				EM.m_FormHist.clickFind(null);
 			}
 
 		} else if (n.m_Type == NewsTypeCotlReady) {

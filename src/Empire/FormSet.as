@@ -20,6 +20,7 @@ public class FormSet extends FormStd
 	private var m_AccessKey:CtrlInput = null;
 	private var m_HourPlanetShield:CtrlInput = null;
 	private var m_Unprintable:CtrlCheckBox = null;
+	private var m_FonVis:CtrlCheckBox = null;
 	private var m_ScopeVis:CtrlCheckBox = null;
 	private var m_FPSShow:CtrlCheckBox = null;
 	private var m_FPSMax:CtrlInput = null;
@@ -64,6 +65,9 @@ public class FormSet extends FormStd
 		LocNextRow();
 
 		TabAdd(Common.Txt.FormSetTabGraph);
+
+		i = ItemCheckBox(Common.Txt.FormSetFon); m_FonVis = ItemObj(i) as CtrlCheckBox;
+		LocNextRow();
 
 		i = ItemCheckBox(Common.Txt.FormSetScopeVis); m_ScopeVis = ItemObj(i) as CtrlCheckBox;
 		LocNextRow();
@@ -118,6 +122,7 @@ public class FormSet extends FormStd
 		m_AccessKey.text = EmpireMap.Self.m_UserAccessKey.toString();
 		m_HourPlanetShield.text = Common.NormHour(EmpireMap.Self.m_UserHourPlanetShield + EmpireMap.Self.m_DifClientServerHour).toString();
 		m_Unprintable.check = EmpireMap.Self.m_Set_Unprintable;
+		m_FonVis.check = EmpireMap.Self.m_Set_FonVis;
 		m_ScopeVis.check = EmpireMap.Self.m_Set_ScopeVis;
 		m_FPSShow.check = EmpireMap.Self.m_Set_FPSOn;
 		m_FPSMax.text = EmpireMap.Self.m_Set_FPSMax.toString();
@@ -163,6 +168,7 @@ public class FormSet extends FormStd
 			FormChat.Self.ReloadMsg();
 		}
 		
+		EmpireMap.Self.m_Set_FonVis = m_FonVis.check;
 		EmpireMap.Self.m_Set_ScopeVis = m_ScopeVis.check;
 		EmpireMap.Self.m_Set_FPSOn = m_FPSShow.check;
 		EmpireMap.Self.SetFPSMax(int(m_FPSMax.text));
@@ -179,6 +185,7 @@ public class FormSet extends FormStd
 		var so:SharedObject = SharedObject.getLocal("EGEmpireSet");
 		if (so == null) return;
 		so.data.Unprintable = EmpireMap.Self.m_Set_Unprintable;
+		so.data.FonVis = EmpireMap.Self.m_Set_FonVis;
 		so.data.ScopeVis = EmpireMap.Self.m_Set_ScopeVis;
 		so.data.FPS = EmpireMap.Self.m_Set_FPSOn;
 		so.data.FPSMax = EmpireMap.Self.m_Set_FPSMax;
@@ -194,6 +201,7 @@ public class FormSet extends FormStd
 		if (so.data.hint == undefined) EmpireMap.Self.m_Set_Hint = true; else EmpireMap.Self.m_Set_Hint = so.data.hint;
 
 		if (so.data.Unprintable != undefined) EmpireMap.Self.m_Set_Unprintable = so.data.Unprintable;
+		if(so.data.FonVis!=undefined) EmpireMap.Self.m_Set_FonVis=so.data.FonVis;
 		if(so.data.ScopeVis!=undefined) EmpireMap.Self.m_Set_ScopeVis=so.data.ScopeVis;
 		if(so.data.FPS!=undefined) EmpireMap.Self.m_Set_FPSOn=so.data.FPS;
 		if(so.data.FPSMax!=undefined) {

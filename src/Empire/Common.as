@@ -46,7 +46,8 @@ public class Common
 
 	static public const GaalBarrierMax:int = 400000;
 
-	static public const MulFactor:int=10;
+	static public const PlanetRichMul:int = 2;
+	static public const MulFactor:int = 10;
 	static public const RelocateCost:int = 15000;
 	static public const BuyNameCost:int = 30000;
 	static public const CotlDevCost:int = 1000;
@@ -1982,6 +1983,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		TechResearchNext:"Следующая",
 		TechResearchNoMore:"Чтобы получить доступ к возможности задавать две технологии для изучения, вам надо активировать инжектор науки или контроля.",
 		TechNeedPrev:"Чтобы изучить данную технологию вы должны сначала изучить 2 технологии в вышестоящем ряду.",
+		TechNeedCadet:"Технологии 3 уровня можно изучить, только если вы достигли звания кадет.",
 		TechNeedPlusar:"Технологии начиная с 4 уровня можно изучить, только если активирован инжектор науки или контроля.",
 		TechUnResearchQuery:"Вы уверены, что хотите уничтожить технологию?",
 		TechShowFullList:"Ctrl - посмотреть все неизученные уровни технологии.",
@@ -2043,6 +2045,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		FormSetUnprintable:"Фильтр нецензурной лексики",
 		FormSetTabGame:"игра",
 		FormSetTabGraph:"графика",
+		FormSetFon:"отображение фона.",
 		FormSetShieldPercent:"отдельное отображение числовых процентов щита.",
 		FormSetButSave:"СОХРАНИТЬ",
 		FormSetButFon:"ФОН",
@@ -3104,6 +3107,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 			+",ас[с]асин"
 			+",рубл"
 			+",страх"
+			+",флаг"
 		,
 		BadWord:""
 			+"с[ц]ук(а){и},с[ц]уч[ь][ка]{ар[а]{ы}}"
@@ -3179,6 +3183,8 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		MapSave:"Сохранить карту",
 		PowerMul:"Сила кораблей (%)",
 		ManufMul:"Скорость производства (*)",
+		LootMul:"Лут (%)",
+		LootForPlayerMul:"Лут игрока (%)",
 		MapUnload:"Выгрузить карту",
 		MapUnloadQuery:"Вы действительно хотите выгрузить карту?",
 //		MapUnloadNormal:"Выгрузить игровую карту",
