@@ -64,8 +64,8 @@ public class HyperspaceContainer extends HyperspaceEntity
 
 		m_Model = new C3DModel();
 		cm = m_Model.AddChild();
-		cm.m_MeshPath = "Container/part.mesh";
-		cm.m_Texture0 = C3D.GetTexture("Container/dif.png");
+		cm.m_MeshPath = "container/part.mesh";
+		cm.m_Texture0 = C3D.GetTexture("container/dif.png");
 		cm.m_Texture1 = C3D.GetTexture("empty");
 		cm.m_Texture2 = C3D.GetTexture("empty");
 		//cm.m_Flag |= C3DModel.FlagMeshShadow;
