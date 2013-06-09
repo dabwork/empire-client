@@ -978,7 +978,7 @@ public class FormInfoBar extends Sprite
 			var txtvis:Boolean=false;
 
 			if(obj.Type==Common.TicketTypeAttack) {
-				if(obj.State==0) {
+				if(obj.State==0 || obj.State==2) {
 					if(m_TicketDown==obj.TicketId) bm.bitmapData=m_TicketAttackD;
 					else if(m_TicketCur==obj.TicketId) bm.bitmapData=m_TicketAttackA;
 					else bm.bitmapData=m_TicketAttackN;
@@ -1801,7 +1801,12 @@ if(EM.m_FormChat!=null && EM.m_Debug) EM.m_FormChat.AddDebugMsg("Sound: "+s);
 		
 //		EM.m_FormMenu.Add(Common.Txt.FormMenuTraining, clickTraining);
 //		EM.m_FormMenu.Add(Common.Txt.FormMenuAdviser, clickAdviser);
-		
+
+		if (EM.m_CotlType == Common.CotlTypeUser && EM.m_RootCotlId == Server.Self.m_CotlId && !EM.HS.visible && !EM.m_Hangar.visible) {
+			EM.m_FormMenu.Add(Common.Txt.FormMenuDefSave, clickDefSave);
+			EM.m_FormMenu.Add(Common.Txt.FormMenuDefLoad, clickDefLoad);
+		}
+
 		EM.m_FormMenu.Add();
 		
 		CONFIG::player {
@@ -1854,6 +1859,49 @@ if(EM.m_FormChat!=null && EM.m_Debug) EM.m_FormChat.AddDebugMsg("Sound: "+s);
 			if (EM.stage.displayState == StageDisplayState.FULL_SCREEN_INTERACTIVE || EM.stage.displayState == StageDisplayState.FULL_SCREEN) EM.stage.displayState = StageDisplayState.NORMAL;
 			else EM.stage.displayState = StageDisplayState.FULL_SCREEN_INTERACTIVE;
 		}
+	}
+
+	public function clickDefSave(...args):void
+	{
+		if (EM.m_GameState & Common.GameStateEnemy) {
+			FormMessageBox.RunErr(Common.Txt.WarningOpErrEnemy);
+			return;
+		}
+		FormMessageBox.Run(Common.Txt.FormMenuDefSaveQuery, StdMap.Txt.ButNo, StdMap.Txt.BuyYes, sendDefSave);
+	}
+
+	public function sendDefSave():void
+	{
+		Server.Self.Query("embuilddef", "&save=1", recvBuildDef, false);
+	}
+
+	public function clickDefLoad(...args):void
+	{
+		if (EM.m_GameState & Common.GameStateEnemy) {
+			FormMessageBox.RunErr(Common.Txt.WarningOpErrEnemy);
+			return;
+		}
+		FormMessageBox.Run(Common.Txt.FormMenuDefLoadQuery, StdMap.Txt.ButNo, StdMap.Txt.BuyYes, sendDefLoad);
+	}
+
+	public function sendDefLoad():void
+	{
+		Server.Self.Query("embuilddef", "&save=0", recvBuildDef, false);
+	}
+
+	public function recvBuildDef(e:Event):void
+	{
+		var loader:URLLoader = URLLoader(e.target);
+		var buf:ByteArray=loader.data;
+		buf.endian=Endian.LITTLE_ENDIAN;
+		var err:int = buf.readUnsignedByte();
+		
+		if (err == Server.ErrorNoEnoughRes) {
+			var val:int = buf.readUnsignedInt();
+			FormMessageBox.RunErr(BaseStr.Replace(Common.Txt.FormMenuDefNeedModule, "<Val>", "[clr]" + BaseStr.FormatBigInt(val) + "[/clr]"));
+		}
+		else if (EM.ErrorFromServer(err)) return;
+		else FormMessageBox.Run(Common.Txt.FormMenuDefOpOk);
 	}
 }
 

@@ -136,6 +136,7 @@ public class FormSplit extends FormSplitClass
 	public function Run(secx:int,secy:int,planetnum:int,shipnum:int,tonum:int):void
 	{
 		var i:int;
+		var idesc:Item;
 
 		m_SectorX=secx;
 		m_SectorY=secy;
@@ -153,7 +154,17 @@ public class FormSplit extends FormSplitClass
 		if(fromship.m_Type==Common.ShipTypeNone) return;
 
 		var toship:Ship=m_Map.GetShip(m_SectorX,m_SectorY,m_PlanetNum,m_ToNum);
-		if(!toship) return;
+		if (!toship) return;
+		
+		var onitem:Boolean = true;
+		if (fromship.m_ItemType) {
+			idesc = UserList.Self.GetItem(fromship.m_ItemType);
+			if (!idesc || idesc.IsEq()) onitem = false;
+		}
+		if (toship.m_ItemType) {
+			idesc = UserList.Self.GetItem(toship.m_ItemType);
+			if (!idesc || idesc.IsEq()) onitem = false;
+		}
 		
 		ItfInit();
 		
@@ -180,24 +191,24 @@ public class FormSplit extends FormSplitClass
 		EditCnt.setFocus();
 		EditCnt.setSelection(0,EditCnt.text.length);
 
-		if(fromship.m_ItemType==Common.ItemTypeNone) {
-			LabelItem.visible=false;
-			ItemCnt.visible=false;
+		if (!onitem || fromship.m_ItemType == Common.ItemTypeNone) {
+			LabelItem.visible = false;
+			ItemCnt.visible = false;
 
-			ButSplit.y=91;
-			ButCancel.y=91;
-			FrameBG.height=120;
+			ButSplit.y = 91;
+			ButCancel.y = 91;
+			FrameBG.height = 120;
 		} else {
-			LabelItem.visible=true;
-			ItemCnt.visible=true;
+			LabelItem.visible = true;
+			ItemCnt.visible = true;
 
-			LabelItem.text=Common.ItemName[fromship.m_ItemType]+":";
+			LabelItem.text = m_Map.ItemName(fromship.m_ItemType) + ":";
 
-			ButSplit.y=121;
-			ButCancel.y=121;
-			FrameBG.height=150;
+			ButSplit.y = 121;
+			ButCancel.y = 121;
+			FrameBG.height = 150;
 		}
-		CheckModule.visible=false;
+		CheckModule.visible = false;
 		
 		UpdateBar();
 	}

@@ -107,6 +107,8 @@ public class GraphShip// extends Sprite
 	public var m_NameTex:Texture = null;
 
 	public var m_IsFlyOtherPlanet:Boolean = false;
+	
+	public var m_SpeedOld:Number = 0.0;
 
 	public static var m_TextTex:Texture = null;
 	public static var m_TextTexWidth:int = 0;
@@ -132,8 +134,8 @@ public class GraphShip// extends Sprite
 		m_Race=-1;
 		m_ItemType=-1;
 
-		m_PosX=0;
-		m_PosY=0;
+		m_PosX = 0;
+		m_PosY = 0;
 		m_Angle=0;
 		m_LastTime=0;
 		
@@ -1177,66 +1179,76 @@ public class GraphShip// extends Sprite
 
 	public function CalcPos():void
 	{
-		var ra:Array;
+		var k:Number;
+		
 		var ct:Number=Common.GetTime();// (new Date()).getTime();
+		var st:Number = ct - m_LastTime;
+		if (st > 1000) m_LastTime = 0;
 		if(m_LastTime==0 || (m_Flag & Common.ShipFlagExchange)) {
-			ra=CalcShipServerPos();
-			m_LastTime=ct;
-			m_PosX=ra[0];
-			m_PosY=ra[1];
-			m_Angle=ra[2];
+			var ra:Array;
+			ra = CalcShipServerPos();
+			m_LastTime = ct;
+			m_PosX = ra[0];
+			m_PosY = ra[1];
+			m_Angle = ra[2];
 			return;
 		}
-		var st:Number=ct-m_LastTime;
-		if(st<10) return;
+		if (st < 10) return;
 		m_LastTime=ct;
 
 		var sec:Sector=m_Map.GetSector(m_SectorX,m_SectorY);
 		if(!sec) return;
 		var planet:Planet=sec.m_Planet[m_PlanetNum];
 
-		ra=m_Map.CalcShipPlace(planet,m_ShipNum);
-		var needx:Number=ra[0];
-		var needy:Number=ra[1];
-		var needangle:Number=ra[2];
+		m_Map.CalcShipPlaceEx(planet, m_ShipNum, EmpireMap.m_TPos);
+		var needx:Number = EmpireMap.m_TPos.x;// ra[0];
+		var needy:Number = EmpireMap.m_TPos.y;// ra[1];
+		var needangle:Number = EmpireMap.m_TPos.z;// ra[2];
 
-		var speed:Number=0.05*st;
-		var aspeed:Number=Math.PI/180*0.1*st;
-		if(Common.IsBase(m_Type)) aspeed=Math.PI;
+		var speed:Number = 0.05 * st;
+		var aspeed:Number = Math.PI / 180 * 0.1 * st;
+		if (Common.IsBase(m_Type)) aspeed = Math.PI;
 
-		var dirx:Number=needx-m_PosX;
-		var diry:Number=needy-m_PosY;
-		var dist:Number=Math.sqrt(dirx*dirx+diry*diry);
-		dirx/=dist;
-		diry/=dist;
+		var dirx:Number = needx - m_PosX;
+		var diry:Number = needy - m_PosY;
+		var dist:Number = Math.sqrt(dirx * dirx + diry * diry);
+		if (dist <= 0.001) { dirx = 0; diry = 0; }
+		else { k = 1.0 / dist; dirx *= k; diry *= k; }
 
-		var at:Number=m_Map.m_ServerCalcTime;
-		if(m_ArrivalTime>at) {
-			var speedold:Number=speed;
-			speed=(dist/Math.max(1000,m_ArrivalTime-at))*st;
-			if(speed>10) speed=10;
-
-			aspeed=speed/speedold*aspeed;
-
-//if(m_Type==Common.ShipTypeCorvette && m_Owner==Server.Self.m_UserId) trace("speed = "+speed+" ServerTime="+at+" ArrivalTime="+m_ArrivalTime+" sub="+(m_ArrivalTime-at));
-		}
-
-		if(dist>speed*10) {
-			needangle=Math.atan2(dirx,-diry);
-		}
-
-		var ad:Number=BaseMath.AngleDist(m_Angle,needangle);
-		if(Math.abs(ad)<=aspeed) m_Angle=needangle;
-		else {
-			if(ad<0) m_Angle=BaseMath.AngleNorm(m_Angle-aspeed);
-			else m_Angle=BaseMath.AngleNorm(m_Angle+aspeed);
+		var at:Number = m_Map.m_ServerCalcTime;
+		if (m_ArrivalTime > at) {
+			var speedold:Number = speed;
+			speed = (dist / Math.max(1000, m_ArrivalTime - at));// * st;
+			if (speed < 0.005) speed = 0.005;
+			else if (speed > 10.0) speed = 10.0;
 			
-			if(dist<200) {
-				speed*=1.0-Math.abs(ad)/Math.PI;
+			m_SpeedOld = speed;
+			speed *= st;
+
+			if (speedold != 0) aspeed = speed / speedold * aspeed;
+//if(m_Type==Common.ShipTypeCorvette && m_Owner==Server.Self.m_UserId) trace("speed = "+speed+" ServerTime="+at+" ArrivalTime="+m_ArrivalTime+" sub="+(m_ArrivalTime-at));
+		} else if (m_SpeedOld > 0) {
+			speed = m_SpeedOld * st;
+		}
+
+		if (dist > 10/*speed * 10*/) {
+			needangle = Math.atan2(dirx, -diry);
+		} else {
+			m_Prymo = true;
+		}
+
+		var ad:Number = BaseMath.AngleDist(m_Angle, needangle);
+		if (Math.abs(ad) <= aspeed) m_Angle = needangle;
+		else {
+			if (ad < 0) m_Angle = BaseMath.AngleNorm(m_Angle - aspeed);
+			else m_Angle = BaseMath.AngleNorm(m_Angle + aspeed);
+			
+			if (dist < 200) {
+				speed *= 1.0 - Math.abs(ad) / Math.PI;
 			}
 		}
 		
-		if(dist>100) m_Prymo=false;		
+		if (dist > 100) m_Prymo = false;		
 
 		if (dist <= speed) {
 			m_PosX = needx;
@@ -2108,7 +2120,7 @@ public class GraphShip// extends Sprite
 
 			clr = C3D.ClrReplaceAlpha(0x000000, 0.5 * alpha, true);
 			TextRect(tx, ty, m_HPBarMax * 5 + 1, 6, clr);
-			
+
 			clr = C3D.ClrReplaceAlpha(0xff0000, alpha * (m_HPBarState == 0?1.0:0.5), true);
 			TextImg(m_TextTex, tx, ty, 1 + m_HPBarVal * 5, 5, clr, 0, 496.0 / 512.0, (1 + m_HPBarVal * 5) / 1024.0, (496.0 + 5.0) / 512.0);
 		}
@@ -2126,20 +2138,6 @@ public class GraphShip// extends Sprite
 			TextImg(m_TextTex, tx, ty, 1 + m_ShieldBarVal * 5, 5, clr, 0, 496.0 / 512.0, (1 + m_ShieldBarVal * 5) / 1024.0, (496.0 + 5.0) / 512.0);
 		}
 	}
-/*		var i:int = 0;
-		
-		m_HPBar.graphics.lineStyle(0, 0x0, 0.0);
-
-		m_HPBar.graphics.beginFill(0x000000, 0.8);
-		m_HPBar.graphics.drawRect(0, 0, m_HPBarMax*5+1, 6);
-		m_HPBar.graphics.endFill();
-		
-		for (i = 0; i < m_HPBarVal; i++) {
-			if(m_HPBarState==0)  m_HPBar.graphics.beginFill(0xff0000, 0.9);
-			else  m_HPBar.graphics.beginFill(0xff0000, 0.4);
-			m_HPBar.graphics.drawRect(1 + i * 5, 1, 4, 4);
-			m_HPBar.graphics.endFill();
-		}*/
 
 	public static function DrawText():void
 	{

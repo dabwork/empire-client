@@ -11,6 +11,9 @@ public class HangarSlot
 	public var m_ItemType:uint = 0;
 	public var m_ItemCnt:int = 0;
 	public var m_ItemBroken:int = 0;
+	
+	public var m_Group:uint = 0;
+	public var m_Energy:int = 0;
 }
 	
 }

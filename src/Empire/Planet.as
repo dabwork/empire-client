@@ -82,6 +82,8 @@ package Empire
 		public var m_FindMask:uint = 0;
 		
 		public var m_Vis:Boolean = false;
+		
+		public var m_ExistEnemy:Boolean = false;
 
 		static public const PlanetCellCnt:int = 12;
 		static public const PlanetItemCnt:int = 16;

@@ -16,7 +16,7 @@ public class FleetItem
 	public var m_SlotN:Sprite = null;
 	public var m_SlotC:Sprite = null;
 	public var m_SlotA:Sprite = null;
-	public var m_Img:Sprite=null;
+	public var m_Img:DisplayObject=null;
 	public var m_Txt:TextField = null;
 	public var m_ShowRow:int = -1;
 	

@@ -25,7 +25,7 @@ import Empire.FormDialog;
 
 public class EmpireMap extends StdMap
 {
-	public static const GameVersion:int = 179;
+	public static const GameVersion:int = 181;
 	public static const GameVersionSub:int = 0;// String = "";
 
 	public var RunFromLocal:Boolean = true;
@@ -124,7 +124,7 @@ public class EmpireMap extends StdMap
 	public var m_OpsTeamOwner:int;
 	public var m_OpsTeamEnemy:int;
 	public var m_OpsJumpRadius:int = Common.DefaultJumpRadius;
-	
+
 	public var JumpRadius2:int = Common.DefaultJumpRadius * Common.DefaultJumpRadius;
 
 	private var m_Sector:Array=null;
@@ -176,6 +176,8 @@ public class EmpireMap extends StdMap
 	public static var ActionWormhole:int = 16;
 	public static var ActionLink:int = 17;
 	public static var ActionEject:int = 18
+	public static var ActionAntiShield:int = 19;
+	public static var ActionWormholeAtk:int = 20;
 
 	public var m_Action:int = ActionNone;
 	public var m_ActionShipNum:int = -1;
@@ -242,6 +244,7 @@ public class EmpireMap extends StdMap
 	public var m_UserCitadelBuildDate:Number = 0;
 	public var m_UserQuestId:Vector.<int> = new Vector.<int>(QEManager.QuestMax);
 	public var m_UserExistClone:Boolean = false;
+	public var m_UserActiveAtk:Boolean = false;
 	public var m_UnionId:uint=0;
 	public var m_UnionAccess:uint=0;
 	public var m_UnionIdOld:uint=0;
@@ -293,6 +296,7 @@ public class EmpireMap extends StdMap
 	public var m_FormItemBalans:FormItemBalans;
 	public var m_FormCombat:FormCombat;
 	public var m_FormNews:FormNews;
+	public var m_FormItemManager:FormItemManager;
 
 	//
 	public var m_FormDialog:FormDialog;
@@ -309,7 +313,6 @@ public class EmpireMap extends StdMap
 	public var m_FormPortal:FormPortal;
 	public var m_FormPlusar:FormPlusar;
 	public var m_FormPactList:FormPactList;
-	public var m_FormItemManager:FormItemManager;
 	public var m_FormQuestManager:FormQuestManager;
 	public var m_FormItemImg:FormItemImg;
 	public var m_FormPact:FormPact;
@@ -412,7 +415,7 @@ public class EmpireMap extends StdMap
 	
 	public var m_TmpVal:Number=0;
 
-	public var m_ReconnectTimer:Timer=new Timer(1000,1);
+	public var m_ReconnectTimer:Timer = new Timer(1000, 1);
 
 	public var m_LockTimeNewId:Number=0;
 	
@@ -740,6 +743,12 @@ public class EmpireMap extends StdMap
 		m_FormNewCpt=new FormNewCpt(this);
 		addIntoFloat(m_FormNewCpt);
 
+		m_FormItemManager=new FormItemManager(this);
+		addIntoFloat(m_FormItemManager);
+
+		m_FormItemImg=new FormItemImg(this);
+		addIntoFloat(m_FormItemImg);
+
 		//
 		m_GraphMovePath=new GraphMovePath(this);
 
@@ -779,17 +788,9 @@ public class EmpireMap extends StdMap
 		m_FormPactList.visible=false;
 		addAfterFloat(m_FormPactList);
 		
-		m_FormItemManager=new FormItemManager(this);
-		m_FormItemManager.visible=false;
-		addAfterFloat(m_FormItemManager);
-		
 		m_FormQuestManager = new FormQuestManager(this);
 		m_FormQuestManager.visible = false;
 		addAfterFloat(m_FormQuestManager);
-
-		m_FormItemImg=new FormItemImg(this);
-		m_FormItemImg.visible=false;
-		addAfterFloat(m_FormItemImg);
 
 		m_FormPact=new FormPact(this);
 		m_FormPact.visible=false;
@@ -1026,10 +1027,12 @@ public class EmpireMap extends StdMap
 	public override function onDeactivate(e:Event):void
 	{
 		super.onDeactivate(e);
-		
-		m_ScrollLeft=false;
-		m_ScrollRight=false;
-		m_ScrollUp=false;
+
+		m_MoveItem.Cancel();
+
+		m_ScrollLeft = false;
+		m_ScrollRight = false;
+		m_ScrollUp = false;
 		m_ScrollDown = false;
 		
 		m_MoveMap=false;
@@ -1163,6 +1166,8 @@ public class EmpireMap extends StdMap
 		m_StateSector = false;
 		m_StateEnterCotl = false;
 		
+		m_UserActiveAtk = false;
+		
 		cnt=(1<<Common.TeamMaxShift)*(1<<Common.TeamMaxShift);
 		for(i=0;i<cnt;i++) m_TeamRel[i]=0;
 		m_TeamRelVer=0;
@@ -1263,6 +1268,7 @@ public class EmpireMap extends StdMap
 		ClearForNewCotl();
 		
 		m_UserExistClone = false;
+		m_UserActiveAtk = false;
 
 		m_SendGv_Time = 0;
 
@@ -1887,7 +1893,7 @@ public class EmpireMap extends StdMap
 
 		if (m_Hangar.visible) { m_Hangar.onMouseDown(e); return; }
 		else if (HS.visible) { HS.onMouseDown(e); return; }
-		
+
 		e.stopImmediatePropagation();
 		m_ContentMenuShow = false;
 		
@@ -2103,6 +2109,27 @@ event_touchmove_cnt = 0;
 				}
 				return;
 
+			} else if(m_Action==ActionWormholeAtk) {
+				while(true) {
+					if (m_CurPlanetNum < 0) break;
+
+					if(m_MoveSectorX==m_CurSectorX && m_MoveSectorY==m_CurSectorY && m_MovePlanetNum==m_CurPlanetNum) {
+						MouseUnlock();
+						m_MoveMap=false;
+						m_Action=ActionNone;
+						CalcPick(mouseX,mouseY);
+						break;
+					}
+
+					ProcessActionWormholeAtk();
+
+					MouseUnlock();
+					m_Action=ActionNone;
+					CalcPick(mouseX,mouseY);
+					break;
+				}
+				return;
+
 			} else if(m_Action==ActionAntiGravitor) {
 				if(m_MoveSectorX==m_CurSectorX && m_MoveSectorY==m_CurSectorY && m_MovePlanetNum==m_CurPlanetNum && m_MoveShipNum==m_CurShipNum) {
 					m_MoveMap = false;
@@ -2142,6 +2169,21 @@ event_touchmove_cnt = 0;
 					return;
 				} else {
 					ActionBlackHoleProcess();
+				}
+				MouseUnlock();
+				m_Action=ActionNone;
+				CalcPick(mouseX,mouseY);
+				return;
+
+			} else if(m_Action==ActionAntiShield) {
+				if(m_MoveSectorX==m_CurSectorX && m_MoveSectorY==m_CurSectorY && m_MovePlanetNum==m_CurPlanetNum && m_MoveShipNum==m_CurShipNum) {
+					m_MoveMap = false;
+					MouseUnlock();
+					m_Action=ActionNone;
+					MenuShip();
+					return;
+				} else {
+					ActionAntiShieldProcess();
 				}
 				MouseUnlock();
 				m_Action=ActionNone;
@@ -2246,7 +2288,7 @@ event_touchmove_cnt = 0;
 
 			} else if(m_MoveMap) {
 				m_MoveMap = false;
-				if (m_Action == ActionNone || m_Action == ActionPortal || m_Action == ActionLink || m_Action == ActionEject || m_Action == ActionWormhole || m_Action == ActionExchange || m_Action == ActionConstructor || m_Action == ActionRecharge || m_Action == ActionAntiGravitor || m_Action == ActionGravWell || m_Action == ActionBlackHole || m_Action == ActionTransition) MouseUnlock();
+				if (m_Action == ActionNone || m_Action == ActionPortal || m_Action == ActionLink || m_Action == ActionEject || m_Action == ActionWormhole || m_Action == ActionWormholeAtk || m_Action == ActionExchange || m_Action == ActionConstructor || m_Action == ActionRecharge || m_Action == ActionAntiGravitor || m_Action == ActionGravWell || m_Action == ActionBlackHole || m_Action == ActionAntiShield || m_Action == ActionTransition) MouseUnlock();
 				CalcPick(mouseX,mouseY);
 
 				if(!m_MoveMapBegin && (CotlDevAccess(Server.Self.m_CotlId) || m_EmpireEdit) && m_Action==ActionNone) MenuEditGlobal();
@@ -2525,7 +2567,7 @@ event_touchmove_cnt = 0;
 		else if (HS.visible) { HS.onMouseMove(e); return; }
 
 		if (FormChat.Self.IsScroll()) return;
-		if (m_FormItemManager.IsScroll()) return;
+//		if (m_FormItemManager.IsScroll()) return;
 		
 		e.stopImmediatePropagation();
 		m_ScrollOn=true;
@@ -2555,7 +2597,7 @@ event_touchmove_cnt = 0;
 				m_FormFleetBar.onMouseMove(e);
 				return;
 
-			} else if (m_Action == ActionMove || m_Action == ActionPathMove || m_Action == ActionSplit || m_Action == ActionExchange || m_Action == ActionConstructor || m_Action == ActionRecharge || m_Action == ActionPortal || m_Action == ActionLink || m_Action == ActionEject || m_Action == ActionWormhole || m_Action == ActionAntiGravitor || m_Action == ActionGravWell || m_Action == ActionBlackHole || m_Action == ActionTransition) {
+			} else if (m_Action == ActionMove || m_Action == ActionPathMove || m_Action == ActionSplit || m_Action == ActionExchange || m_Action == ActionConstructor || m_Action == ActionRecharge || m_Action == ActionPortal || m_Action == ActionLink || m_Action == ActionEject || m_Action == ActionWormhole || m_Action == ActionWormholeAtk || m_Action == ActionAntiGravitor || m_Action == ActionGravWell || m_Action == ActionBlackHole || m_Action == ActionAntiShield || m_Action == ActionTransition) {
 
 			} else if(m_FormInfoBar.IsMouseIn()) {
 				return;
@@ -3009,6 +3051,7 @@ var t02:int = getTimer();
 			else if (m_Action == ActionAntiGravitor) { }
 			else if (m_Action == ActionGravWell) { }
 			else if (m_Action == ActionBlackHole) { }
+			else if (m_Action == ActionAntiShield) { }
 			else break;
 
 			var range:int = 150;
@@ -3068,6 +3111,7 @@ var t04:int = getTimer();
 		if(m_FormCptBar.m_QueryCptDscTimer!=0 && Common.GetTime()>m_FormCptBar.m_QueryCptDscTimer) { m_FormCptBar.m_QueryCptDscTimer=Common.GetTime()+3000; m_FormCptBar.QueryCptDsc(); }
 
 		HS.Takt();
+		m_Hangar.Takt();
 var t05:int = getTimer();
 		//Update();
 		SendLoadSector();
@@ -3796,6 +3840,7 @@ return;
 		var a_build:Boolean;
 		var str:String;
 		var str2:String;
+		var idesc:Item;
 
 		var isedit:Boolean=IsEdit();
 		//var servertime:Number = m_ServerTime;// GetServerTime();
@@ -4014,7 +4059,15 @@ return;
 							//if (!m_Set_Module) gs.SetPoints(0, "");
 							//else
 							if(ship.m_Type!=Common.ShipTypeTransport && !(m_CurSectorX==x && m_CurSectorY==y && m_CurPlanetNum==i && m_CurShipNum==k)) gs.SetPoints(0, "");
-							else if(ship.m_CargoType!=0 && ship.m_Race!=Common.RaceKling) gs.SetPoints(ship.m_CargoType,"          "+BaseStr.FormatBigInt(ship.m_CargoCnt)+" ");
+							else if (ship.m_CargoType != 0 && ship.m_Race != Common.RaceKling) {
+								idesc = UserList.Self.GetItem(ship.m_CargoType);
+								if (idesc == null) gs.SetPoints(0, "");
+								else if (idesc.IsEq()) {
+									if (ship.m_CargoCnt <= 0) gs.SetPoints(ship.m_CargoType, "           ");
+									else gs.SetPoints(ship.m_CargoType, "          " + Math.max(1, Math.floor(ship.m_CargoCnt * 100 / idesc.m_StackMax)).toString() + "% ");
+								}
+								else gs.SetPoints(ship.m_CargoType,"          "+BaseStr.FormatBigInt(ship.m_CargoCnt)+" ");
+							}
 							else gs.SetPoints(0,"");
 
 							if (Common.IsBase(ship.m_Type)) gs.SetFuel("");
@@ -4027,7 +4080,15 @@ return;
 								gs.SetItemCnt("");
 							} else {
 								gs.SetItemType(ship.m_ItemType);
-								if(ship.m_ItemType!=Common.ItemTypeNone && m_CurSectorX==x && m_CurSectorY==y && m_CurPlanetNum==i && m_CurShipNum==k) gs.SetItemCnt(ship.m_ItemCnt.toString());
+								if (ship.m_ItemType != Common.ItemTypeNone && m_CurSectorX == x && m_CurSectorY == y && m_CurPlanetNum == i && m_CurShipNum == k) {
+									idesc = UserList.Self.GetItem(ship.m_ItemType);
+									if (idesc == null) gs.SetItemCnt("");
+									else if (idesc.IsEq()) {
+										if (ship.m_ItemCnt <= 0) gs.SetItemCnt("");
+										else gs.SetItemCnt(Math.max(1, Math.floor(ship.m_ItemCnt * 100 / idesc.m_StackMax)).toString() + "%");
+									}
+									else gs.SetItemCnt(ship.m_ItemCnt.toString());
+								}
 								else gs.SetItemCnt("");
 							}
 
@@ -4193,6 +4254,17 @@ if(ship.m_Owner == 2147483650) {
 		}
 	}
 	
+	public function GraphShipClearPos():void
+	{
+		var i:int;
+		var gs:GraphShip;
+
+		for (i = m_ShipList.length - 1; i >= 0; i--) {
+			gs = m_ShipList[i];
+			gs.m_LastTime = 0;
+		}
+	}
+	
 	public function ItemUpdate():void
 	{
 		var i:int,u:int,k:int,x:int,y:int;
@@ -4200,6 +4272,7 @@ if(ship.m_Owner == 2147483650) {
 		var planet:Planet;
 		var ship:Ship;
 		var gi:GraphItem;
+		var idesc:Item;
 
 		for(i=0;i<m_ItemList.length;i++) {
 			gi=m_ItemList[i];
@@ -4255,7 +4328,13 @@ if(ship.m_Owner == 2147483650) {
 							}
 							gi.m_Tmp=1;
 							gi.SetType(ship.m_OrbitItemType);
-							gi.SetCnt(ship.m_OrbitItemCnt.toString());
+							
+							idesc = UserList.Self.GetItem(ship.m_OrbitItemType);
+							if (idesc && idesc.IsEq()) {
+								if (ship.m_OrbitItemCnt <= 0) gi.SetCnt("");
+								else gi.SetCnt(Math.max(1, Math.floor(ship.m_OrbitItemCnt * 100 / idesc.m_StackMax)).toString() + "%");
+							}
+							else gi.SetCnt(ship.m_OrbitItemCnt.toString());
 							gi.SetColor(0xffff00);
 							gi.Update();
 						}
@@ -4352,7 +4431,7 @@ if(ship.m_Owner == 2147483650) {
 						
 						for (k = 0; k < planet.m_BtlEvent.length; k++) {
 							var e:BtlEvent = planet.m_BtlEvent[k];
-							if (e.m_Type != BtlEvent.TypeExplosion) continue;
+							if (e.m_Type != BtlEvent.TypeExplosion && e.m_Type != BtlEvent.TypeExplosionBig) continue;
 
 							for (u = 0; u < m_ExplosionList.length; u++) {
 								ge=m_ExplosionList[u];
@@ -4368,7 +4447,7 @@ if(ship.m_Owner == 2147483650) {
 								if (gs.m_Id != e.m_Id) continue;
 							}
 
-							ge=new GraphExplosion(this,e.m_Slot == 100);
+							ge = new GraphExplosion(this, e.m_Slot == 100 || e.m_Type == BtlEvent.TypeExplosionBig);
 							ge.m_SectorX=x; ge.m_SectorY=y;
 							ge.m_PlanetNum=i;
 							ge.m_PlaceNum = e.m_Slot;
@@ -4586,11 +4665,11 @@ if(ship.m_Owner == 2147483650) {
 		m_JumpRadiusShow = false;
 		//m_GraphJumpRadius_PlanetNum=-1;
 
-		while(m_Action==ActionMove || m_Action==ActionPlanet  || m_Action==ActionRoute || m_Action==ActionShowRadius || m_Action==ActionExchange || m_Action==ActionAntiGravitor || m_Action==ActionGravWell || m_Action==ActionBlackHole || m_Action==ActionTransition) {
+		while(m_Action==ActionMove || m_Action==ActionPlanet  || m_Action==ActionRoute || m_Action==ActionShowRadius || m_Action==ActionExchange || m_Action==ActionAntiGravitor || m_Action==ActionGravWell || m_Action==ActionBlackHole || m_Action==ActionAntiShield || m_Action==ActionTransition) {
 			if(IsEdit()) {
 				if(m_Action==ActionMove) break;
 			}
-			if ((m_MoveSectorX != m_CurSectorX || m_MoveSectorY != m_CurSectorY || m_MovePlanetNum != m_CurPlanetNum) || (m_Action == ActionAntiGravitor || m_Action == ActionGravWell || m_Action == ActionBlackHole)) {
+			if ((m_MoveSectorX != m_CurSectorX || m_MoveSectorY != m_CurSectorY || m_MovePlanetNum != m_CurPlanetNum) || (m_Action == ActionAntiGravitor || m_Action == ActionGravWell || m_Action == ActionBlackHole || m_Action == ActionAntiShield)) {
 				m_JumpRadiusShow = true;
 //					m_GraphJumpRadius.m_SectorX=m_MoveSectorX;
 //					m_GraphJumpRadius.m_SectorY=m_MoveSectorY;
@@ -4684,6 +4763,9 @@ if(ship.m_Owner == 2147483650) {
 					}
 				}
 			}
+		}
+		if (m_CotlType == Common.CotlTypeUser && (m_GameState & Common.GameStateEnemy)) {
+			if (m_UserActiveAtk) s += " <font color='#00ff00'>" + Common.Txt.ActiveAtk + "</font>";
 		}
 
 		if((m_CotlType==Common.CotlTypeProtect) && !IsEdit() && m_GameTime!=0) {
@@ -4866,10 +4948,10 @@ if(ship.m_Owner == 2147483650) {
 		//m_BG.visible = !HS.visible;
 
 		if(!IsSpaceOff()) {
-			if(!IsEdit() && (m_Action==ActionPathMove || m_Action==ActionMove || m_Action==ActionExchange || m_Action==ActionConstructor || m_Action==ActionRecharge || m_Action==ActionPortal || m_Action==ActionLink || m_Action==ActionEject || m_Action==ActionWormhole || m_Action==ActionAntiGravitor || m_Action==ActionGravWell || m_Action==ActionBlackHole || m_Action==ActionTransition)) {
-				var fromship:Ship=GetShip(m_MoveSectorX,m_MoveSectorY,m_MovePlanetNum,m_MoveShipNum);
-				if(fromship!=null && (fromship.m_Type==Common.ShipTypeNone || !(m_MoveShipNum>=Common.ShipOnPlanetMax || AccessControl(fromship.m_Owner)))) {
-					m_Action=ActionNone;
+			if (!IsEdit() && (m_Action == ActionPathMove || m_Action == ActionMove || m_Action == ActionExchange || m_Action == ActionConstructor || m_Action == ActionRecharge || m_Action == ActionPortal || m_Action == ActionLink || m_Action == ActionEject || m_Action == ActionWormhole || m_Action == ActionWormholeAtk || m_Action == ActionAntiGravitor || m_Action == ActionGravWell || m_Action == ActionBlackHole || m_Action == ActionAntiShield || m_Action == ActionTransition)) {
+				var fromship:Ship = GetShip(m_MoveSectorX, m_MoveSectorY, m_MovePlanetNum, m_MoveShipNum);
+				if (fromship != null && (fromship.m_Type == Common.ShipTypeNone || !(m_MoveShipNum >= Common.ShipOnPlanetMax || AccessControl(fromship.m_Owner)))) {
+					m_Action = ActionNone;
 				}
 			}
 
@@ -5095,8 +5177,10 @@ if((t15 - t00) > 50 && EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("!SLOW.
 				sec=m_Sector[i];
 
 				for(i=0;i<sec.m_Planet.length;i++) {
-					var planet:Planet=sec.m_Planet[i];
-					if(!planet.IsExist()) {
+					var planet:Planet = sec.m_Planet[i];
+					if ((planet.m_Flag & Planet.PlanetFlagWormhole) != 0 && (planet.m_Flag & (Planet.PlanetFlagWormholeClose | Planet.PlanetFlagWormholeOpen | Planet.PlanetFlagWormholePrepare)) == 0 && m_Action == ActionWormholeAtk) {
+						
+					} else if(!planet.IsExist()) {
 						if(!IsEdit()) continue;
 					}
 					//if(!IsVis(planet)) continue;
@@ -5247,6 +5331,16 @@ if((t15 - t00) > 50 && EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("!SLOW.
 							if((x*x+y*y)>JumpRadius2) break;
 						} else break;
 					}
+					if(m_Action==ActionAntiShield) {
+						if(m_MoveSectorX!=m_CurSectorX || m_MoveSectorY!=m_CurSectorY || m_MovePlanetNum!=curplanet) {
+							planet2=GetPlanet(m_MoveSectorX,m_MoveSectorY,m_MovePlanetNum);
+							if(planet2==null) break;
+
+							x=planet.m_PosX-planet2.m_PosX;
+							y=planet.m_PosY-planet2.m_PosY;
+							if((x*x+y*y)>JumpRadius2) break;
+						} else break;
+					}
 					if (m_Action == ActionConstructor) break;
 					if (m_Action == ActionRecharge) break;
 					if (m_Action == ActionSplit) break;
@@ -5269,6 +5363,13 @@ if((t15 - t00) > 50 && EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("!SLOW.
 						}
 					}
 					if (m_Action == ActionWormhole) { }
+					if (m_Action == ActionWormholeAtk) {
+						//if(curplanet<0) break;
+						//planet2=GetPlanet(m_MoveSectorX,m_MoveSectorY,m_MovePlanetNum);
+						//if (planet == null) break;
+						if ((planet.m_Flag & Planet.PlanetFlagWormhole) == 0) break;
+						if ((planet.m_Flag & (Planet.PlanetFlagWormholeClose|Planet.PlanetFlagWormholeOpen|Planet.PlanetFlagWormholePrepare)) != 0) break;
+					}
 					if (m_Action == ActionShowRadius) {
 						if(m_MoveSectorX!=m_CurSectorX || m_MoveSectorY!=m_CurSectorY || m_MovePlanetNum!=curplanet) break;
 					}
@@ -5381,6 +5482,18 @@ if((t15 - t00) > 50 && EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("!SLOW.
 						if (ship.m_Type == Common.ShipTypeNone) break;
 						if (ship.m_Type == Common.ShipTypeQuarkBase) break;
 
+					} else if(m_Action==ActionAntiShield) {
+						planet2=GetPlanet(m_MoveSectorX,m_MoveSectorY,m_MovePlanetNum);
+						if(planet2==null) break;
+
+						x=planet.m_PosX-planet2.m_PosX;
+						y=planet.m_PosY-planet2.m_PosY;
+						if ((x * x + y * y) > JumpRadius2) break;
+
+						if (ship.m_Type == Common.ShipTypeNone) break;
+						if (ship.m_Type == Common.ShipTypeQuarkBase) break;
+						if ((ship.m_Flag & (Common.ShipFlagInvu | Common.ShipFlagInvu2)) == 0) break;
+
 					} else if(m_Action==ActionExchange) {
 						if(!isvis) break;
 						break;
@@ -5447,6 +5560,11 @@ if((t15 - t00) > 50 && EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("!SLOW.
 						if (m_MoveSectorX != m_CurSectorX || m_MoveSectorY != m_CurSectorY || m_MovePlanetNum != curplanet || m_MoveShipNum != curship) break;
 					
 					} else if(m_Action==ActionWormhole) {
+						if(!(m_MoveSectorX==m_CurSectorX && m_MoveSectorY==m_CurSectorY && m_MovePlanetNum==curplanet)) break;
+						if(ship.m_Type==Common.ShipTypeNone || Common.IsBase(ship.m_Type)) break;
+						if (!AccessControl(ship.m_Owner)) break;
+
+					} else if(m_Action==ActionWormholeAtk) {
 						if(!(m_MoveSectorX==m_CurSectorX && m_MoveSectorY==m_CurSectorY && m_MovePlanetNum==curplanet)) break;
 						if(ship.m_Type==Common.ShipTypeNone || Common.IsBase(ship.m_Type)) break;
 						if (!AccessControl(ship.m_Owner)) break;
@@ -7032,13 +7150,13 @@ tg:			var t0:int = getTimer();
 
 		buf.position = off;
 		m_FormFleetBar.RecvFleet(buf);
-		
+
 		buf.position = offquest;
 		QEManager.RecvQuest(buf);
-		
+
 		m_StateGv = true;
 //trace("StateGv");
-		
+
 //trace("RecvGv", m_HomeworldCotlId, m_HomeworldSectorX, m_HomeworldSectorY, m_HomeworldPlanetNum);
 		HintNewHomeworldUpdate();
 
@@ -7644,6 +7762,7 @@ var tm0:int=System.totalMemory;
 						ship.m_AbilityCooldown0 = 0;
 						ship.m_AbilityCooldown1 = 0;
 						ship.m_AbilityCooldown2 = 0;
+						ship.m_AbilityCooldown3 = 0;
 					}
 
 					while(true) {
@@ -7692,6 +7811,7 @@ var tm0:int=System.totalMemory;
 							else if (ship.m_Race == Common.RacePeleng && ship.m_Type != Common.ShipTypeFlagship && !Common.IsBase(ship.m_Type)) ship.m_AbilityCooldown0 = 1000 * sl.LoadDword();
 							if (ship.m_Type == Common.ShipTypeQuarkBase) ship.m_AbilityCooldown1 = 1000 * sl.LoadDword();
 							if (ship.m_Type == Common.ShipTypeQuarkBase) ship.m_AbilityCooldown2 = 1000 * sl.LoadDword();
+							if (ship.m_Type == Common.ShipTypeQuarkBase) ship.m_AbilityCooldown3 = 1000 * sl.LoadDword();
 
 							if(ship.m_Type==Common.ShipTypeFlagship) {
 //trace("flagship",u);
@@ -7739,6 +7859,8 @@ var tm0:int=System.totalMemory;
 						}
 //trace("load ship cnt="+ship.m_Cnt);
 					}
+					
+					planet.m_ExistEnemy = sl.LoadDword() != 0;
 				}
 				sl.LoadEnd();
 
@@ -7801,6 +7923,7 @@ var tm0:int=System.totalMemory;
 		if (m_Action == ActionPortal) return;
 		if (m_Action == ActionLink || m_Action == ActionEject) return;
 		if (m_Action == ActionWormhole) return;
+		if (m_Action == ActionWormholeAtk) return;
 
 //			var sx:int=Math.max(m_SectorMinX,Math.floor(ScreenToWorldX(0)/m_SectorSize)-1);
 //			var sy:int=Math.max(m_SectorMinY,Math.floor(ScreenToWorldY(0)/m_SectorSize)-1);
@@ -8332,6 +8455,9 @@ at flash.net::URLLoader/onComplete()*/
 			if (ct == Common.CotlTypeRich || ct == Common.CotlTypeProtect) {
 				m_UserCitadelBuildDate = 1000 * sl.LoadDword();
 			}
+			if (ct == Common.CotlTypeUser) {
+				m_UserActiveAtk = sl.LoadDword() != 0;
+			}
 
 			m_UnionId=sl.LoadDword();
 			m_UnionAccess=sl.LoadDword();
@@ -8551,6 +8677,7 @@ at flash.net::URLLoader/onComplete()*/
 		var obj:Object;
 		var user:User;
 		var cpt:Cpt;
+		var idesc:Item;
 
 		FormHideAll();
 		m_FormMenu.Clear();
@@ -8654,7 +8781,11 @@ at flash.net::URLLoader/onComplete()*/
 				//if (ship.m_Type == Common.ShipTypeTransport) obj.Fun = MsgLoad;
 				//else obj.Disable = true;
 
-				if (ship.m_CargoType != 0 && ship.m_CargoCnt > 0) m_FormMenu.Add(Common.Txt.ButUnload + ": " + Txt_ItemName(ship.m_CargoType)).Fun = MsgUnload;
+				if (ship.m_CargoType != 0) {
+					idesc = UserList.Self.GetItem(ship.m_CargoType);
+					if (!idesc || (!idesc.IsEq() && ship.m_CargoCnt <= 0)) m_FormMenu.Add(Common.Txt.ButUnload).Disable = true;
+					else m_FormMenu.Add(Common.Txt.ButUnload + ": " + ItemName(ship.m_CargoType)).Fun = MsgUnload;
+				}
 				else m_FormMenu.Add(Common.Txt.ButUnload).Disable = true;
 			}
 
@@ -8722,6 +8853,9 @@ at flash.net::URLLoader/onComplete()*/
 
 					if ((ship.m_Owner == Server.Self.m_UserId) && (m_CotlType == Common.CotlTypeUser) && (m_CotlOwnerId == Server.Self.m_UserId) && (m_GameState & Common.GameStateTraining) == 0) {
 						m_FormMenu.Add(Common.Txt.ButWormhole, MsgWormhole);
+
+					} else if ((m_CotlType == Common.CotlTypeUser) && (m_CotlOwnerId != Server.Self.m_UserId) && (m_GameState & Common.GameStateTraining) == 0) {
+						m_FormMenu.Add(Common.Txt.ButWormhole, MsgWormholeAtk);
 					}
 
 					if (1) {
@@ -8764,7 +8898,17 @@ at flash.net::URLLoader/onComplete()*/
 						obj.Fun=MsgBlackHole;
 					}
 				}
-				
+
+				if (!IsViewMap() && ship.m_Type == Common.ShipTypeQuarkBase && DirValE(ship.m_Owner, Common.DirQuarkBaseAntiShield) > 0) {
+					obj=m_FormMenu.Add(Common.Txt.InfoAntiShield);
+					obj.Disable = true;
+
+					if (ship.m_AbilityCooldown3 <= m_ServerCalcTime) {
+						obj.Disable=false;
+						obj.Fun=MsgAntiShield;
+					}
+				}
+
 				if(!IsViewMap() && ship.m_Type==Common.ShipTypeFlagship && VecValE(ship.m_Owner, ship.m_Id, Common.VecSystemRecharge)>0) {
 					obj=m_FormMenu.Add(Common.Txt.ButRecharge);
 					obj.Disable=true;
@@ -9316,7 +9460,7 @@ at flash.net::URLLoader/onComplete()*/
 
 					for (i = 0; i < sec.m_Planet.length; i++) {
 						planet2 = sec.m_Planet[i];
-						if (planet2.m_Flag & Planet.PlanetFlagWormhole) continue;
+						if (!(planet2.m_Flag & Planet.PlanetFlagWormhole)) continue;
 						if (planet2.m_Flag & (Planet.PlanetFlagWormholeOpen | Planet.PlanetFlagWormholeClose | Planet.PlanetFlagWormholePrepare)) continue;
 
 						dx = planet.m_PosX - planet2.m_PosX;
@@ -9336,6 +9480,79 @@ at flash.net::URLLoader/onComplete()*/
 
 		if ((!findprotoplasm) || (findwormhole < 2) || (findscibase < 2) || ((m_GameState & Common.GameStateEnemy) != 0)) {
 			FormMessageBox.RunErr(Common.Txt.ErrorOpenWormhole);
+			return;
+		}
+
+		SendAction("emwormhole", "" + m_MoveSectorX + "_" + m_MoveSectorY + "_" + m_MovePlanetNum + "_" + m_MoveShipNum + "_" + m_CurSectorX + "_" + m_CurSectorY + "_" + m_CurPlanetNum);
+	}
+
+	private function MsgWormholeAtk(...args):void
+	{
+		var planet:Planet=GetPlanet(m_CurSectorX,m_CurSectorY,m_CurPlanetNum);
+		if(planet==null) return;
+		var ship:Ship=GetShip(m_CurSectorX,m_CurSectorY,m_CurPlanetNum,m_CurShipNum);
+		if (ship == null) return;
+		
+		if (!m_Set_ShowWormholePoint) {
+			m_FormMiniMap.SelectWormholePoint();
+		}
+
+		m_MoveSectorX = m_CurSectorX;
+		m_MoveSectorY = m_CurSectorY;
+		m_MovePlanetNum = m_CurPlanetNum;
+		m_MoveShipNum = m_CurShipNum;
+		m_MoveOwner = ship.m_Owner;
+		m_MoveListNum.length = 0;
+		m_MovePath.length = 0;
+
+		m_Action = ActionWormholeAtk;
+		CalcPick(mouseX, mouseY);
+		InfoUpdate(mouseX, mouseY);
+	}
+	
+	private function FindNearCloseWormhole(secx:int, secy:int, plnum:int):Planet
+	{
+		var i:int, x:int, y:int, dx:int ,dy:int;
+		var sec:Sector;
+		var ok:Boolean;
+		var planet:Planet, planet2:Planet;
+
+		planet = GetPlanet(secx, secy, plnum);
+		if (planet == null) return null;
+
+		for (y = planet.m_Sector.m_SectorY - 1; y <= planet.m_Sector.m_SectorY + 1; y++) {
+			for (x = planet.m_Sector.m_SectorX - 1; x <= planet.m_Sector.m_SectorX + 1; x++) {
+				sec = GetSector(x, y);
+				if (sec == null) continue;
+
+				for (i = 0; i < sec.m_Planet.length; i++) {
+					planet2 = sec.m_Planet[i];
+					if (!(planet2.m_Flag & Planet.PlanetFlagWormhole)) continue;
+					if (planet2.m_PortalOwner);
+					else if (planet2.m_Flag & (Planet.PlanetFlagWormholeOpen | Planet.PlanetFlagWormholeClose | Planet.PlanetFlagWormholePrepare)) continue;
+
+					dx = planet.m_PosX - planet2.m_PosX;
+					dy = planet.m_PosY - planet2.m_PosY;
+
+					if ((dx * dx + dy * dy) > JumpRadius2) continue;
+
+					return planet2;
+				}
+			}
+		}
+		return null;
+	}
+
+	private function ProcessActionWormholeAtk():void
+	{
+		if (!FindNearCloseWormhole(m_MoveSectorX, m_MoveSectorY, m_MovePlanetNum)) {
+			m_FormHint.Show(Common.Txt.WarningNotFoundWormhole,Common.WarningHideTime);
+			return;
+		}
+		var ship:Ship = GetShip(m_MoveSectorX, m_MoveSectorY, m_MovePlanetNum, m_MoveShipNum);
+		if (!ship) return;
+		if (ship.m_CargoType != Common.ItemTypeQuarkCore || ship.m_CargoCnt < 10) {
+			m_FormHint.Show(Common.Txt.WarningNotQuarkCoreForWormhole,Common.WarningHideTime);
 			return;
 		}
 
@@ -9509,6 +9726,8 @@ at flash.net::URLLoader/onComplete()*/
 		m_FormInput.AddItem(Txt_ItemName(Common.ItemTypeRepair2), Common.ItemTypeRepair2, Common.ItemTypeRepair2 == gt);
 		m_FormInput.AddItem(Txt_ItemName(Common.ItemTypeMonuk), Common.ItemTypeMonuk, Common.ItemTypeMonuk == gt);
 		m_FormInput.AddItem(Txt_ItemName(Common.ItemTypeQuarkCore), Common.ItemTypeQuarkCore, Common.ItemTypeQuarkCore == gt);
+		
+//m_FormInput.AddItem(ItemName(256), 256, 256 == gt);
 
 //			while (planet.m_Owner == ship.m_Owner || IsFriendEx(planet, planet.m_Owner, planet.m_Race, ship.m_Owner, ship.m_Race)) {
 //				if ((m_CotlType == Common.CotlTypeRich || m_CotlType == Common.CotlTypeProtect || m_CotlType == Common.CotlTypeCombat) && (m_OpsFlag & Common.OpsFlagLeaveShip) == 0) break;
@@ -9533,7 +9752,7 @@ at flash.net::URLLoader/onComplete()*/
 
 	private function ActionGive():void
 	{
-		var itype:int = m_FormInput.GetInt(0);
+		var itype:uint = m_FormInput.GetInt(0);
 		var icnt:int = m_FormInput.GetInt(1);
 		
 		m_ItemGiveCnt = icnt;
@@ -9716,22 +9935,57 @@ at flash.net::URLLoader/onComplete()*/
 			return;
 		}
 
-		m_MoveSectorX=m_CurSectorX;
-		m_MoveSectorY=m_CurSectorY;
-		m_MovePlanetNum=m_CurPlanetNum;
-		m_MoveShipNum=m_CurShipNum;
-		m_MoveOwner=0;
-		m_Action=ActionBlackHole;
-		m_MoveListNum.length=0;
-		m_MovePath.length=0;
+		m_MoveSectorX = m_CurSectorX;
+		m_MoveSectorY = m_CurSectorY;
+		m_MovePlanetNum = m_CurPlanetNum;
+		m_MoveShipNum = m_CurShipNum;
+		m_MoveOwner = 0;
+		m_Action = ActionBlackHole;
+		m_MoveListNum.length = 0;
+		m_MovePath.length = 0;
 
-		CalcPick(mouseX,mouseY);
-		InfoUpdate(mouseX,mouseY);
+		CalcPick(mouseX, mouseY);
+		InfoUpdate(mouseX, mouseY);
+	}
+
+	private function MsgAntiShield(...args):void
+	{
+		var ship:Ship = GetShip(m_CurSectorX, m_CurSectorY, m_CurPlanetNum, m_CurShipNum);
+		if (ship.m_Type != Common.ShipTypeQuarkBase) return;
+		if ((ship.m_Flag & Common.ShipFlagBattle) == 0) {
+			m_FormHint.Show(Common.Txt.WarningNeedBattleMode, Common.WarningHideTime);
+			return;
+		}
+		if (ship.m_BattleTimeLock > m_ServerCalcTime) {
+			m_FormHint.Show(Common.Txt.WarningNeedReloadReactor, Common.WarningHideTime); 
+			return;
+		}
+		if ((ship.m_CargoType != Common.ItemTypeQuarkCore) || (ship.m_CargoCnt <= 0)) {
+			m_FormHint.Show(Common.Txt.WarningNeedSingleQuarkCore, Common.WarningHideTime); 
+			return;
+		}
+
+		m_MoveSectorX = m_CurSectorX;
+		m_MoveSectorY = m_CurSectorY;
+		m_MovePlanetNum = m_CurPlanetNum;
+		m_MoveShipNum = m_CurShipNum;
+		m_MoveOwner = 0;
+		m_Action = ActionAntiShield;
+		m_MoveListNum.length = 0;
+		m_MovePath.length = 0;
+
+		CalcPick(mouseX, mouseY);
+		InfoUpdate(mouseX, mouseY);
 	}
 
 	private function ActionBlackHoleProcess():void
 	{
 		SendAction("emabil", "3_" + m_MoveSectorX.toString() + "_" + m_MoveSectorY.toString() + "_" + m_MovePlanetNum.toString() + "_" + m_MoveShipNum.toString() + "_" + m_CurSectorX.toString() + "_" + m_CurSectorY.toString() + "_" + m_CurPlanetNum.toString() + "_" + m_CurShipNum.toString());
+	}
+
+	private function ActionAntiShieldProcess():void
+	{
+		SendAction("emabil", "5_" + m_MoveSectorX.toString() + "_" + m_MoveSectorY.toString() + "_" + m_MovePlanetNum.toString() + "_" + m_MoveShipNum.toString() + "_" + m_CurSectorX.toString() + "_" + m_CurSectorY.toString() + "_" + m_CurPlanetNum.toString() + "_" + m_CurShipNum.toString());
 	}
 
 	private function MsgBarrier(...args):void
@@ -10475,7 +10729,7 @@ at flash.net::URLLoader/onComplete()*/
 			} else if(ac.m_Type==Action.ActionTypeFleetSpecial) {
 				if (ac.Process()) {
 					Server.Self.m_Anm += 256;
-					m_LoadUserAfterActionNo=SendActionEx(m_RootCotlId,"emfleetspeciala",""+ac.m_Kind.toString()+"_"+ac.m_Id.toString());
+					m_LoadUserAfterActionNo = SendActionEx(m_RootCotlId, "emfleetspeciala", "" + ac.m_Kind.toString() + "_" + ac.m_Id.toString());
 					m_LoadUserAfterActionNo_Time = Common.GetTime();
 
 					m_FormFleetBar.m_RecvFleetAfterAnm = Server.Self.m_Anm;
@@ -10509,6 +10763,62 @@ at flash.net::URLLoader/onComplete()*/
 		var d:Date=new Date();
 		d.setTime(m_ConnectDate.getTime() + (GetServerGlobalTime() - m_ConnectTime));
 		return d;
+	}
+	
+	public function DropItemNear(planet:Planet, ship:Ship, shipnum:int):Boolean
+	{
+		if (!ship.m_ItemType) return false;
+		var idesc:Item = UserList.Self.GetItem(ship.m_ItemType);
+		if (!idesc) return false;
+		
+		var i:int;
+		var ship2:Ship;
+		var sopl:int = planet.ShipOnPlanetLow;
+
+		if (idesc.IsEq()) {
+			i = shipnum + 1;
+			
+			if (shipnum < sopl && i >= sopl) i = 0;
+			else if (shipnum >= sopl && i >= Common.ShipOnPlanetMax) i = sopl;
+			ship2 = planet.m_Ship[i];
+			if (ship2.m_Type != Common.ShipTypeNone || ship2.m_OrbitItemType != Common.ItemTypeNone) {
+				i = shipnum - 1;
+				if (shipnum < sopl && i < 0) i = sopl - 1;
+				else if (shipnum >= sopl && i < sopl) i = Common.ShipOnPlanetMax - 1;
+				ship2 = planet.m_Ship[i];
+				if (ship2.m_Type != Common.ShipTypeNone || ship2.m_OrbitItemType != Common.ItemTypeNone) return false;
+			}
+			ship2.m_OrbitItemType = ship.m_ItemType;
+			ship2.m_OrbitItemCnt = ship.m_ItemCnt;
+			ship2.m_OrbitItemOwner = ship.m_Owner;
+			ship2.m_OrbitItemTimer = m_ServerCalcTime;
+
+		} else if(ship.m_ItemCnt>0) {
+			i=shipnum+1;
+			if (shipnum < sopl && i >= sopl) i = 0;
+			else if (shipnum >= sopl && i >= Common.ShipOnPlanetMax) i = sopl;
+			ship2=planet.m_Ship[i];
+			if (ship2.m_Type != Common.ShipTypeNone || (ship2.m_OrbitItemType != Common.ItemTypeNone && ship2.m_OrbitItemType != ship.m_ItemType)) {
+				i = shipnum - 1;
+				if (shipnum < sopl && i < 0) i = sopl - 1;
+				else if (shipnum >= sopl && i < sopl) i = Common.ShipOnPlanetMax - 1;
+				ship2 = planet.m_Ship[i];
+				if (ship2.m_Type != Common.ShipTypeNone || (ship2.m_OrbitItemType != Common.ItemTypeNone && ship2.m_OrbitItemType != ship.m_ItemType)) return false;
+			}
+
+			if (ship2.m_OrbitItemType == ship.m_ItemType) {
+				ship2.m_OrbitItemCnt += ship.m_ItemCnt;
+			} else {
+				ship2.m_OrbitItemType = ship.m_ItemType;
+				ship2.m_OrbitItemCnt = ship.m_ItemCnt;
+			}
+			ship2.m_OrbitItemOwner = ship.m_Owner;
+			ship2.m_OrbitItemTimer = m_ServerCalcTime;
+		}
+
+		ship.m_ItemType = Common.ItemTypeNone;
+		ship.m_ItemCnt = 0;
+		return true;
 	}
 
 	public function IsFriend(owner1:uint, race1:uint, owner2:uint, race2:uint):Boolean
@@ -12306,6 +12616,7 @@ at flash.net::URLLoader/onComplete()*/
 			else if (dir == Common.DirQuarkBaseShield) ar = Common.DirQuarkBaseShieldLvl;
 			else if (dir == Common.DirQuarkBaseShieldReduce) ar = Common.DirQuarkBaseShieldReduceLvl;
 			else if (dir == Common.DirQuarkBaseShieldInc) ar = Common.DirQuarkBaseShieldIncLvl;
+			else if (dir == Common.DirQuarkBaseAntiShield) ar = Common.DirQuarkBaseAntiShieldLvl;
 			
 		} else {
 			if(dir==Common.DirEmpireMax) ar=Common.DirEmpireMaxLvl;
@@ -12427,6 +12738,7 @@ at flash.net::URLLoader/onComplete()*/
 			else if (dir == Common.DirQuarkBaseShield) ar = Common.DirQuarkBaseShieldLvl;
 			else if (dir == Common.DirQuarkBaseShieldReduce) ar = Common.DirQuarkBaseShieldReduceLvl;
 			else if (dir == Common.DirQuarkBaseShieldInc) ar = Common.DirQuarkBaseShieldIncLvl;
+			else if (dir == Common.DirQuarkBaseAntiShield) ar = Common.DirQuarkBaseAntiShieldLvl;
 		}
 		
 		return ar;
@@ -12441,21 +12753,21 @@ at flash.net::URLLoader/onComplete()*/
 		
 		return user.CalcDirLvl(dir);
 	}
-	
-	public function DirValE(owner:uint, dir:int, rc:Boolean=false):int
+
+	public function DirValE(owner:uint, dir:int, rc:Boolean = false):int
 	{
 		if(owner==0) return 0;
 
-		var user:User=UserList.Self.GetUser(owner,false);
-		if(user==null) return 0;
-		
-		var lvl:int=user.CalcDirLvl(dir);
-		var ar:Array=DirValAr(dir,rc);
+		var user:User = UserList.Self.GetUser(owner, false);
+		if (user == null) return 0;
 
-		if(ar==null) return 0;
-		if(lvl<0 || lvl>=ar.length) return 0;
+		var lvl:int = user.CalcDirLvl(dir);
+		var ar:Array = DirValAr(dir, rc);
 
-		return ar[lvl];			
+		if (ar == null) return 0;
+		if (lvl<0 || lvl>=ar.length) return 0;
+
+		return ar[lvl];
 	}
 
 	public function VecValAr(dir:int):Array
@@ -13360,17 +13672,17 @@ at flash.net::URLLoader/onComplete()*/
 		var ex:int = Math.min(m_SectorMinX + m_SectorCntX, fromplanet.m_Sector.m_SectorX + 2);
 		var ey:int = Math.min(m_SectorMinY + m_SectorCntY, fromplanet.m_Sector.m_SectorY + 2);
 
-		var i:int, u:int, x:int, y:int, x2:int, y2:int;
+		var i:int, u:int, x:int, y:int, x2:int, y2:int, off:int;
 		var dx:int, dy:int;
 		var sec:Sector, sec2:Sector;
 		var p:Planet, p2:Planet;
 		var ret:int = 0;
 		for (y = sy; y < ey; y++) {
 			for (x = sx; x < ex; x++) {
-				i = (x - m_SectorMinX) + (y - m_SectorMinY) * m_SectorCntX;
-				if (i < 0 || i >= m_SectorCntX * m_SectorCntY) throw Error("");
-				if (!(m_Sector[i] is Sector)) continue;
-				sec = m_Sector[i];
+				off = (x - m_SectorMinX) + (y - m_SectorMinY) * m_SectorCntX;
+				if (off < 0 || off >= m_SectorCntX * m_SectorCntY) throw Error("");
+				if (!(m_Sector[off] is Sector)) continue;
+				sec = m_Sector[off];
 
 				for (i = 0; i < sec.m_Planet.length; i++) {
 					p = sec.m_Planet[i];
@@ -13394,10 +13706,10 @@ at flash.net::URLLoader/onComplete()*/
 
 					for (y2 = sy2; y2 < ey2; y2++) {
 						for (x2 = sx2; x2 < ex2; x2++) {
-							i = (x2 - m_SectorMinX) + (y2 - m_SectorMinY) * m_SectorCntX;
-							if (i < 0 || i >= m_SectorCntX * m_SectorCntY) throw Error("");
-							if (!(m_Sector[i] is Sector)) continue;
-							sec2 = m_Sector[i];
+							off = (x2 - m_SectorMinX) + (y2 - m_SectorMinY) * m_SectorCntX;
+							if (off < 0 || off >= m_SectorCntX * m_SectorCntY) throw Error("");
+							if (!(m_Sector[off] is Sector)) continue;
+							sec2 = m_Sector[off];
 
 							for (u = 0; u < sec2.m_Planet.length; u++) {
 								p2 = sec2.m_Planet[u];
@@ -13914,18 +14226,19 @@ at flash.net::URLLoader/onComplete()*/
 		}
 		if(ff) return true;*/
 
-		var ff:Boolean=false;
+		if (planet.m_ExistEnemy) return false;
+/*		var ff:Boolean = false;
 		if (planet.m_Owner == owner || IsFriendEx(planet, planet.m_Owner, Common.RaceNone, owner, Common.RaceNone)) ff = true;
 		var sopl:int = planet.ShipOnPlanetLow;
 		for(u=0;u<sopl;u++) {
 			ship=planet.m_Ship[u];
-			if(ship.m_Type==Common.ShipTypeNone/* || ship.m_Type==Common.ShipTypeTransport*/) continue;
+			if(ship.m_Type==Common.ShipTypeNone) continue;
 			if(ship.m_Owner==0) continue;
 			
 			if(ship.m_Owner==owner) {}// ff=true;
 			else if(!IsFriendEx(planet, ship.m_Owner, Common.RaceNone, owner, Common.RaceNone)) return false;
 		}
-		if(ff) return true;
+		if(ff) return true;*/
 
 		sx=Math.max(m_SectorMinX,tx-1);
 		sy=Math.max(m_SectorMinY,ty-1);
@@ -13938,19 +14251,21 @@ at flash.net::URLLoader/onComplete()*/
 				if(sec==null) continue;
 
 				for(i=0;i<sec.m_Planet.length;i++) {
-					planet=sec.m_Planet[i];
+					planet = sec.m_Planet[i];
+					
+					if (planet.m_ExistEnemy) return false;
 
-					if(planet.m_Owner!=0) {
+/*					if(planet.m_Owner!=0) {
 						if(!IsFriendEx(planet, planet.m_Owner, Common.RaceNone, owner, Common.RaceNone)) return false;
 					}
 
 					for(u=0;u<sopl;u++) {
 						ship=planet.m_Ship[u];
-						if(ship.m_Type==Common.ShipTypeNone/* || ship.m_Type==Common.ShipTypeTransport*/) continue;
+						if(ship.m_Type==Common.ShipTypeNone) continue;
 						if(ship.m_Owner==0) continue;
 
 						if(!IsFriendEx(planet, ship.m_Owner, Common.RaceNone, owner, Common.RaceNone)) return false;
-					}
+					}*/
 				}
 			}
 		}
@@ -17716,6 +18031,10 @@ Log("a:",a);
 
 		if(cnt<=0) return 0;
 
+		var itdesc:Item=UserList.Self.GetItem(it&0xffff);
+		if (itdesc == null) return 0;
+		if (itdesc.IsEq()) return 0;
+
 		if (owner == 0xffffffff || planet.m_Owner == owner || (GetRel(owner, planet.m_Owner) & Common.PactBuild) != 0) {
 			var m:int = planet.PlanetItemMax();
 			
@@ -17788,15 +18107,55 @@ Log("a:",a);
 		var pi:PlanetItem;
 		var ship:Ship;
 
-		if(cnt<=0) return 0;
+		if (cnt < 0) return 0;
 
-		var itdesc:Item=UserList.Self.GetItem(it&0xffff);
-		if(itdesc==null) return 0;
+		var itdesc:Item = UserList.Self.GetItem(it);
+		if (itdesc == null) return 0;
+
+		if (!itdesc.IsEq() && cnt <= 0) return 0;
+
 		var m:int=itdesc.m_StackMax;
 
 		var storage:int = planet.PlanetItemMax();;
 		var picnt:int = Math.min(Planet.PlanetItemCnt, storage);
 //trace("!!!PIA picnt:",picnt);
+
+		if (itdesc.IsEq()) {
+			if (owner == 0xffffffff || planet.m_Owner == owner || (GetRel(owner, planet.m_Owner) & Common.PactBuild) != 0);
+			else return 0;
+			
+			k = -1;
+			for (i = 0; i < picnt; i++) {
+				pi = planet.m_Item[i];
+				if (pi.m_Type != 0) continue;
+				k = i;
+				break;
+			}
+
+			if (k < 0 && toland) {
+				for (i = picnt; i < Planet.PlanetItemCnt; i++) {
+					pi = planet.m_Item[i];
+					if (pi.m_Type != 0) continue;
+					k = i;
+					break;
+				}
+			}
+
+			if(k<0) return 0;
+			i=k;
+
+			pi.m_Type = it;
+			pi.m_Cnt = cnt;
+			if (pi.m_Cnt < 0) pi.m_Cnt = 0;
+			else if (pi.m_Cnt > m) pi.m_Cnt = m;
+			if(owner!=0xffffffff) pi.m_Owner=owner;
+			else pi.m_Owner=0;
+			pi.m_Complete=0;
+			pi.m_Broken=0;
+			pi.m_Flag=flagfornewslot;
+
+			return 1;
+		}
 
 		if(full) {
 			var h:int=0;
@@ -18466,16 +18825,32 @@ Log("a:",a);
 	
 	public function ItemName(ti:uint):String
 	{
-		var i:int;
+		var i:int, v:int;
 		var str:String = Txt_ItemName(ti & 0xffff);
 		var h:Boolean = true;
-		
-		if ((ti & 0xffff0000) != 0) {
-			for (i = 0; i < 4; i++) {
-				var no:int = (ti >> (16 + i * 4)) & 15;
-				if (no <= 3) continue;
-				if (h) { h = false; str += " "; }
-				str += String.fromCharCode(65 + no - 4);
+
+		if ((ti && 0xffff) == Common.ItemTypeNavigator || (ti && 0xffff) == Common.ItemTypeTechnician) {
+			if ((ti & 0xffff0000) != 0) {
+				for (i = 0; i < 4; i++) {
+					var no:int = (ti >> (16 + i * 4)) & 15;
+					if (no <= 3) continue;
+					if (h) { h = false; str += " "; }
+					str += String.fromCharCode(65 + no - 4);
+				}
+			}
+		} else {
+			var desc:Item = UserList.Self.GetItem(ti);
+			if (desc) {
+				for (i = 0; i < Item.BonusCnt; i++) {
+					if (!desc.m_BonusType[i]) continue;
+					if (Common.ItemBonusParent[desc.m_BonusType[i]]) continue;
+					if (desc.m_CoefCnt[i] <= 0) continue;
+					v = (ti >> (16 + desc.m_CoefShift[i])) & ((1 << desc.m_CoefBit[i]) - 1);
+					if (v >= desc.m_CoefCnt[i]) v = desc.m_CoefCnt[i] - 1;
+
+					if (h) { h = false; str += " "; }
+					str += String.fromCharCode(65 + desc.m_CoefCnt[i] - 1 - v);
+				}
 			}
 		}
 		
@@ -18639,6 +19014,47 @@ Log("a:",a);
 	public function PlusarTech():Boolean
 	{
 		return (m_GameState & Common.GameStateTraining) || (m_UserTechEnd > GetServerGlobalTime()) || (m_UserControlEnd > GetServerGlobalTime());
+	}
+	
+	public function SendMouseMove():void
+	{
+		var ar:Array = stage.getObjectsUnderPoint(new Point(stage.mouseX, stage.mouseY));
+
+		var i:int;
+		//var str:String = "";
+		for (i = ar.length - 1; i >= 0; i--) {
+			var obj:DisplayObject = ar[i];
+			//str += " " + obj.toString();
+
+			while (obj != null) {
+				if (obj == m_Hangar) {
+					m_Hangar.onMouseMove(new MouseEvent(MouseEvent.MOUSE_MOVE, true, false, stage.mouseX, stage.mouseY));
+					return;
+				}
+				else if (obj == m_FormFleetItem) {
+					m_FormFleetItem.onMouseMove(new MouseEvent(MouseEvent.MOUSE_MOVE, true, false, stage.mouseX, stage.mouseY));
+					return;
+				}
+				else if (obj == m_FormFleetBar) {
+					m_FormFleetBar.onMouseMove(new MouseEvent(MouseEvent.MOUSE_MOVE, true, false, stage.mouseX, stage.mouseY));
+					return;
+				}
+				else if (obj == m_FormPlanet) {
+					m_FormPlanet.onMouseMove(new MouseEvent(MouseEvent.MOUSE_MOVE, true, false, stage.mouseX, stage.mouseY));
+					return;
+				}
+				else if (obj == HS && !m_Hangar.visible) {
+					HS.onMouseMove(new MouseEvent(MouseEvent.MOUSE_MOVE, true, false, stage.mouseX, stage.mouseY));
+					return;
+				}
+				else if (obj == this && !m_Hangar.visible) {
+					onMouseMoveHandler(new MouseEvent(MouseEvent.MOUSE_MOVE, true, false, stage.mouseX, stage.mouseY));
+					return;
+				}
+				obj = obj.parent;
+			}
+		}
+		//trace(str);
 	}
 
 	public function MB_Clear():void

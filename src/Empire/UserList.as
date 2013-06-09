@@ -834,24 +834,24 @@ public class UserList extends EventDispatcher
 		
 		var val:String="";
 		
-		if(m_ItemLoadNextNum>=m_ItemArray.length) m_ItemLoadNextNum=0; 
-		for(i=m_ItemLoadNextNum;i<m_ItemArray.length;i++) {
+		if (m_ItemLoadNextNum >= m_ItemArray.length) m_ItemLoadNextNum = 0; 
+		for (i = m_ItemLoadNextNum; i < m_ItemArray.length; i++) {
 			item=m_ItemArray[i];
-			
-			if(item.m_LoadDate==0 || ((ct>item.m_LoadDate+10*1000) && (ct<(item.m_GetTime+60*60*1000)))) {
-				item.m_GetTime=0;
-				if(val.length>0) val+="_";
-				val+=item.m_Id.toString();
+
+			if (item.m_LoadDate == 0 || ((ct > item.m_LoadDate + 10 * 1000) && (ct < (item.m_GetTime + 60 * 60 * 1000)))) {
+				item.m_GetTime = 0;
+				if (val.length > 0) val += "_";
+				val += item.m_Id.toString();
 			}
-			if(val.length>64) break;			
+			if (val.length > 64) break;
 		}
-		m_ItemLoadNextNum=i;
+		m_ItemLoadNextNum = i;
 		
 		if(val.length<=0) return;
 		
-		m_ItemLockTime=ct+5000;
+		m_ItemLockTime = ct + 5000;
 		
-		Server.Self.Query("emitem","&val="+val,AnswerItem,false);
+		Server.Self.Query("emitem", "&val=" + val, AnswerItem, false);
 	}
 	
 	public function AnswerItem(event:Event):void
@@ -896,10 +896,14 @@ public class UserList extends EventDispatcher
 			item.m_Step = sl.LoadInt();
 			item.m_OwnerId = sl.LoadDword();
 
-			for(i=0;i<Item.BonusCnt;i++) {
+			for (i = 0; i < Item.BonusCnt; i++) {
 				item.m_BonusType[i] = sl.LoadDword();
 				item.m_BonusVal[i] = sl.LoadInt();
 				item.m_BonusDif[i] = sl.LoadInt();
+				item.m_CoefCnt[i] = sl.LoadInt();
+				item.m_CoefShift[i] = sl.LoadInt();
+				item.m_CoefBit[i] = sl.LoadInt();
+				for (u = 0; u < item.m_CoefCnt[i]; u++) item.m_Coef[i * Item.CoefCnt + u] = sl.LoadInt();
 			}
 
 //			if(EmpireMap.Self.m_FormUnion.visible && EmpireMap.Self.m_FormUnion.m_UnionId==unionid) EmpireMap.Self.m_FormUnion.PageUpdate(); 
@@ -913,6 +917,7 @@ public class UserList extends EventDispatcher
 			if (EmpireMap.Self.m_FormFleetItem.visible) EmpireMap.Self.m_FormFleetItem.Update();
 			if (EmpireMap.Self.m_FormPlanet.visible) EmpireMap.Self.m_FormPlanet.Update();
 			if (EmpireMap.Self.m_FormStorage.visible) EmpireMap.Self.m_FormStorage.Update();
+			if (EmpireMap.Self.m_Hangar.visible) EmpireMap.Self.m_Hangar.Update();
 		}
 	}
 	

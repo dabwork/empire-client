@@ -40,6 +40,7 @@ package Empire
         public var m_AbilityCooldown0:Number = 0;
 		public var m_AbilityCooldown1:Number = 0;
 		public var m_AbilityCooldown2:Number = 0;
+		public var m_AbilityCooldown3:Number = 0;
 
 		public function Ship()
 		{
@@ -80,6 +81,7 @@ package Empire
 			m_AbilityCooldown0 = 0;
 			m_AbilityCooldown1 = 0;
 			m_AbilityCooldown2 = 0;
+			m_AbilityCooldown3 = 0;
 
 /*			if(!dropitem) {
 				m_ItemType=Common.ItemTypeNone;
@@ -124,6 +126,7 @@ package Empire
 			m_AbilityCooldown0 = src.m_AbilityCooldown0;
 			m_AbilityCooldown1 = src.m_AbilityCooldown1;
 			m_AbilityCooldown2 = src.m_AbilityCooldown2;
+			m_AbilityCooldown3 = src.m_AbilityCooldown3;
 
 			if (m_Race == Common.RacePeople && m_Type != Common.ShipTypeFlagship && !Common.IsBase(m_Type)) m_Shield = 0;
 			
@@ -161,7 +164,17 @@ package Empire
 		
 		public function TakeItem():void
 		{
-			if(m_OrbitItemType==Common.ItemTypeAntimatter || m_OrbitItemType==Common.ItemTypeElectronics || m_OrbitItemType==Common.ItemTypeMetal || m_OrbitItemType==Common.ItemTypeProtoplasm || m_OrbitItemType==Common.ItemTypeNodes) {
+			if (!m_OrbitItemType) return;
+			
+			var idesc:Item = UserList.Self.GetItem(m_OrbitItemType);
+			if (!idesc) return;
+			
+			if (idesc.IsEq()) {
+				if (m_CargoType) return;
+				m_CargoType = m_OrbitItemType;
+				m_CargoCnt = m_OrbitItemCnt;
+				
+			} else if(m_OrbitItemType==Common.ItemTypeAntimatter || m_OrbitItemType==Common.ItemTypeElectronics || m_OrbitItemType==Common.ItemTypeMetal || m_OrbitItemType==Common.ItemTypeProtoplasm || m_OrbitItemType==Common.ItemTypeNodes) {
 			}
 			else if(m_OrbitItemType==Common.ItemTypeModule) {
 				m_CargoCnt+=m_OrbitItemCnt;

@@ -14,306 +14,71 @@ import flash.net.*;
 import flash.text.*;
 import flash.utils.*;
 
-public class FormItemManager extends Sprite
+public class FormItemManager extends FormStd
 {
-	private var m_Map:EmpireMap;
+	private var EM:EmpireMap = null;
 
-	static public const SizeX:int=650;
-	static public const SizeY:int=500;
+	public var gridItems:int = -1;
 
-	public var m_LabelCaption:TextField=null;
-	public var m_ButClose:Button=null;
-	public var m_ButImg:Button=null;
-	public var m_LvlLabel:TextField=null;
-	public var m_LvlMin:TextInput=null;
-	public var m_LvlMax:TextInput=null;
-	public var m_SlotTypeLabel:TextField=null;
-	public var m_SlotType:ComboBox=null;
-	public var m_SearchLabel:TextField=null;
-	public var m_SearchEdit:TextInput=null;
-	public var m_ButQuery:Button=null;
-	public var m_ItemList:DataGrid=null;
+	public var m_SearchArray:Vector.<ItemSearch> = new Vector.<ItemSearch>();
 
-	public function FormItemManager(map:EmpireMap)
+	private var m_ButQuery:CtrlBut = null;
+	private var m_ButChange:CtrlBut = null;
+	private var m_ButImg:CtrlBut = null;
+
+	public function FormItemManager(em:EmpireMap)
 	{
-		m_Map=map;
+		EM = em;
 
-		var fr:GrFrame=new GrFrame();
-		fr.width=SizeX;
-		fr.height=SizeY;
-		addChild(fr);
+		super(true, false);
 
-		m_LabelCaption=new TextField();
-		m_LabelCaption.x=10;
-		m_LabelCaption.y=5;
-		m_LabelCaption.width=1;
-		m_LabelCaption.height=1;
-		m_LabelCaption.type=TextFieldType.DYNAMIC;
-		m_LabelCaption.selectable=false;
-		m_LabelCaption.border=false;
-		m_LabelCaption.background=false;
-		m_LabelCaption.multiline=false;
-		m_LabelCaption.autoSize=TextFieldAutoSize.LEFT;
-		m_LabelCaption.antiAliasType=AntiAliasType.ADVANCED;
-		m_LabelCaption.gridFitType=GridFitType.PIXEL;
-		m_LabelCaption.defaultTextFormat=new TextFormat("Calibri",18,0xffffff);
-		m_LabelCaption.embedFonts=true;
-		m_LabelCaption.text=Common.TxtEdit.FormItemManagerCpation;
-		addChild(m_LabelCaption);
+		width = 480;
+		height = 480;
+		scale = StdMap.Main.m_Scale;
+		caption = Common.TxtEdit.FormItemManagerCpation;
 
-		m_ButClose=new Button();
-		m_ButClose.label = Common.Txt.ButClose;
-		m_ButClose.width=100;
-		Common.UIStdBut(m_ButClose);
-		m_ButClose.addEventListener(MouseEvent.CLICK, clickClose);
-		m_ButClose.x=SizeX-10-m_ButClose.width;
-		m_ButClose.y=SizeY-10-m_ButClose.height;
-		addChild(m_ButClose);
+		gridItems = GridAdd();
+		GridSizeX(gridItems, 150, 150);
 
-		m_ButImg=new Button();
-		m_ButImg.label = "Img";
-		m_ButImg.width=100;
-		Common.UIStdBut(m_ButImg);
-		m_ButImg.addEventListener(MouseEvent.CLICK, clickImg);
-		m_ButImg.x=10
-		m_ButImg.y=SizeY-10-m_ButImg.height;
-		addChild(m_ButImg);
-
-		m_LvlLabel=new TextField();
-		m_LvlLabel.x=10;
-		m_LvlLabel.y=40;
-		m_LvlLabel.width=1;
-		m_LvlLabel.height=1;
-		m_LvlLabel.type=TextFieldType.DYNAMIC;
-		m_LvlLabel.selectable=false;
-		m_LvlLabel.border=false;
-		m_LvlLabel.background=false;
-		m_LvlLabel.multiline=false;
-		m_LvlLabel.autoSize=TextFieldAutoSize.LEFT;
-		m_LvlLabel.antiAliasType=AntiAliasType.ADVANCED;
-		m_LvlLabel.gridFitType=GridFitType.PIXEL;
-		m_LvlLabel.defaultTextFormat=new TextFormat("Calibri",13,0xffffff);
-		m_LvlLabel.embedFonts=true;
-		m_LvlLabel.text="Lvl:";
-		addChild(m_LvlLabel);
-
-		m_LvlMin=new TextInput();
-		m_LvlMin.x=m_LvlLabel.x+m_LvlLabel.width+5;
-		m_LvlMin.y=m_LvlLabel.y;
-		m_LvlMin.width=70;
-		m_LvlMin.setStyle("focusRectSkin", focusRectSkinNone);
-		m_LvlMin.setStyle("textFormat", new TextFormat("Calibri",13,0xc4fff2));
-		m_LvlMin.setStyle("embedFonts", true);
-		m_LvlMin.textField.antiAliasType=AntiAliasType.ADVANCED;
-		m_LvlMin.textField.gridFitType=GridFitType.PIXEL;
-		m_LvlMin.textField.restrict = "0-9";
-		m_LvlMin.textField.maxChars = 9;
-		m_LvlMin.text="";
-		addChild(m_LvlMin);
-
-		m_LvlMax=new TextInput();
-		m_LvlMax.x=m_LvlMin.x+m_LvlMin.width+5;
-		m_LvlMax.y=m_LvlMin.y;
-		m_LvlMax.width=70;
-		m_LvlMax.setStyle("focusRectSkin", focusRectSkinNone);
-		m_LvlMax.setStyle("textFormat", new TextFormat("Calibri",13,0xc4fff2));
-		m_LvlMax.setStyle("embedFonts", true);
-		m_LvlMax.textField.antiAliasType=AntiAliasType.ADVANCED;
-		m_LvlMax.textField.gridFitType=GridFitType.PIXEL;
-		m_LvlMax.textField.restrict = "0-9";
-		m_LvlMax.textField.maxChars = 9;
-		m_LvlMax.text="";
-		addChild(m_LvlMax);
-
-		m_SlotTypeLabel=new TextField();
-		m_SlotTypeLabel.x=m_LvlMax.x+m_LvlMax.width+15;
-		m_SlotTypeLabel.y=m_LvlMax.y;
-		m_SlotTypeLabel.width=1;
-		m_SlotTypeLabel.height=1;
-		m_SlotTypeLabel.type=TextFieldType.DYNAMIC;
-		m_SlotTypeLabel.selectable=false;
-		m_SlotTypeLabel.border=false;
-		m_SlotTypeLabel.background=false;
-		m_SlotTypeLabel.multiline=false;
-		m_SlotTypeLabel.autoSize=TextFieldAutoSize.LEFT;
-		m_SlotTypeLabel.antiAliasType=AntiAliasType.ADVANCED;
-		m_SlotTypeLabel.gridFitType=GridFitType.PIXEL;
-		m_SlotTypeLabel.defaultTextFormat=new TextFormat("Calibri",13,0xffffff);
-		m_SlotTypeLabel.embedFonts=true;
-		m_SlotTypeLabel.text="Slot:";
-		addChild(m_SlotTypeLabel);
-		
-		m_SlotType=new ComboBox();
-		m_SlotType.x=m_SlotTypeLabel.x+m_SlotTypeLabel.width+5;
-		m_SlotType.y=m_SlotTypeLabel.y;
-		m_SlotType.width=100;
-		Common.UIStdComboBox(m_SlotType);
-		m_SlotType.rowCount=20;
-		m_SlotType.addItem( { label:" ", data:-1 } );
-		m_SlotType.addItem( { label:"None", data:Common.HoldSlotTypeNone } );
-		m_SlotType.addItem( { label:"Blue", data:Common.HoldSlotTypeBlue } );
-		m_SlotType.addItem( { label:"Green", data:Common.HoldSlotTypeGreen } );
-		m_SlotType.addItem( { label:"Red", data:Common.HoldSlotTypeRed } );
-		m_SlotType.addItem( { label:"Yellow", data:Common.HoldSlotTypeYellow } );
-		m_SlotType.selectedIndex=0;
-		addChild(m_SlotType);
-
-		m_SearchLabel=new TextField();
-		m_SearchLabel.x=m_SlotType.x+m_SlotType.width+15;
-		m_SearchLabel.y=m_SlotType.y;
-		m_SearchLabel.width=1;
-		m_SearchLabel.height=1;
-		m_SearchLabel.type=TextFieldType.DYNAMIC;
-		m_SearchLabel.selectable=false;
-		m_SearchLabel.border=false;
-		m_SearchLabel.background=false;
-		m_SearchLabel.multiline=false;
-		m_SearchLabel.autoSize=TextFieldAutoSize.LEFT;
-		m_SearchLabel.antiAliasType=AntiAliasType.ADVANCED;
-		m_SearchLabel.gridFitType=GridFitType.PIXEL;
-		m_SearchLabel.defaultTextFormat=new TextFormat("Calibri",13,0xffffff);
-		m_SearchLabel.embedFonts=true;
-		m_SearchLabel.text="Search:";
-		addChild(m_SearchLabel);
-		
-		m_SearchEdit=new TextInput();
-		m_SearchEdit.x=m_SearchLabel.x+m_SearchLabel.width+5;
-		m_SearchEdit.y=m_SearchLabel.y;
-		m_SearchEdit.width=100;
-		m_SearchEdit.setStyle("focusRectSkin", focusRectSkinNone);
-		m_SearchEdit.setStyle("textFormat", new TextFormat("Calibri",13,0xc4fff2));
-		m_SearchEdit.setStyle("embedFonts", true);
-		m_SearchEdit.textField.antiAliasType=AntiAliasType.ADVANCED;
-		m_SearchEdit.textField.gridFitType=GridFitType.PIXEL;
-		m_SearchEdit.textField.maxChars = 100;
-		m_SearchEdit.text="";
-		addChild(m_SearchEdit);
-
-		m_ButQuery=new Button();
-		m_ButQuery.label = "Query";
-		m_ButQuery.width=80;
-		Common.UIStdBut(m_ButQuery);
+		m_ButQuery = new CtrlBut();
 		m_ButQuery.addEventListener(MouseEvent.CLICK, clickQuery);
-		m_ButQuery.x=SizeX-10-m_ButClose.width;
-		m_ButQuery.y=m_SearchEdit.y;
-		addChild(m_ButQuery);
+		CtrlAdd(m_ButQuery);
 
-		m_ItemList=new DataGrid();
-		m_ItemList.x=10;
-		m_ItemList.y=70;
-		m_ItemList.width=SizeX-20;
-		m_ItemList.height=m_ButClose.y-10-m_ItemList.y;
-		addChild(m_ItemList);
+		m_ButChange = new CtrlBut();
+		m_ButChange.addEventListener(MouseEvent.CLICK, clickChange);
+		CtrlAdd(m_ButChange);
 
-//		m_ItemList.addEventListener(Event.CHANGE,onMemberListChange);
+		m_ButImg = new CtrlBut();
+		m_ButImg.addEventListener(MouseEvent.CLICK, clickImg);
+		CtrlAdd(m_ButImg);
 
-		m_ItemList.setStyle("skin",ListOnlineUser_skin);
-		m_ItemList.setStyle("cellRenderer",ItemListRenderer);
-		
-		m_ItemList.setStyle("trackUpSkin",Chat_ScrollTrack_skin);
-		m_ItemList.setStyle("trackOverSkin",Chat_ScrollTrack_skin);
-		m_ItemList.setStyle("trackDownSkin",Chat_ScrollTrack_skin);
-		m_ItemList.setStyle("trackDisabledSkin",Chat_ScrollTrack_skin);
-		
-		m_ItemList.setStyle("thumbUpSkin",Chat_ScrollThumb_upSkin);
-		m_ItemList.setStyle("thumbOverSkin",Chat_ScrollThumb_upSkin);
-		m_ItemList.setStyle("thumbDownSkin",Chat_ScrollThumb_upSkin);
-		m_ItemList.setStyle("thumbDisabledSkin",Chat_ScrollThumb_upSkin);
-		m_ItemList.setStyle("thumbIcon",Chat_ScrollBar_thumbIcon);
-		
-		m_ItemList.setStyle("upArrowDownSkin",Chat_ScrollArrowUp_upSkin);
-		m_ItemList.setStyle("upArrowOverSkin",Chat_ScrollArrowUp_upSkin);
-		m_ItemList.setStyle("upArrowUpSkin",Chat_ScrollArrowUp_upSkin);
-		m_ItemList.setStyle("upArrowDisabledSkin",Chat_ScrollArrowUp_upSkin);
-		
-		m_ItemList.setStyle("downArrowDownSkin",Chat_ScrollArrowDown_upSkin);
-		m_ItemList.setStyle("downArrowOverSkin",Chat_ScrollArrowDown_upSkin);
-		m_ItemList.setStyle("downArrowUpSkin",Chat_ScrollArrowDown_upSkin);
-		m_ItemList.setStyle("downArrowDisabledSkin",Chat_ScrollArrowDown_upSkin);
-		
-		m_ItemList.setStyle("headerTextFormat",new TextFormat("Calibri",14,0xffffff));
-		m_ItemList.setStyle("headerУmbedFonts", true);
-		m_ItemList.setStyle("headerTextPadding", 5);
-		
-		m_ItemList.rowHeight=22;
+		contentSpaceTop = m_ButQuery.height + 10;
+		contentSpaceBottom = m_ButImg.height + 10;
 
-		var col:DataGridColumn;
-		col=new DataGridColumn("Id"); col.headerText="Id"; col.width=80; m_ItemList.addColumn(col);
-		col=new DataGridColumn("Name"); col.headerText="Name"; col.width=160; m_ItemList.addColumn(col);
-		col=new DataGridColumn("Lvl"); col.headerText="Lvl"; col.width=80; m_ItemList.addColumn(col);
-		col=new DataGridColumn("Slot"); col.headerText="Slot"; col.width=80; m_ItemList.addColumn(col);
-		col=new DataGridColumn("Owner"); col.headerText="Owner"; col.width=160; m_ItemList.addColumn(col);
-		m_ItemList.minColumnWidth=30;
-
-		m_ItemList.doubleClickEnabled=true; 
-		m_ItemList.addEventListener(MouseEvent.DOUBLE_CLICK,onDoubleClickItemList);
-		m_ItemList.addEventListener(Event.CHANGE,onItemChange);
-
-		addEventListener(MouseEvent.MOUSE_DOWN,onMouseDown);
-//		addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
-		addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
+		doubleClickEnabled = true;
+		addEventListener(MouseEvent.DOUBLE_CLICK, clickDbl);
 	}
 	
-	public function IsScroll():Boolean
+	override public function Hide():void
 	{
-		return false;
-		// Заглушка так как неправильно устанавливается обработчик а UIScrollBar
-		if (!visible) return false;
+		super.Hide();
+	}
+
+	override public function Show():void
+	{
+		super.Show();
+
+		m_ButQuery.caption = "Query";
+		m_ButQuery.x = width - innerRight - m_ButQuery.width;
+		m_ButQuery.y = innerTop;
 		
-		if (!m_ItemList.verticalScrollBar.mouseChildren) return true;
-		return false;
-	}
-
-	protected function onMouseDown(e:MouseEvent):void
-	{
-		e.stopImmediatePropagation();
-
-		if(FormMessageBox.Self.visible) return;
-		if(m_ItemList.hitTestPoint(e.stageX,e.stageY)) return;
-		if(m_ButClose.hitTestPoint(e.stageX,e.stageY)) return;
-		if(m_ButImg.hitTestPoint(e.stageX,e.stageY)) return;
-		if(m_ButQuery.hitTestPoint(e.stageX,e.stageY)) return;
-		if(m_SearchEdit.hitTestPoint(e.stageX,e.stageY)) return;
-		if(m_SlotType.hitTestPoint(e.stageX,e.stageY)) return;
-		if(m_LvlMin.hitTestPoint(e.stageX,e.stageY)) return;
-		if(m_LvlMax.hitTestPoint(e.stageX,e.stageY)) return;
+		m_ButChange.caption = "Change";
+		m_ButChange.x = width - innerRight - m_ButChange.width;
+		m_ButChange.y = height - innerBottom - m_ButChange.height;
 		
-		startDrag();
-		stage.addEventListener(MouseEvent.MOUSE_UP,onMouseUpDrag,true,999);
-	}
-
-	protected function onMouseUpDrag(e:MouseEvent):void
-	{
-		stage.removeEventListener(MouseEvent.MOUSE_UP,onMouseUpDrag,true);
-		stopDrag();
-	}
-
-	public function onMouseUp(event:MouseEvent) : void
-	{
-		event.stopImmediatePropagation();
-	}
-
-	public function onMouseMove(e:MouseEvent) : void
-	{
-		if(!IsScroll()) e.stopImmediatePropagation();
-	}
-
-	public function Hide():void
-	{
-		visible=false;
-	}
-
-	public function clickClose(event:MouseEvent):void
-	{
-		Hide();
-	}
-
-	public function Show():void
-	{
-		visible=true;
-
-		x=Math.ceil(m_Map.stage.stageWidth/2-SizeX/2);
-		y=Math.ceil(m_Map.stage.stageHeight/2-SizeY/2);
+		m_ButImg.caption = "Img";
+		m_ButImg.x = width - innerRight - m_ButImg.width - m_ButChange.width;
+		m_ButImg.y = height - innerBottom - m_ButImg.height;
 	}
 
 	public function clickQuery(event:MouseEvent):void
@@ -323,18 +88,18 @@ public class FormItemManager extends Sprite
 
 		var d:String="";
 
-		tstr=m_SearchEdit.text;
+/*		tstr=m_SearchEdit.text;
 		if(tstr.length>0) {
 			d+="--"+boundary+"\r\n";
 			d+="Content-Disposition: form-data; name=\"search\"\r\n\r\n";
 			d+=tstr+"\r\n";
 		}
 
-		tstr=m_LvlMin.text;
-		if(tstr.length>0) {
-			d+="--"+boundary+"\r\n";
-			d+="Content-Disposition: form-data; name=\"lvlmin\"\r\n\r\n";
-			d+=int(tstr).toString()+"\r\n";
+		tstr = m_LvlMin.text;
+		if (tstr.length > 0) {
+			d += "--" + boundary + "\r\n";
+			d += "Content-Disposition: form-data; name=\"lvlmin\"\r\n\r\n";
+			d += int(tstr).toString() + "\r\n";
 		}
 
 		tstr=m_LvlMax.text;
@@ -348,7 +113,7 @@ public class FormItemManager extends Sprite
 			d+="--"+boundary+"\r\n";
 			d+="Content-Disposition: form-data; name=\"slottype\"\r\n\r\n";
 			d+=m_SlotType.selectedItem.data.toString()+"\r\n";
-		}
+		}*/
 
 		if(d.length>0) {
 			d+="--"+boundary+"--\r\n";
@@ -359,6 +124,34 @@ public class FormItemManager extends Sprite
 		}
 	}
 
+	public function SearchDelAll():void
+	{
+		var i:int;
+		var s:ItemSearch;
+
+		for (i = m_SearchArray.length - 1; i >= 0; i--) {
+			s = m_SearchArray[i];
+			SearchDelete(i);
+		}
+	}
+
+	public function SearchDelete(i:int):void
+	{
+		if (i<0 || i>=m_SearchArray.length) return;
+
+		var s:ItemSearch = m_SearchArray[i];
+
+		s.m_IIcon = null;
+		if (s.m_IBox != null) { ItemDelete(ItemByObj(s.m_IBox)); s.m_IBox = null; }
+		if (s.m_IName != null) { ItemDelete(ItemByObj(s.m_IName)); s.m_IName = null; }
+		if (s.m_IOwner != null) { ItemDelete(ItemByObj(s.m_IOwner)); s.m_IOwner = null; }
+		if (s.m_ICnt != null) { ItemDelete(ItemByObj(s.m_ICnt)); s.m_ICnt = null; }
+		if (s.m_IPrice != null) { ItemDelete(ItemByObj(s.m_IPrice)); s.m_IPrice = null; }
+		if (s.m_IStep != null) { ItemDelete(ItemByObj(s.m_IStep)); s.m_IStep = null; }
+
+		m_SearchArray.splice(i, 1);
+	}
+
 	public function QueryAnswer(e:Event):void
 	{
 		var loader:URLLoader = URLLoader(e.target);
@@ -366,26 +159,19 @@ public class FormItemManager extends Sprite
 		var buf:ByteArray=loader.data;
 		buf.endian=Endian.LITTLE_ENDIAN;
 
-		if(m_Map.ErrorFromServer(buf.readUnsignedByte())) return;
-		
-		m_ItemList.removeAll();
+		if(EM.ErrorFromServer(buf.readUnsignedByte())) return;
+
+		SearchDelAll();
 
 		while(buf.position<buf.length) {
 			var iid:uint=buf.readUnsignedInt();
 
 			var it:Item=UserList.Self.GetItem(iid,false);
-			if(it==null) continue;
-			
-			var obj:Object={ Id:iid, Name:it.m_Id.toString(), Lvl:it.m_Lvl };
-			
-			if (it.m_OwnerId) {
-				obj.Owner = EmpireMap.Self.Txt_CotlOwnerName(0, it.m_OwnerId);
-				//var user:User=UserList.Self.GetUser(it.m_OwnerId);
-				//if(user==null) obj.Owner="Load...";
-				//else obj.Owner=user.m_Name;
-			}
+			if (it == null) continue;
 
-			m_ItemList.addItem(obj);
+			var ss:ItemSearch = new ItemSearch();
+			ss.m_ItemType = iid;
+			m_SearchArray.push(ss);
 		}
 
 		UpdateItem();
@@ -393,124 +179,258 @@ public class FormItemManager extends Sprite
 	
 	public function UpdateItem():void
 	{
-		var i:int;
-		
-		for(i=0;i<m_ItemList.length;i++) {
-			var obj:Object=m_ItemList.getItemAt(i);
+		var i:int, n:int, u:int;
+		var str:String;
+		var ss:ItemSearch;
 
-			var it:Item=UserList.Self.GetItem(obj.Id,false);
-			if(it==null) continue;
-//trace(obj.Id,it.m_Lvl);
+		Loc( -1, -1, gridItems, 0, 0, 1, 1);
 
-			obj.Lvl=it.m_Lvl;
+		var row:int = 0;
 
-			obj.Name=m_Map.Txt_ItemName(obj.Id);
+		for (i = 0; i < m_SearchArray.length; i++) {
+			ss = m_SearchArray[i];
 
-			if(it.m_SlotType==Item.stBlue) obj.Slot="Blue";
-			else if(it.m_SlotType==Item.stGreen) obj.Slot="Green";
-			else if(it.m_SlotType==Item.stRed) obj.Slot="Red";
-			else if(it.m_SlotType==Item.stYellow) obj.Slot="Yellow";
-			else obj.Slot="";
+			var item:Item = null;
+			if (ss.m_ItemType != 0) item = UserList.Self.GetItem(ss.m_ItemType & 0xffff);
 
-			if(it.m_OwnerId) {
-				var user:User = UserList.Self.GetUser(it.m_OwnerId);
-				obj.Owner = EmpireMap.Self.Txt_CotlOwnerName(0, it.m_OwnerId);
-				//if(user==null) obj.Owner="Load...";
-				//else obj.Owner=user.m_Name;
+			if (ss.m_IBox == null) {
+				ss.m_IBox = ItemObj(ItemBox()) as CtrlBox;
+				ss.m_IBox.heightMin = 47;
+				ss.m_IBox.addEventListener(Event.CHANGE, SearchSelectChange);
+				//ss.m_IBox.addEventListener(MouseEvent.MOUSE_OVER, SearchOver);
+				//ss.m_IBox.addEventListener(MouseEvent.MOUSE_OUT, SearchOut);
+				ss.m_IBox.doubleClickEnabled = true;
 			}
-			
-//			m_ItemList.invalidateItem(obj);
+			n = ItemByObj(ss.m_IBox); ItemCell(n, 0, row); ItemSpace(n, 0, 2, 0, 2); ItemCellCnt(n, 3, 2);
+			ss.m_IBox.visible = true;
+
+			if (ss.m_IIcon == null && item!=null) {
+				ss.m_IIcon = Common.ItemImg(item.m_Img);
+				if (ss.m_IIcon != null) {
+					ss.m_IBox.addChild(ss.m_IIcon);
+//					ss.m_IIcon.mouseEnabled = false;
+					ss.m_IIcon.x = 35;
+					ss.m_IIcon.y = 47 >> 1;
+				}
+			}
+
+			if (ss.m_IName == null) {
+				str = ss.m_ItemType.toString() + " - " + EM.ItemName(ss.m_ItemType);
+
+				if (item != null) {
+					var bitcnt:int = 0;
+					for (u = 0; u < Item.BonusCnt; u++) {
+						if (!item.m_BonusType[u]) continue;
+						if (Common.ItemBonusParent[item.m_BonusType[u]]) continue;
+						bitcnt += item.m_CoefBit[u];
+					}
+					if (bitcnt > 0) {
+						str += " (bit:" + bitcnt.toString() + ")";
+
+						//for (u = 0; u < Item.BonusCnt; u++) {
+						//	if (!item.m_BonusType[u]) continue;
+						//	str += " " + item.m_CoefShift[u].toString() + ":" + item.m_CoefBit[u].toString();
+						//}
+					}
+				}
+				
+				ss.m_IName = ItemObj(ItemLabel(str)) as TextField;
+				ss.m_IName.mouseEnabled = false;
+			}
+			n = ItemByObj(ss.m_IName); ItemCell(n, 0, row); 
+			/*if (ss.m_Owner) {*/ ItemSpace(n, 60, 2, 0, 0); ItemAlign(n, -1, 1); ItemCellCnt(n, 1, 1); //}
+			//else { ItemSpace(n, 60, 2, 0, 2); ItemAlign(n, -1, 0); ItemCellCnt(n, 1, 2); }
+			ss.m_IName.visible = true;
+
+			//if(ss.m_Owner) {
+				if (ss.m_IOwner == null) {
+					str =  "own";// EM.Txt_CotlOwnerName(m_CotlId, ss.m_Owner);
+					ss.m_IOwner = ItemObj(ItemLabel(str)) as TextField;
+					ss.m_IOwner.mouseEnabled = false;
+				}
+				n = ItemByObj(ss.m_IOwner); ItemCell(n, 0, row + 1); ItemSpace(n, 60, 0, 0, 2); ItemAlign(n, -1, -1);
+				//ss.m_IOwner.textColor = 0x404040;
+				ss.m_IOwner.visible = true;
+			//}
+			if (item == null) str = "-";
+			else str = BaseStr.FormatBigInt(item.m_StackMax);
+			ss.m_IOwner.text = str;
+
+			if (ss.m_ICnt == null) {
+				ss.m_ICnt = ItemObj(ItemLabel("")) as TextField;
+				ss.m_ICnt.mouseEnabled = false;
+			}
+			if (item == null) ss.m_ICnt.text = "";
+			else ss.m_ICnt.text = item.m_Lvl.toString();// "0";// BaseStr.FormatBigInt(Math.max(0, ss.m_Cnt));
+			n = ItemByObj(ss.m_ICnt); ItemCell(n, 1, row); ItemSpace(n, 10, 2, 20, 2); ItemAlign(n, 1, 0);  ItemCellCnt(n, 1, 2);
+			ss.m_ICnt.visible = true;
+
+			if (ss.m_IPrice == null) {
+				ss.m_IPrice = ItemObj(ItemLabel("")) as TextField;
+				ss.m_IPrice.mouseEnabled = false;
+			}
+			ss.m_IPrice.text = "";// BaseStr.FormatBigInt(ss.m_Price) + " cr.";
+			n = ItemByObj(ss.m_IPrice); ItemCell(n, 2, row); ItemSpace(n, 10, 2, 30, 0); ItemAlign(n, 1, 1);  ItemCellCnt(n, 1, 1);
+			ss.m_IPrice.visible = true;
+
+			if (ss.m_IStep == null) {
+				ss.m_IStep = ItemObj(ItemLabel("")) as TextField;
+				ss.m_IStep.mouseEnabled = false;
+			}
+			ss.m_IStep.text = "";// BaseStr.FormatBigInt(ss.m_Step) + " " + Common.Txt.StorageEd;
+			n = ItemByObj(ss.m_IStep); ItemCell(n, 2, row + 1); ItemSpace(n, 10, 0, 30, 2); ItemAlign(n, 1, -1);  ItemCellCnt(n, 1, 1);
+			ss.m_IStep.textColor = 0x404040;
+			ss.m_IStep.visible = true;
+
+			row += 2;
 		}
-		m_ItemList.invalidateList();
+		
+		SearchSelectChange();
+		
+		ContentBuild();
+	}
+	
+	private function SearchSelectChange(e:Event = null):void
+	{
+		var i:int;
+		var ss:ItemSearch;
+
+		if(e!=null)
+		for (i = 0; i < m_SearchArray.length; i++) {
+			ss = m_SearchArray[i];
+			if (!ss.m_IBox) continue;
+			if (ss.m_IBox == e.target) continue;
+			ss.m_IBox.select = false;
+		}
+		onItemChange(e);
+	}
+	
+	public function SearchCurItemType():uint
+	{
+		var i:int;
+		var ss:ItemSearch;
+
+		for (i = 0; i < m_SearchArray.length; i++) {
+			ss = m_SearchArray[i];
+			if (!ss.m_IBox) continue;
+			if (ss.m_IBox.select) return ss.m_ItemType;
+		}
+		return 0;
 	}
 
-	public function onDoubleClickItemList(event:Event):void
+	private function clickDbl(e:Event):void
 	{
-		var i:int,u:int,k:int;
+		if (mouseX >= contentX && mouseX < contentX + contentWidth && mouseY >= contentY && mouseY < contentY + contentHeight) {
+			clickChange(e);
+		}
+	}
 
-		event.stopImmediatePropagation();
+	public function clickChange(event:Event):void
+	{
+		var i:int, u:int, k:int, j:int;
+		var str:String;
+		var cb:CtrlComboBox;
+
+		var it:Item = UserList.Self.GetItem(SearchCurItemType());
+		if (it == null) return;
+
+		FI.Init(480, 500);
+		FI.caption = Common.TxtEdit.EditItemCaption;
+
+		FI.TabAdd("Main");
+		FI.tab = 0;
+
+		FI.AddLabel(Common.TxtEdit.ItemName + ":");
+		FI.Col();
+		FI.AddInput(EM.Txt_ItemName(it.m_Id), 32 - 1, true, Server.Self.m_Lang);
+
+		FI.AddLabel(Common.TxtEdit.ItemDesc + ":");
+		FI.AddCode(EM.Txt_ItemDesc(it.m_Id), 512 - 1, true, Server.Self.m_Lang).heightMin = 100;
+
+		//FI.AddLabel(Common.TxtEdit.ItemSlotType+":");
+		FI.AddLabel(Common.Txt.HangarAddSlotType + ":");
+		FI.Col();
+		FI.AddComboBox();
+		FI.AddItem("None", Hangar.stNone, it.m_SlotType == Hangar.stNone);
+		FI.AddItem(Common.Txt.HangarSlotEnergy, Hangar.stEnergy, it.m_SlotType == Hangar.stEnergy);
+		FI.AddItem(Common.Txt.HangarSlotCharge, Hangar.stCharge, it.m_SlotType == Hangar.stCharge);
+		FI.AddItem(Common.Txt.HangarSlotCore, Hangar.stCore, it.m_SlotType == Hangar.stCore);
+		FI.AddItem(Common.Txt.HangarSlotSupply, Hangar.stSupply, it.m_SlotType == Hangar.stSupply);
 		
-		if(m_ItemList.selectedItem==null) return;
-		
-		var it:Item=UserList.Self.GetItem(m_ItemList.selectedItem.Id);
-		if(it==null) return;
+//	static public const stNone:int = 0;
+//	static public const stEnergy:int = 1;
+//	static public const stCharge:int = 2;
+//	static public const stCore:int = 3;
+//	static public const stSupply:int = 4;
 
-		m_Map.m_FormInput.Init(500);
-		m_Map.m_FormInput.AddLabel(Common.TxtEdit.EditItemCaption + ":", 18);
-		
-		m_Map.m_FormInput.PageAdd("Main");
+		FI.AddLabel(Common.TxtEdit.ItemLvl + ":");
+		FI.Col();
+		FI.AddInput(it.m_Lvl.toString(), 6, true, 0);
 
-		m_Map.m_FormInput.AddLabel(Common.TxtEdit.ItemName+":");
-		m_Map.m_FormInput.Col();
-		m_Map.m_FormInput.AddInput(m_Map.Txt_ItemName(it.m_Id),32-1,true,Server.Self.m_Lang);
+		FI.AddLabel(Common.TxtEdit.ItemStackMax+":");
+		FI.Col();
+		FI.AddInput(it.m_StackMax.toString(),9,true,0);
 
-		m_Map.m_FormInput.AddLabel(Common.TxtEdit.ItemDesc+":");
-		m_Map.m_FormInput.AddArea(100,true,m_Map.Txt_ItemDesc(it.m_Id),512-1,true,Server.Self.m_Lang);
-		
-		m_Map.m_FormInput.AddLabel(Common.TxtEdit.ItemSlotType+":");
-		m_Map.m_FormInput.Col();
-		m_Map.m_FormInput.AddComboBox();
-		m_Map.m_FormInput.AddItem("None",Item.stNone,it.m_SlotType==Item.stNone);
-		m_Map.m_FormInput.AddItem("Blue",Item.stBlue,it.m_SlotType==Item.stBlue);
-		m_Map.m_FormInput.AddItem("Green",Item.stGreen,it.m_SlotType==Item.stGreen);
-		m_Map.m_FormInput.AddItem("Red",Item.stRed,it.m_SlotType==Item.stRed);
-		m_Map.m_FormInput.AddItem("Yellow",Item.stYellow,it.m_SlotType==Item.stYellow);
+		var tb:int = FI.TabAdd("Bonus");
 
-		m_Map.m_FormInput.AddLabel(Common.TxtEdit.ItemLvl+":");
-		m_Map.m_FormInput.Col();
-		m_Map.m_FormInput.AddInput(it.m_Lvl.toString(),6,true,0);
+		for (i = 0; i < 16; i++) {
+			//FI.TabAdd("" + i.toString());
+			FI.PageAdd(i.toString(), tb);
+			FI.page = 0;
 
-		m_Map.m_FormInput.AddLabel(Common.TxtEdit.ItemStackMax+":");
-		m_Map.m_FormInput.Col();
-		m_Map.m_FormInput.AddInput(it.m_StackMax.toString(),9,true,0);
+			for (u = 0; u < 1; u++) {
+				j = i * 1 + u;
 
-		for (i = 0; i < 4;i++) {
-			m_Map.m_FormInput.PageAdd("Bonus" + i.toString());
+				FI.AddLabel("Type" + j.toString() + ":");
+				FI.Col();
+				cb = FI.AddComboBox();
+				FI.AddItem("", 0, 0 == it.m_BonusType[j]);
+				cb.current = Common.FillBonusItem(cb.menu, it.m_BonusType[j]);
 
-			for (u = 0; u < 4;u++) {
-				m_Map.m_FormInput.AddLabel("Type" + (i * 4 + u).toString() + ":");
-				m_Map.m_FormInput.Col();
-				m_Map.m_FormInput.AddComboBox();
-				m_Map.m_FormInput.AddItem("None", 0, 0 == it.m_BonusType[i * 4 + u]);
-				for (k = 1; k < Common.ItemBonusCnt; k++) {
-					m_Map.m_FormInput.AddItem(Common.ItemBonusName[k], k, k == it.m_BonusType[i * 4 + u]);
+				FI.AddLabel("Val" + j.toString() + ":");
+				FI.Col();
+				FI.AddInput(it.m_BonusVal[j].toString(), 6, true, 0);
+
+				FI.AddLabel("Difficult" + j.toString() + ":");
+				FI.Col();
+				FI.AddInput(it.m_BonusDif[j].toString(), 6, true, 0);
+
+				str = "";
+				for (k = 0; k < it.m_CoefCnt[j]; k++) {
+					if (k != 0) str += ", ";
+					str += it.m_Coef[j * Item.CoefCnt + k].toString();
 				}
 
-				m_Map.m_FormInput.AddLabel("Val" + (i * 4 + u).toString() + ":");
-				m_Map.m_FormInput.Col();
-				m_Map.m_FormInput.AddInput(it.m_BonusVal[i * 4 + u].toString(), 6, true, 0);
-
-				m_Map.m_FormInput.AddLabel("Difficult" + (i * 4 + u).toString() + ":");
-				m_Map.m_FormInput.Col();
-				m_Map.m_FormInput.AddInput(it.m_BonusDif[i * 4 + u].toString(), 6, true, 0);
+				FI.AddLabel("Coef" + j.toString() + ":");
+				FI.Col();
+				FI.AddInput(str, 255, true, 0, true, "-,");
 			}
 		}
 
-		m_Map.m_FormInput.ColAlign();
-		m_Map.m_FormInput.Run(EditItemSend);
+		FI.Run(EditItemSend, StdMap.Txt.ButSave, StdMap.Txt.ButCancel);
 	}
 
 	private function EditItemSend():void
 	{
-		var i:int, u:int, k:int;
-		var tstr:String;
-		var boundary:String=Server.Self.CreateBoundary();
+		var i:int, u:int, k:int, j:int, srclen:int, vlen:int, v:int, sme:int;
+		var tstr:String, src:String;
+		var boundary:String = Server.Self.CreateBoundary();
 
-		var it:Item=UserList.Self.GetItem(m_ItemList.selectedItem.Id);
+		var it:Item = UserList.Self.GetItem(SearchCurItemType());
 		if(it==null) return;
 
 		var d:String = "";
 
 		k = 0;
 
-		tstr=m_Map.m_FormInput.GetStr(k++);
+		tstr = FI.GetStr(k++);
 		if(tstr.length>0) {
 			d+="--"+boundary+"\r\n";
 			d+="Content-Disposition: form-data; name=\"iname\"\r\n\r\n";
 			d+=tstr+"\r\n";
 		}
 
-		tstr=m_Map.m_FormInput.GetStr(k++);
+		tstr=FI.GetStr(k++);
 		if(tstr.length>0) {
 			d+="--"+boundary+"\r\n";
 			d+="Content-Disposition: form-data; name=\"idesc\"\r\n\r\n";
@@ -519,29 +439,54 @@ public class FormItemManager extends Sprite
 
 		d += "--" + boundary + "\r\n";
 		d += "Content-Disposition: form-data; name=\"slottype\"\r\n\r\n";
-		d += m_Map.m_FormInput.GetInt(k++).toString() + "\r\n";
+		d += FI.GetInt(k++).toString() + "\r\n";
 
 		d += "--" + boundary + "\r\n";
 		d += "Content-Disposition: form-data; name=\"lvl\"\r\n\r\n";
-		d += m_Map.m_FormInput.GetInt(k++).toString() + "\r\n";
+		d += FI.GetInt(k++).toString() + "\r\n";
 
 		d += "--" + boundary + "\r\n";
 		d += "Content-Disposition: form-data; name=\"smax\"\r\n\r\n";
-		d += m_Map.m_FormInput.GetInt(k++).toString() + "\r\n";
+		d += FI.GetInt(k++).toString() + "\r\n";
 
 		d += "--" + boundary + "\r\n";
 		d += "Content-Disposition: form-data; name=\"itemid\"\r\n\r\n";
 		d += it.m_Id.toString() + "\r\n";
 
 		tstr = "";
-		for (i = 0; i < 4; i++) {
-			for (u = 0; u < 4; u++) {
+		for (i = 0; i < 16; i++) {
+			for (u = 0; u < 1; u++) {
 				if (i != 0 || u != 0) tstr += "~";
-				tstr += m_Map.m_FormInput.GetInt(k++).toString();
+				tstr += FI.GetInt(k++).toString();
 				tstr += "~";
-				tstr += m_Map.m_FormInput.GetInt(k++).toString();
+				tstr += FI.GetInt(k++).toString();
 				tstr += "~";
-				tstr += m_Map.m_FormInput.GetInt(k++).toString();
+				tstr += FI.GetInt(k++).toString();
+
+				tstr += "~";
+				src = FI.GetStr(k++);
+				srclen = src.length;
+				sme = 0;
+				for (j = 0; j < Item.CoefCnt; j++) {
+					while (srclen > 0 && src.charCodeAt(sme) == 32) { sme++; srclen--; }
+
+					vlen = BaseStr.ParseIntLen(src, sme, srclen);
+					if (vlen <= 0) break;
+
+					v = int(src.substr(sme, vlen));
+					if (j != 0) tstr += "_";
+					tstr += v.toString();
+
+					sme += vlen;
+					srclen -= vlen;
+
+					while (srclen > 0 && src.charCodeAt(sme) == 32) { sme++; srclen--; }
+
+					if (srclen <= 0) break;
+					if (src.charCodeAt(sme) != 44) break;
+					sme++;
+					srclen--;
+				}
 			}
 		}
 		d += "--" + boundary + "\r\n";
@@ -560,30 +505,29 @@ public class FormItemManager extends Sprite
 		var buf:ByteArray=loader.data;
 		buf.endian=Endian.LITTLE_ENDIAN;
 		
-		if(m_Map.ErrorFromServer(buf.readUnsignedByte())) return;
+		if(EM.ErrorFromServer(buf.readUnsignedByte())) return;
 
-		m_Map.QueryTxt();
+//		m_Map.QueryTxt();
 	}
 
 	public function clickImg(event:MouseEvent):void
 	{
-		if(m_Map.m_FormItemImg.visible) m_Map.m_FormItemImg.Hide();
+		if(EM.m_FormItemImg.visible) EM.m_FormItemImg.Hide();
 		else {
-//			if(m_ItemList.item
-			var it:Item=UserList.Self.GetItem(m_ItemList.selectedItem.Id);
-			if(it!=null) {
-				m_Map.m_FormItemImg.m_CurNo=it.m_Img;
-				m_Map.m_FormItemImg.Show();
+			var it:Item = UserList.Self.GetItem(SearchCurItemType());
+			if (it != null) {
+				EM.m_FormItemImg.Show();
+				EM.m_FormItemImg.ChangeCur(it.m_Img);
 			}
 		}
 	}
 	
 	public function onItemChange(e:Event):void
 	{
-		if(m_Map.m_FormItemImg.visible) {
-			var it:Item=UserList.Self.GetItem(m_ItemList.selectedItem.Id);
-			if(it!=null) {
-				m_Map.m_FormItemImg.ChangeCur(it.m_Img);
+		if(EM.m_FormItemImg.visible) {
+			var it:Item = UserList.Self.GetItem(SearchCurItemType());
+			if (it != null) {
+				EM.m_FormItemImg.ChangeCur(it.m_Img);
 			}
 		}
 	}
@@ -591,33 +535,20 @@ public class FormItemManager extends Sprite
 
 }
 
-import fl.controls.listClasses.CellRenderer;
-import fl.events.ComponentEvent;
+import Engine.*;
+import flash.display.DisplayObject;
+import flash.display.Sprite;
 import flash.text.*;
 
-class ItemListRenderer extends CellRenderer
+class ItemSearch
 {
-	public function ItemListRenderer() {
-		var originalStyles:Object = CellRenderer.getStyleDefinition();
-		setStyle("upSkin",CellRenderer_OU_upSkin);
-		setStyle("downSkin",CellRendere_PL_selectedUpSkin);
-		setStyle("overSkin",CellRendere_PL_selectedUpSkin);
-		setStyle("selectedUpSkin",CellRendere_PL_selectedUpSkin);
-		setStyle("selectedDownSkin",CellRendere_PL_selectedUpSkin);
-		setStyle("selectedOverSkin",CellRendere_PL_selectedUpSkin);
-		setStyle("textFormat",new TextFormat("Calibri",14,0xffffff));
-		setStyle("embedFonts", true);
-		setStyle("textPadding",5);
-		
-//		addEventListener(ComponentEvent.LABEL_CHANGE, labelChangeHandler);
-	}
-	
-//	function labelChangeHandler(event:ComponentEvent):void
-//	{
-//		if(FormChat.Self.UserIsOnline(data.User)) {
-//			setStyle("textFormat",new TextFormat("Calibri",14,0xffffff));
-//		} else {
-//			setStyle("textFormat",new TextFormat("Calibri",14,0x808080));
-//		}
-//	}
+	public var m_ItemType:uint = 0;
+
+	public var m_IIcon:DisplayObject;
+	public var m_IBox:CtrlBox;
+	public var m_IName:TextField;
+	public var m_IOwner:TextField;
+	public var m_ICnt:TextField;
+	public var m_IPrice:TextField;
+	public var m_IStep:TextField;
 }

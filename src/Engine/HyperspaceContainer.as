@@ -55,7 +55,7 @@ public class HyperspaceContainer extends HyperspaceEntity
 			m_Model = null;
 		}
 	}
-	
+
 	public function SetFormation():void
 	{
 		ClearGraph();

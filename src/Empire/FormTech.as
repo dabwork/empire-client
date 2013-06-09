@@ -45,7 +45,7 @@ public class FormTech extends Sprite
 
 	public var m_Timer:Timer=new Timer(200);
 	
-	public var m_Owner:uint=0;
+	public var m_Owner:uint = 0;
 
 	public function FormTech(map:EmpireMap)
 	{
@@ -56,10 +56,10 @@ public class FormTech extends Sprite
 		var s:Sprite;
 		var bm:Bitmap;
 		var i:int,u:int;
-		
+
 		m_Timer.addEventListener("timer",UpdateTimer);
-		
-		m_LabelCaption=new TextField();
+
+		m_LabelCaption = new TextField();
 		m_LabelCaption.x=10;
 		m_LabelCaption.y=5;
 		m_LabelCaption.width=1;
@@ -92,7 +92,7 @@ public class FormTech extends Sprite
 		m_LabelCost.embedFonts=true;
 		addChild(m_LabelCost);
 		
-		m_LabelResearch=new TextField();
+		m_LabelResearch = new TextField();
 		m_LabelResearch.width=1;
 		m_LabelResearch.height=1;
 		m_LabelResearch.type=TextFieldType.DYNAMIC;
@@ -107,7 +107,7 @@ public class FormTech extends Sprite
 		m_LabelResearch.embedFonts=true;
 		addChild(m_LabelResearch);
 
-		m_LabelResearchNext=new TextField();
+		m_LabelResearchNext = new TextField();
 		m_LabelResearchNext.width=1;
 		m_LabelResearchNext.height=1;
 		m_LabelResearchNext.type=TextFieldType.DYNAMIC;
@@ -130,10 +130,10 @@ public class FormTech extends Sprite
 		m_ButClose.x=SizeX-10-m_ButClose.width;
 		m_ButClose.y=SizeY-10-m_ButClose.height;
 		addChild(m_ButClose);
-		
+
 		m_ButResearchCancel=new Button();
 		m_ButResearchCancel.label = Common.Txt.ButCancel;
-		m_ButResearchCancel.width=70;
+		m_ButResearchCancel.width = 70;
 		Common.UIStdBut(m_ButResearchCancel);
 		m_ButResearchCancel.addEventListener(MouseEvent.CLICK, clickResearchCancel);
 		addChild(m_ButResearchCancel);
@@ -258,13 +258,13 @@ public class FormTech extends Sprite
 		
 		m_Timer.start();
 
-		if(m_Owner==Server.Self.m_UserId) {
-			m_LabelCaption.text=Common.Txt.FormTechCaption;
+		if (m_Owner == Server.Self.m_UserId) {
+			m_LabelCaption.text = Common.Txt.FormTechCaption;
 		} else {
-			m_LabelCaption.text=Common.Txt.FormTechCaption+" ("+m_Map.Txt_CotlOwnerName(Server.Self.m_CotlId,m_Owner)+")";
+			m_LabelCaption.text = Common.Txt.FormTechCaption + " (" + m_Map.Txt_CotlOwnerName(Server.Self.m_CotlId, m_Owner) + ")";
 		}
 		
-		if(UserList.Self.GetUser(m_Owner)==null) return;
+		if (UserList.Self.GetUser(m_Owner) == null) return;
 
 		Update();
 	}
@@ -304,11 +304,13 @@ public class FormTech extends Sprite
 	{
 		var i:int;
 		var bm:Bitmap;
-		
-		for(i=0;i<m_Dir.length;i++) {
-			bm=m_Dir[i].Icon;
+
+		for (i = 0; i < m_Dir.length; i++) {
+			bm = m_Dir[i].Icon;
 			if (bm.mouseX >= 0 && bm.mouseX < bm.width && bm.mouseY >= 0 && bm.mouseY < bm.height) {
 				if (Common.TechDir[32 * m_TechCur + i] == 0) return -1;
+
+				if (Common.TechDir[32 * m_TechCur + i] == Common.DirQuarkBaseBlackHole && (m_Owner & Common.OwnerAI) == 0) return -1;
 				return i;
 			}
 		}
@@ -462,47 +464,46 @@ public class FormTech extends Sprite
 		var fover:Sprite;
 		var fnormal:Sprite;
 		var fprogress:Sprite;
-		
+
 		var user:User=UserList.Self.GetUser(m_Owner,false);
 
 		var val:uint=user.m_Tech[m_TechCur];
 
+		for (i = 0; i < 4 * 8; i++) {
+			fbg = m_Dir[i].BG;
+			icon = m_Dir[i].Icon;
+			fnormal = m_Dir[i].FrameNormal;
+			fprogress = m_Dir[i].FrameProgress;
+			fover = m_Dir[i].FrameOver;
 
-		for(i=0;i<4*8;i++) {
-			fbg=m_Dir[i].BG;
-			icon=m_Dir[i].Icon;
-			fnormal=m_Dir[i].FrameNormal;
-			fprogress=m_Dir[i].FrameProgress;
-			fover=m_Dir[i].FrameOver;
-
-			if(Common.TechDir[32*m_TechCur+i]==0) {
-				fbg.visible=true;
-				icon.visible=false;
-				fnormal.visible=false;
-				fprogress.visible=false;
-				fover.visible=false;
+			if (Common.TechDir[32 * m_TechCur + i] == 0 || (Common.TechDir[32 * m_TechCur + i] == Common.DirQuarkBaseBlackHole && (m_Owner & Common.OwnerAI) == 0)) {
+				fbg.visible = true;
+				icon.visible = false;
+				fnormal.visible = false;
+				fprogress.visible = false;
+				fover.visible = false;
 			} else {
 //if(m_TechCur==3) trace(i,"Tech=",m_TechCur,"Length=",Common.TechDir.length,"Tech=",Common.TechDir[32*m_TechCur+i],"BM=",m_DirImg2[Common.TechDir[32*m_TechCur+i]]);
-				fbg.visible=true;
+				fbg.visible = true;
 				if(val & (1<<i)) {
-					icon.bitmapData=m_DirImg[Common.TechDir[32*m_TechCur+i]];
-					icon.alpha=1.0;
+					icon.bitmapData = m_DirImg[Common.TechDir[32 * m_TechCur + i]];
+					icon.alpha = 1.0;
 				} else {
-					icon.bitmapData=m_DirImg2[Common.TechDir[32*m_TechCur+i]];
-					if(CanOn(i)) icon.alpha=0.9;
-					else if((m_Owner == Server.Self.m_UserId) && (m_Map.m_UserResearchLeft>0) && (m_Map.m_UserResearchTech==m_TechCur) && (m_Map.m_UserResearchDir==i)) icon.alpha=0.9;
-					else icon.alpha=0.4;
+					icon.bitmapData = m_DirImg2[Common.TechDir[32 * m_TechCur + i]];
+					if (CanOn(i)) icon.alpha = 0.9;
+					else if ((m_Owner == Server.Self.m_UserId) && (m_Map.m_UserResearchLeft > 0) && (m_Map.m_UserResearchTech == m_TechCur) && (m_Map.m_UserResearchDir == i)) icon.alpha = 0.9;
+					else icon.alpha = 0.4;
 				}
-				icon.visible=true;
-				fnormal.visible=(m_DirMouse!=i);
-				if(m_Owner == Server.Self.m_UserId) {
-					fprogress.visible=(m_Map.m_UserResearchLeft>0) && (m_Map.m_UserResearchTech==m_TechCur) && (m_Map.m_UserResearchDir==i);
-					if(!fprogress.visible && (m_Map.m_UserFlag & Common.UserFlagTechNext) && (m_Map.m_UserResearchTechNext==m_TechCur) && (m_Map.m_UserResearchDirNext==i)) fprogress.visible=true;
+				icon.visible = true;
+				fnormal.visible = (m_DirMouse != i);
+				if (m_Owner == Server.Self.m_UserId) {
+					fprogress.visible = (m_Map.m_UserResearchLeft > 0) && (m_Map.m_UserResearchTech == m_TechCur) && (m_Map.m_UserResearchDir == i);
+					if (!fprogress.visible && (m_Map.m_UserFlag & Common.UserFlagTechNext) && (m_Map.m_UserResearchTechNext == m_TechCur) && (m_Map.m_UserResearchDirNext == i)) fprogress.visible = true;
 				} else {
-					fprogress.visible=false;
+					fprogress.visible = false;
 				} 
 				//fprogress.visible=(m_Map.m_UserResearchLeft>0) && (Common.TechDir[m_Map.m_UserResearchTech*32+m_Map.m_UserResearchDir]==Common.TechDir[32*m_TechCur+i]);
-				fover.visible=(m_DirMouse==i);
+				fover.visible = (m_DirMouse == i);
 			}
 		}
 	}
@@ -510,21 +511,24 @@ public class FormTech extends Sprite
 	public function CanOn(ii:int):Boolean
 	{
 		if(ii<0 || ii>=32) return false;
-		var i:int,u:int,cnt:int;
-		var user:User=UserList.Self.GetUser(m_Owner,false);
-		var val:uint=user.m_Tech[m_TechCur];
-		
-		if((m_Owner == Server.Self.m_UserId) && m_Map.m_UserResearchLeft>0 && m_Map.m_UserResearchTech==m_TechCur) val|=1<<m_Map.m_UserResearchDir;
-		
-		if(val & (1<<ii)) return false;
-		var row:int=Math.floor(i/4);
-		for(i=row-1;i>=0;i--) {
-			cnt=0;
-			for(u=0;u<4;u++) {
-				if(val&(1<<(i*4+u))) cnt++;
+		var i:int, u:int, cnt:int;
+		var user:User = UserList.Self.GetUser(m_Owner, false);
+		var val:uint = user.m_Tech[m_TechCur];
+
+		if ((m_Owner == Server.Self.m_UserId) && m_Map.m_UserResearchLeft > 0 && m_Map.m_UserResearchTech == m_TechCur) val |= 1 << m_Map.m_UserResearchDir;
+
+		if (val & (1 << ii)) return false;
+		var row:int = Math.floor(i / 4);
+		for (i = row - 1; i >= 0; i--) {
+			cnt = 0;
+			for (u = 0; u < 4; u++) {
+				if (val & (1 << (i * 4 + u))) cnt++;
 			}
-			if(cnt<2) return false;
+			if (cnt < 2) return false;
 		}
+		
+		//if ((Common.TechDir[32 * m_TechCur + ii] == Common.DirQuarkBaseBlackHole && (m_Owner & Common.OwnerAI) == 0)) return false;
+		
 		return true;
 	}
 	

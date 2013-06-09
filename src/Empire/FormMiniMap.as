@@ -2866,7 +2866,7 @@ if((t5 - t0) > 50 && EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("!SLOW.MM
 		Update();
 	}
 
-	private function SelectWormholePoint(...args):void
+	public function SelectWormholePoint(...args):void
 	{
 		EM.m_Set_ShowWormholePoint = !EM.m_Set_ShowWormholePoint;
 		EM.m_Set_ShowColony = false;

@@ -317,9 +317,12 @@ public class Action
 							ship.m_Link = 0;
 							ship.m_Flag&=~(Common.ShipFlagPortal|Common.ShipFlagEject/*|Common.ShipFlagAutoReturn|Common.ShipFlagAutoLogic*/|Common.ShipFlagCapture|Common.ShipFlagExchange|Common.ShipFlagAIRoute);
 							ship.m_Path = 0;
-							if(ship.m_CargoType!=0 && ship.m_CargoCnt<=0) {
-								ship.m_CargoType=0;
-								ship.m_CargoCnt=0;
+							if (ship.m_CargoType != 0 && ship.m_CargoCnt <= 0) {
+								var idesc:Item = UserList.Self.GetItem(ship.m_CargoType);
+								if(idesc && !idesc.IsEq()) {
+									ship.m_CargoType=0;
+									ship.m_CargoCnt = 0;
+								}
 							}
 							return true;
 						}
@@ -337,6 +340,7 @@ public class Action
 		var dx:int, dy:int;
 		var ship2:Ship;
 		var planet2:Planet;
+		var idesc:Item;
 		
 		if (EM.IsEdit()) return false;
 
@@ -539,18 +543,27 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. TargetR
  					if (!(ship2.m_Flag & (Common.ShipFlagPortal | Common.ShipFlagEject))) ship2.m_BattleTimeLock = m_ServerTime;//+Common.LogicLockAfterMove;
  					if (ship.m_Fuel > ship2.m_Fuel) ship2.m_Fuel = ship.m_Fuel;
 
-					if(ship2.m_CargoType!=Common.ItemTypeNone && ship2.m_CargoType==ship.m_CargoType) {
-						ship2.m_CargoCnt += ship.m_CargoCnt;
-						if (ship2.m_CargoCnt > EM.CargoMax(ship2.m_Type, ship2.m_Cnt + ship2.m_CntDestroy)) ship2.m_CargoCnt = EM.CargoMax(ship2.m_Type, ship2.m_Cnt + ship2.m_CntDestroy);
+					if (ship2.m_CargoType != Common.ItemTypeNone && ship2.m_CargoType == ship.m_CargoType) {
+						idesc = UserList.Self.GetItem(ship2.m_CargoType);
+						if(idesc && !idesc.IsEq()) {
+							ship2.m_CargoCnt += ship.m_CargoCnt;
+							if (ship2.m_CargoCnt > EM.CargoMax(ship2.m_Type, ship2.m_Cnt + ship2.m_CntDestroy)) ship2.m_CargoCnt = EM.CargoMax(ship2.m_Type, ship2.m_Cnt + ship2.m_CntDestroy);
+						}
 
 					} else if(ship2.m_CargoType==Common.ItemTypeNone && ship.m_CargoType!=Common.ItemTypeNone) {
  						ship2.m_CargoType = ship.m_CargoType;
  						ship2.m_CargoCnt = ship.m_CargoCnt;
-						if (ship2.m_CargoCnt > EM.CargoMax(ship2.m_Type, ship2.m_Cnt + ship2.m_CntDestroy)) ship2.m_CargoCnt = EM.CargoMax(ship2.m_Type, ship2.m_Cnt + ship2.m_CntDestroy);
+						idesc = UserList.Self.GetItem(ship2.m_CargoType);
+						if(idesc && !idesc.IsEq()) {
+							if (ship2.m_CargoCnt > EM.CargoMax(ship2.m_Type, ship2.m_Cnt + ship2.m_CntDestroy)) ship2.m_CargoCnt = EM.CargoMax(ship2.m_Type, ship2.m_Cnt + ship2.m_CntDestroy);
+						}
  					}
 
 					if(ship2.m_ItemType!=Common.ItemTypeNone && ship2.m_ItemType==ship.m_ItemType) {
-						ship2.m_ItemCnt+=ship.m_ItemCnt;
+						idesc = UserList.Self.GetItem(ship2.m_ItemType);
+						if(idesc && !idesc.IsEq()) {
+							ship2.m_ItemCnt += ship.m_ItemCnt;
+						}
 
 					} else if(ship2.m_ItemType==Common.ItemTypeNone && ship.m_ItemType!=Common.ItemTypeNone) {
  						ship2.m_ItemType=ship.m_ItemType;
@@ -560,6 +573,7 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. TargetR
 					if (ship.m_AbilityCooldown0 > ship2.m_AbilityCooldown0) ship2.m_AbilityCooldown0 = ship.m_AbilityCooldown0;
 					if (ship.m_AbilityCooldown1 > ship2.m_AbilityCooldown1) ship2.m_AbilityCooldown1 = ship.m_AbilityCooldown1;
 					if (ship.m_AbilityCooldown2 > ship2.m_AbilityCooldown2) ship2.m_AbilityCooldown2 = ship.m_AbilityCooldown2;
+					if (ship.m_AbilityCooldown3 > ship2.m_AbilityCooldown3) ship2.m_AbilityCooldown3 = ship.m_AbilityCooldown3;
 
 					//if(ship2.m_Type==Common.ShipTypeTransport) ship2.m_LogicTimeLock=m_ServerTime+Common.TransportLogicLockAfterMove;
 					//else ship2.m_LogicTimeLock=0;
@@ -576,11 +590,22 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. TargetR
 						if (ship.m_Shield > Common.GaalBarrierMax && ship.m_Race == Common.RaceGaal && ship.m_Type != Common.ShipTypeFlagship && !Common.IsBase(ship.m_Type)) ship.m_Shield = Common.GaalBarrierMax;
 					}
 
-					if(ship.m_CargoType!=0 && ship.m_CargoCnt>0 && (ship2.m_CargoType==Common.ItemTypeNone || ship2.m_CargoType==ship.m_CargoType)) {
-						var movecargo:int=Math.floor(((ship.m_CargoCnt)*cnt)/ship.m_Cnt);
-						ship.m_CargoCnt-=movecargo;
-						if(ship2.m_CargoType==Common.ItemTypeNone) { ship2.m_CargoType=ship.m_CargoType; ship2.m_CargoCnt=0; }
-						ship2.m_CargoCnt+=movecargo;
+					while (ship.m_CargoType != 0 && ship.m_CargoCnt > 0 && (ship2.m_CargoType == Common.ItemTypeNone || ship2.m_CargoType == ship.m_CargoType)) {
+						if(ship.m_CargoType) {
+							idesc = UserList.Self.GetItem(ship.m_CargoType);
+							if (!idesc || idesc.IsEq()) break;
+						}
+						if(ship2.m_CargoType) {
+							idesc = UserList.Self.GetItem(ship2.m_CargoType);
+							if (!idesc || idesc.IsEq()) break;
+						}
+
+						var movecargo:int = Math.floor(((ship.m_CargoCnt) * cnt) / ship.m_Cnt);
+						ship.m_CargoCnt -= movecargo;
+						if (ship2.m_CargoType == Common.ItemTypeNone) { ship2.m_CargoType = ship.m_CargoType; ship2.m_CargoCnt = 0; }
+						ship2.m_CargoCnt += movecargo;
+						
+						break;
 					}
 			        ship2.m_Cnt+=cnt;
 			        ship.m_Cnt-=cnt;
@@ -592,10 +617,12 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. TargetR
 						if (ship.m_AbilityCooldown0 > ship2.m_AbilityCooldown0) ship2.m_AbilityCooldown0 = ship.m_AbilityCooldown0;
 						if (ship.m_AbilityCooldown1 > ship2.m_AbilityCooldown1) ship2.m_AbilityCooldown1 = ship.m_AbilityCooldown1;
 						if (ship.m_AbilityCooldown2 > ship2.m_AbilityCooldown2) ship2.m_AbilityCooldown2 = ship.m_AbilityCooldown2;
+						if (ship.m_AbilityCooldown3 > ship2.m_AbilityCooldown3) ship2.m_AbilityCooldown3 = ship.m_AbilityCooldown3;
 					} else if (cnt < 0) {
 						if (ship2.m_AbilityCooldown0 > ship.m_AbilityCooldown0) ship.m_AbilityCooldown0 = ship2.m_AbilityCooldown0;
 						if (ship2.m_AbilityCooldown1 > ship.m_AbilityCooldown1) ship.m_AbilityCooldown1 = ship2.m_AbilityCooldown1;
 						if (ship2.m_AbilityCooldown2 > ship.m_AbilityCooldown2) ship.m_AbilityCooldown2 = ship2.m_AbilityCooldown2;
+						if (ship2.m_AbilityCooldown3 > ship.m_AbilityCooldown3) ship.m_AbilityCooldown3 = ship2.m_AbilityCooldown3;
 					}
 					
 //					if(ship2.m_Type==Common.ShipTypeTransport) {
@@ -1328,6 +1355,7 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 	{
 		var itcnt:int, ccnt:int;
 		var it:uint;
+		var idesc:Item;
 		
 		if (EM.IsEdit()) return false;
 
@@ -1393,25 +1421,44 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 			while(true) {
 				ccnt=0;
 				it=Common.ItemTypeNone;
-				if(fromship.m_CargoType!=Common.ItemTypeNone) { it=fromship.m_CargoType; ccnt+=fromship.m_CargoCnt; }
-				if(toship.m_CargoType!=Common.ItemTypeNone) { it=toship.m_CargoType; ccnt+=toship.m_CargoCnt; }
+				if (fromship.m_CargoType != Common.ItemTypeNone) {
+					idesc = UserList.Self.GetItem(fromship.m_CargoType);
+					if (!idesc || idesc.IsEq()) break;
+					it = fromship.m_CargoType;
+					ccnt += fromship.m_CargoCnt;
+				}
+				if (toship.m_CargoType != Common.ItemTypeNone) {
+					idesc = UserList.Self.GetItem(toship.m_CargoType);
+					if (!idesc || idesc.IsEq()) break;
+					it = toship.m_CargoType;
+					ccnt += toship.m_CargoCnt;
+				}
 				if(it==Common.ItemTypeNone || ccnt<=0) break;
 				if(fromship.m_CargoType!=Common.ItemTypeNone && toship.m_CargoType!=Common.ItemTypeNone && fromship.m_CargoType!=toship.m_CargoType) break;
 
-				toship.m_CargoType=it;
-				toship.m_CargoCnt=(toship.m_Cnt*Math.floor((ccnt<<8)/maxcnt))>>8;
-				if(toship.m_CargoCnt<0) { toship.m_CargoType=Common.ItemTypeNone; toship.m_CargoCnt=0; }
-				else if(toship.m_CargoCnt>ccnt) toship.m_CargoCnt=ccnt;
-				fromship.m_CargoType=it;
-				fromship.m_CargoCnt=ccnt-toship.m_CargoCnt;
-				if(fromship.m_CargoCnt<=0) { fromship.m_CargoType=Common.ItemTypeNone; fromship.m_CargoCnt=0; }
+				toship.m_CargoType = it;
+				toship.m_CargoCnt = (toship.m_Cnt * Math.floor((ccnt << 8) / maxcnt)) >> 8;
+				if (toship.m_CargoCnt < 0) { toship.m_CargoType = Common.ItemTypeNone; toship.m_CargoCnt = 0; }
+				else if (toship.m_CargoCnt > ccnt) toship.m_CargoCnt = ccnt;
+				fromship.m_CargoType = it;
+				fromship.m_CargoCnt = ccnt - toship.m_CargoCnt;
+				if (fromship.m_CargoCnt <= 0) { fromship.m_CargoType = Common.ItemTypeNone; fromship.m_CargoCnt = 0; }
 
 				break;
 			}
 
 			itcnt=m_Kind;
 			while(fromship.m_ItemType!=Common.ItemTypeNone || toship.m_ItemType!=Common.ItemTypeNone) {
-				if(itcnt<=0 && fromship.m_ItemType!=Common.ItemTypeNone && toship.m_ItemType!=Common.ItemTypeNone && fromship.m_ItemType!=toship.m_ItemType) break;
+				if (itcnt <= 0 && fromship.m_ItemType != Common.ItemTypeNone && toship.m_ItemType != Common.ItemTypeNone && fromship.m_ItemType != toship.m_ItemType) break;
+				
+				if (fromship.m_ItemType != Common.ItemTypeNone) {
+					idesc = UserList.Self.GetItem(fromship.m_ItemType);
+					if (!idesc || idesc.IsEq()) break;
+				}
+				if (toship.m_ItemType != Common.ItemTypeNone) {
+					idesc = UserList.Self.GetItem(toship.m_ItemType);
+					if (!idesc || idesc.IsEq()) break;
+				}
 
 				maxcnt=0;
 				it=fromship.m_ItemType;
@@ -1440,10 +1487,12 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 				if (fromship.m_AbilityCooldown0 > toship.m_AbilityCooldown0) toship.m_AbilityCooldown0 = fromship.m_AbilityCooldown0;
 				if (fromship.m_AbilityCooldown1 > toship.m_AbilityCooldown1) toship.m_AbilityCooldown1 = fromship.m_AbilityCooldown1;
 				if (fromship.m_AbilityCooldown2 > toship.m_AbilityCooldown2) toship.m_AbilityCooldown2 = fromship.m_AbilityCooldown2;
+				if (fromship.m_AbilityCooldown3 > toship.m_AbilityCooldown3) toship.m_AbilityCooldown3 = fromship.m_AbilityCooldown3;
 			} else if (s2add < 0) {
 				if (toship.m_AbilityCooldown0 > fromship.m_AbilityCooldown0) fromship.m_AbilityCooldown0 = toship.m_AbilityCooldown0;
 				if (toship.m_AbilityCooldown1 > fromship.m_AbilityCooldown1) fromship.m_AbilityCooldown1 = toship.m_AbilityCooldown1;
 				if (toship.m_AbilityCooldown2 > fromship.m_AbilityCooldown2) fromship.m_AbilityCooldown2 = toship.m_AbilityCooldown2;
+				if (toship.m_AbilityCooldown3 > fromship.m_AbilityCooldown3) fromship.m_AbilityCooldown3 = toship.m_AbilityCooldown3;
 			}
 
 			m_Id=EM.NewShipId(toship.m_Owner);
@@ -1491,20 +1540,28 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 
 			toship.m_CargoType=0;
 			toship.m_CargoCnt=0;
-			if(fromship.m_CargoType!=Common.ItemTypeNone && fromship.m_CargoCnt>0) {
+			while (fromship.m_CargoType != Common.ItemTypeNone && fromship.m_CargoCnt > 0) {
+				idesc = UserList.Self.GetItem(fromship.m_CargoType);
+				if (!idesc) break;
+				if (idesc.IsEq()) break;
 				ccnt = fromship.m_CargoCnt;
 				toship.m_CargoType=fromship.m_CargoType;
 				toship.m_CargoCnt=(toship.m_Cnt*Math.floor((ccnt<<8)/maxcnt))>>8;
 				if(toship.m_CargoCnt<0) { toship.m_CargoType=Common.ItemTypeNone; toship.m_CargoCnt=0; }
 				else if(toship.m_CargoCnt>ccnt) toship.m_CargoCnt=ccnt;
 				fromship.m_CargoCnt = ccnt - toship.m_CargoCnt;
-				if(fromship.m_CargoCnt<=0) { fromship.m_CargoType=Common.ItemTypeNone; fromship.m_CargoCnt=0; }
+				if (fromship.m_CargoCnt <= 0) { fromship.m_CargoType = Common.ItemTypeNone; fromship.m_CargoCnt = 0; }
+				break;
 			}
 
 			toship.TakeItem();
 
 			itcnt=m_Kind;
 			while(itcnt>0 && fromship.m_ItemType!=Common.ItemTypeNone) {
+				idesc = UserList.Self.GetItem(fromship.m_ItemType);
+				if (!idesc) break;
+				if (idesc.IsEq()) break;
+
 				if(itcnt>fromship.m_ItemCnt) itcnt=fromship.m_ItemCnt;
 				if(itcnt<=0) break;
 				
@@ -1529,6 +1586,7 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 			toship.m_AbilityCooldown0 = fromship.m_AbilityCooldown0;
 			toship.m_AbilityCooldown1 = fromship.m_AbilityCooldown1;
 			toship.m_AbilityCooldown2 = fromship.m_AbilityCooldown2;
+			toship.m_AbilityCooldown3 = fromship.m_AbilityCooldown3;
 
 			m_Id=EM.NewShipId(toship.m_Owner);
 			if(m_Id==0) return false;
@@ -1721,25 +1779,29 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 			cnt=Math.min(m_Cnt,cnt);
 			if (cnt <= 0) return false;
 
-			cnt = EM.m_FormFleetBar.FleetSysItemExtract(m_Kind, cnt);
-			if (cnt <= 0) return false;
+			cnt = EM.m_FormFleetBar.FleetSysItemExtract( -1, m_Kind, cnt);
+			if (cnt < 0) return false;
 
 			if(ship.m_CargoType!=m_Kind) { ship.m_CargoType=m_Kind; ship.m_CargoCnt=0; }
 			ship.m_CargoCnt+=cnt;
 
-		} else if (Common.ItemCanOnShip(m_Kind, ship.m_Type)) {
-			item = UserList.Self.GetItem(m_Kind & 0xffff);
+		} else if (Common.ItemCanOnShip(m_Kind, ship.m_Type) /*|| m_Kind == 256*/) {
+			item = UserList.Self.GetItem(m_Kind);
 			if (item == null) return false;
 
-			cnt=item.m_StackMax;
+			cnt = m_Cnt;
+//if(m_Kind != 256) {
+			if (item.IsEq()) return false;
+			cnt = item.m_StackMax;
 			if (ship.m_ItemType == m_Kind) cnt -= ship.m_ItemCnt;
-			cnt=Math.min(m_Cnt,cnt);
+			cnt = Math.min(m_Cnt, cnt);
 			if (cnt <= 0) return false;
 
-			cnt = EM.m_FormFleetBar.FleetSysItemExtract(m_Kind, cnt);
-			if (cnt <= 0) return false;
+			cnt = EM.m_FormFleetBar.FleetSysItemExtract( -1, m_Kind, cnt);
+			if (cnt < 0) return false;
+//}
 
-			if(ship.m_ItemType!=m_Kind) { ship.m_ItemType=m_Kind; ship.m_ItemCnt=0; }
+			if (item.IsEq() || ship.m_ItemType != m_Kind) { ship.m_ItemType = m_Kind; ship.m_ItemCnt = 0; }
 			ship.m_ItemCnt+=cnt;
 
 		} else return false;
@@ -1908,7 +1970,9 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 	public function ProcessActionCargo():Boolean
 	{
 		if (EM.IsEdit()) return false;
-		var cnt:int, i:int, val:int;
+		var cnt:int, i:int, val:int, sopl:int;
+		var idesc:Item;
+		var ship2:Ship;
 		
 		var sec:Sector=EM.GetSector(m_SectorX,m_SectorY);
 		if(sec==null) return false;
@@ -1926,30 +1990,8 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 			if (ship.m_ItemType == Common.ItemTypeNone) return false;
 			else if (ship.m_ItemType == Common.ItemTypeMine) return false;
 			
+			if (!EM.DropItemNear(planet, ship, m_ShipNum)) return false;
 
-			if(ship.m_ItemCnt>0) {
-				i=m_ShipNum+1;
-				if(i>=Common.ShipOnPlanetMax) i=0;
-				var ship2:Ship=planet.m_Ship[i];
-				if(ship2.m_Type!=Common.ShipTypeNone || (ship2.m_OrbitItemType!=Common.ItemTypeNone && ship2.m_OrbitItemType!=ship.m_ItemType)) {
-					i=m_ShipNum-1;
-					if(i<0) i=Common.ShipOnPlanetMax-1;
-					ship2=planet.m_Ship[i];
-					if(ship2.m_Type!=Common.ShipTypeNone || (ship2.m_OrbitItemType!=Common.ItemTypeNone && ship2.m_OrbitItemType!=ship.m_ItemType)) return false;
-				}
-
-				if(ship2.m_OrbitItemType==ship.m_ItemType) {
-					ship2.m_OrbitItemCnt+=ship.m_ItemCnt;
-				} else {
-					ship2.m_OrbitItemType=ship.m_ItemType;
-					ship2.m_OrbitItemCnt=ship.m_ItemCnt;
-				}
-				ship2.m_OrbitItemOwner=ship.m_Owner;
-				ship2.m_OrbitItemTimer = EM.m_ServerCalcTime;
-			}
-
-			ship.m_ItemType=Common.ItemTypeNone;
-			ship.m_ItemCnt=0;
 			return true;
 
 		} else if(m_Kind>0) {
@@ -2002,11 +2044,14 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 			//if (planet.m_Owner == 0) return false;
 			
 			if (!ship.m_CargoType) return false;
+			idesc = UserList.Self.GetItem(ship.m_CargoType);
+			if (!idesc) return false;
+			
 			cnt=EM.PlanetItemAdd(ship.m_Owner/*0xffffffff*/,planet,ship.m_CargoType,ship.m_CargoCnt);
 			if(cnt<=0) return false;
 
 			ship.m_CargoCnt-=cnt;
-			if(ship.m_CargoCnt<=0) { ship.m_CargoType=0; ship.m_CargoCnt=0; }
+			if(idesc.IsEq() || ship.m_CargoCnt<=0) { ship.m_CargoType=0; ship.m_CargoCnt=0; }
 
 			return true;
 
@@ -2519,7 +2564,10 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 				}
 			}
 
-			if (ship.m_ItemType!=Common.ItemTypeNone && ship.m_Type != Common.ShipTypeQuarkBase) {
+			while (ship.m_ItemType != Common.ItemTypeNone && ship.m_Type != Common.ShipTypeQuarkBase) {
+				var idesc:Item = UserList.Self.GetItem(ship.m_ItemType);
+				if (!idesc) break;
+				if (idesc.IsEq()) break;
 				sum = 0;
 				cnt = 0;
 				for (i = 0; i < Common.ShipOnPlanetMax; i++) {
@@ -2560,6 +2608,7 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 						sum--;
 					}
 				}
+				break;
 			}
 
 			return true;
@@ -2679,12 +2728,12 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 //                EM.m_UserRes[Common.ItemTypeElectronics]+=ra[2];
 //                EM.m_UserRes[Common.ItemTypeProtoplasm]+=ra[3];
 //                EM.m_UserRes[Common.ItemTypeNodes]+=ra[4];
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeAntimatter, ra[0],false, false);
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeMetal, ra[1],false, false);
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeElectronics, ra[2],false, false);
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeProtoplasm, ra[3],false, false);
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeNodes, ra[4],false, false);
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeQuarkCore, ra[5],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeAntimatter, ra[0], false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeMetal, ra[1],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeElectronics, ra[2],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeProtoplasm, ra[3],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeNodes, ra[4],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeQuarkCore, ra[5],false, false);
 
                 break;
             }
@@ -2702,12 +2751,12 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 //                EM.m_UserRes[Common.ItemTypeElectronics]+=ra[2];
 //                EM.m_UserRes[Common.ItemTypeProtoplasm]+=ra[3];
 //                EM.m_UserRes[Common.ItemTypeNodes]+=ra[4];
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeAntimatter, ra[0],false, false);
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeMetal, ra[1],false, false);
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeElectronics, ra[2],false, false);
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeProtoplasm, ra[3],false, false);
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeNodes, ra[4],false, false);
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeQuarkCore, ra[5],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeAntimatter, ra[0],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeMetal, ra[1],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeElectronics, ra[2],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeProtoplasm, ra[3],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeNodes, ra[4],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeQuarkCore, ra[5],false, false);
 
                 break;
             }
@@ -2776,12 +2825,12 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 //                EM.m_UserRes[Common.ItemTypeElectronics]+=ra[2];
 //                EM.m_UserRes[Common.ItemTypeProtoplasm]+=ra[3];
 //                EM.m_UserRes[Common.ItemTypeNodes]+=ra[4];
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeAntimatter, ra[0],false, false);
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeMetal, ra[1],false, false);
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeElectronics, ra[2],false, false);
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeProtoplasm, ra[3],false, false);
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeNodes, ra[4],false, false);
-				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, Common.ItemTypeQuarkCore, ra[5],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeAntimatter, ra[0],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeMetal, ra[1],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeElectronics, ra[2],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeProtoplasm, ra[3],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeNodes, ra[4],false, false);
+				EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, Common.ItemTypeQuarkCore, ra[5],false, false);
 
                 EM.m_UserResearchTechNext=0;
                 EM.m_UserResearchDirNext=0;
@@ -2817,12 +2866,12 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 //                EM.m_UserRes[Common.ItemTypeElectronics]-=ra[2];
 //                EM.m_UserRes[Common.ItemTypeProtoplasm]-=ra[3];
 //                EM.m_UserRes[Common.ItemTypeNodes]-=ra[4];
-				EM.m_FormFleetBar.FleetSysItemExtract(Common.ItemTypeAntimatter, ra[0]);
-				EM.m_FormFleetBar.FleetSysItemExtract(Common.ItemTypeMetal, ra[1]);
-				EM.m_FormFleetBar.FleetSysItemExtract(Common.ItemTypeElectronics, ra[2]);
-				EM.m_FormFleetBar.FleetSysItemExtract(Common.ItemTypeProtoplasm, ra[3]);
-				EM.m_FormFleetBar.FleetSysItemExtract(Common.ItemTypeNodes, ra[4]);
-				EM.m_FormFleetBar.FleetSysItemExtract(Common.ItemTypeQuarkCore, ra[5]);
+				EM.m_FormFleetBar.FleetSysItemExtract( -1, Common.ItemTypeAntimatter, ra[0]);
+				EM.m_FormFleetBar.FleetSysItemExtract( -1, Common.ItemTypeMetal, ra[1]);
+				EM.m_FormFleetBar.FleetSysItemExtract( -1, Common.ItemTypeElectronics, ra[2]);
+				EM.m_FormFleetBar.FleetSysItemExtract( -1, Common.ItemTypeProtoplasm, ra[3]);
+				EM.m_FormFleetBar.FleetSysItemExtract( -1, Common.ItemTypeNodes, ra[4]);
+				EM.m_FormFleetBar.FleetSysItemExtract( -1, Common.ItemTypeQuarkCore, ra[5]);
                 
                 EM.m_UserResearchTechNext=tech;
    	            EM.m_UserResearchDirNext=dir;
@@ -2867,12 +2916,12 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 //            EM.m_UserRes[Common.ItemTypeElectronics]-=ra[2];
 //            EM.m_UserRes[Common.ItemTypeProtoplasm]-=ra[3];
 //            EM.m_UserRes[Common.ItemTypeNodes]-=ra[4];
-			EM.m_FormFleetBar.FleetSysItemExtract(Common.ItemTypeAntimatter, ra[0]);
-			EM.m_FormFleetBar.FleetSysItemExtract(Common.ItemTypeMetal, ra[1]);
-			EM.m_FormFleetBar.FleetSysItemExtract(Common.ItemTypeElectronics, ra[2]);
-			EM.m_FormFleetBar.FleetSysItemExtract(Common.ItemTypeProtoplasm, ra[3]);
-			EM.m_FormFleetBar.FleetSysItemExtract(Common.ItemTypeNodes, ra[4]);
-			EM.m_FormFleetBar.FleetSysItemExtract(Common.ItemTypeQuarkCore, ra[5]);
+			EM.m_FormFleetBar.FleetSysItemExtract( -1, Common.ItemTypeAntimatter, ra[0]);
+			EM.m_FormFleetBar.FleetSysItemExtract( -1, Common.ItemTypeMetal, ra[1]);
+			EM.m_FormFleetBar.FleetSysItemExtract( -1, Common.ItemTypeElectronics, ra[2]);
+			EM.m_FormFleetBar.FleetSysItemExtract( -1, Common.ItemTypeProtoplasm, ra[3]);
+			EM.m_FormFleetBar.FleetSysItemExtract( -1, Common.ItemTypeNodes, ra[4]);
+			EM.m_FormFleetBar.FleetSysItemExtract( -1, Common.ItemTypeQuarkCore, ra[5]);
 
             if(EM.m_TechSpeed==0) {
 	            user.m_Tech[tech]|=1<<dir;
@@ -3024,6 +3073,10 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 		var itemcnt:int = ship.m_ItemCnt;
 		if ((cotl.m_CotlFlag & SpaceCotl.fDevelopment)) { cargotype = 0; cargocnt = 0; itemtype = 0; itemcnt = 0; }
 		else if ((EM.m_CotlType == Common.CotlTypeProtect || EM.m_CotlType == Common.CotlTypeCombat || EM.m_CotlType == Common.CotlTypeRich) && (EM.m_OpsFlag & Common.OpsFlagItemToHyperspace) == 0) { cargotype = 0; cargocnt = 0; }
+		
+		if (EM.m_CotlType == Common.CotlTypeUser && (EM.m_GameState & Common.GameStateEnemy) && !EM.m_UserActiveAtk) {
+			cargotype = 0; cargocnt = 0; itemtype = 0; itemcnt = 0;
+		}
 
 		var ship_shield:int = ship.m_Shield;
 		if (ship.m_Type != Common.ShipTypeFlagship) ship_shield = 0;
@@ -3042,31 +3095,7 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 
 		while((ret==2) && (ship.m_ItemType!=Common.ItemTypeNone)) {
 			// Drop
-			var i:int=m_ShipNum;
-			ship2=planet.m_Ship[i];
-			if(((ship2.m_OrbitItemType!=Common.ItemTypeNone) && (ship2.m_OrbitItemType!=ship.m_ItemType))) {
-			    i=m_ShipNum+1;
-			    if(i>=Common.ShipOnPlanetMax) i=0;
-			    ship2=planet.m_Ship[i];
-			    if((ship2.m_Type!=Common.ShipTypeNone) || ((ship2.m_OrbitItemType!=Common.ItemTypeNone) && (ship2.m_OrbitItemType!=ship.m_ItemType))) {
-			        i=m_ShipNum-1;
-			        if(i<0) i=Common.ShipOnPlanetMax-1;
-			        ship2=planet.m_Ship[i];
-			        if((ship2.m_Type!=Common.ShipTypeNone) || ((ship2.m_OrbitItemType!=Common.ItemTypeNone) && (ship2.m_OrbitItemType!=ship.m_ItemType))) break;
-			    }
-			}
-
-			if(ship2.m_OrbitItemType==ship.m_ItemType) {
-			    ship2.m_OrbitItemCnt+=ship.m_ItemCnt;
-			} else {
-			    ship2.m_OrbitItemType=ship.m_ItemType;
-			    ship2.m_OrbitItemCnt=ship.m_ItemCnt;
-			}
-			ship2.m_OrbitItemOwner=ship.m_Owner;
-			ship2.m_OrbitItemTimer=EM.m_ServerCalcTime;
-
-			ship.m_ItemType=Common.ItemTypeNone;
-			ship.m_ItemCnt=0;
+			EM.DropItemNear(planet, ship, m_ShipNum);
 			break;
 		}
 
@@ -3422,15 +3451,15 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 	{
 		var cnt:int=m_Cnt;
 		if (cnt <= 0) return false;
-		
+
 		var vvv:int = EM.m_FormFleetBar.FleetSysItemGet(Common.ItemTypeFuel);
 		if (cnt > vvv) cnt = vvv;
 		if (cnt <= 0) return false;
 
 		cnt=EM.m_FormFleetBar.EmpireFleetFuelChange(cnt);
         if (cnt == 0) return false;
-		
-		EM.m_FormFleetBar.FleetSysItemExtract(Common.ItemTypeFuel,cnt);
+
+		EM.m_FormFleetBar.FleetSysItemExtract( -1, Common.ItemTypeFuel, cnt);
 
 		EM.m_FormFleetBar.Update();
 		EM.m_FormFleetItem.Update();
@@ -3618,6 +3647,7 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 
 	public function ProcessActionItemMove():Boolean
 	{
+		// type: 1=planet 2=hold 9=ship slot 16...23=hangar(no support)
 		var pi:PlanetItem;
 		var fi:FleetItem;
 		var fs:FleetSlot;
@@ -3625,13 +3655,14 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 		var vdw:uint;
 		var i:int;
 		var ship:Ship;
-		
+		var idesc:Item;
+
 		var fromtype:int = m_Kind;
 		var fromslot:int = m_Id;
 		var totype:int = m_TargetPlanetNum;
 		var toslot:int = m_TargetNum;
 		var cnt:int = m_Cnt;
-		
+
 		if (EM.IsEdit()) {
 			if (fromtype == 1 || totype == 1) {
 				if (fromtype != totype) return false;
@@ -3668,6 +3699,11 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 
 			var cotl:SpaceCotl=EM.HS.GetCotl(Server.Self.m_CotlId);
 			if (cotl == null || (cotl.m_RecvInfo == false && cotl.m_RecvFull == false)) { return false; }
+
+			if (fromtype == 1 && totype != 1 && cotl.m_CotlType == Common.CotlTypeUser && (EM.m_GameState & Common.GameStateEnemy) && !EM.m_UserActiveAtk) {
+				EM.m_FormHint.Show(Common.Txt.WarningItemActiveAtk, Common.WarningHideTime);
+				return false;
+			}
 
 			//if (fromtype == 1) {
 				if (cotl.m_CotlFlag & SpaceCotl.fDevelopment) { EM.m_FormHint.Show(Common.Txt.WarningInDevNoExtract, Common.WarningHideTime); return false; }
@@ -3712,6 +3748,9 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 				fi = EM.m_FormFleetItem.m_FleetItem[fromslot];
 				if (fi.m_Type == 0) break;
 				if (fi.m_Cnt <= 0) break;
+				
+				idesc = UserList.Self.GetItem(fi.m_Type & 0xffff);
+				if (!idesc) break;
 
 				var flagfornewslot:uint = 0;
 				if (fi.m_Type == Common.ItemTypeModule) flagfornewslot = PlanetItem.PlanetItemFlagNoMove;
@@ -3719,7 +3758,7 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 				if (cnt <= 0) break;
 
 				fi.m_Cnt -= cnt;
-				if (fi.m_Cnt <= 0) {
+				if (fi.m_Cnt <= 0 || idesc.IsEq()) {
 					fi.m_Type = 0;
 					fi.m_Cnt = 0;
 					fi.m_Broken = 0;
@@ -3740,17 +3779,20 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 				if (pi.m_Cnt <= 0) break;
 				
 				if(!EM.CanTransfer(m_Owner,pi.m_Owner)) { EM.m_FormHint.Show(Common.Txt.WarningItemNoAccessOpByRank, Common.WarningHideTime); return false; }
-				
+
+				idesc = UserList.Self.GetItem(pi.m_Type & 0xffff);
+				if (!idesc) break;
+
 				if (pi.m_Type == Common.ItemTypeMoney) {
 					cnt = pi.m_Cnt;
 					EM.m_FormFleetBar.m_FleetMoney += cnt;
 				} else {
-					cnt = EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, pi.m_Type, pi.m_Cnt, false, false);
+					cnt = EM.m_FormFleetBar.FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl, -1, pi.m_Type, pi.m_Cnt, false, false);
 					if (cnt <= 0) break;
 				}
 
 				pi.m_Cnt -= cnt;
-				if (pi.m_Cnt <= 0 && pi.m_Complete==0 && ((pi.m_Flag == 0) || (pi.m_Type==Common.ItemTypeModule && pi.m_Flag==PlanetItem.PlanetItemFlagNoMove))) {
+				if (idesc.IsEq() || (pi.m_Cnt <= 0 && pi.m_Complete==0 && ((pi.m_Flag == 0) || (pi.m_Type==Common.ItemTypeModule && pi.m_Flag==PlanetItem.PlanetItemFlagNoMove)))) {
 					pi.m_Cnt = 0;
 					pi.m_Owner = 0;
 					pi.m_Complete = 0;
@@ -3861,10 +3903,37 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 
 		var fromzero:Boolean = (fromtype == 1) && (totype != 1) && (from_item_complete==0) && (!(from_item_flag == 0 || (from_item_type == Common.ItemTypeModule && from_item_flag == PlanetItem.PlanetItemFlagNoMove)));
 		
-		var idesc:Item = UserList.Self.GetItem(from_item_type & 0xffff);
+		idesc = UserList.Self.GetItem(from_item_type & 0xffff);
 		if (idesc == null) return false;
 
-		if (to_item_type != 0 && from_item_type != to_item_type) { // Обмен разных итемов
+        var idesc2:Item = null;
+        if(to_item_type) {
+			idesc2 = UserList.Self.GetItem(to_item_type & 0xffff);
+			if (idesc2 == null) return false;
+        }
+
+		if (idesc.IsEq() || (idesc2 && idesc2.IsEq())) {
+            if ((fromtype != 1) != (totype != 1)) {
+                if (!EM.CanTransfer(from_owner, to_owner)) { EM.m_FormHint.Show(Common.Txt.WarningItemNoAccessOpByRank, Common.WarningHideTime); return false; }
+                if (!EM.CanTransfer(to_owner, from_owner)) { EM.m_FormHint.Show(Common.Txt.WarningItemNoAccessOpByRank, Common.WarningHideTime); return false; }
+            }
+
+			if (!idesc.IsEq()) {
+				if (from_item_cnt > idesc.m_StackMax * to_mul) { EM.m_FormHint.Show(Common.Txt.WarningItemMoveHoldOverload, Common.WarningHideTime); return false; }
+			}
+
+			if (idesc2 && !idesc2.IsEq()) {
+				if (to_item_cnt > idesc2.m_StackMax * from_mul) { EM.m_FormHint.Show(Common.Txt.WarningItemMoveHoldOverload, Common.WarningHideTime); return false; }
+			}
+
+			vdw = from_item_type; from_item_type = to_item_type; to_item_type = vdw;
+			vin = from_item_cnt; from_item_cnt = to_item_cnt; to_item_cnt = vin;
+			vin = from_item_complete; from_item_complete = to_item_complete; to_item_complete = vin;
+			vin = from_item_broken; from_item_broken = to_item_broken; to_item_broken = vin;
+			vdw = from_item_flag; from_item_flag = to_item_flag; to_item_flag = vdw;
+			vdw = from_owner; from_owner = to_owner; to_owner = vdw;
+
+		} else if (to_item_type != 0 && from_item_type != to_item_type) { // Обмен разных итемов
             if ((fromtype != 1) != (totype != 1)) {
                 if (!EM.CanTransfer(from_owner, to_owner)) { EM.m_FormHint.Show(Common.Txt.WarningItemNoAccessOpByRank, Common.WarningHideTime); return false; }
                 if (!EM.CanTransfer(to_owner, from_owner)) { EM.m_FormHint.Show(Common.Txt.WarningItemNoAccessOpByRank, Common.WarningHideTime); return false; }
@@ -3872,7 +3941,6 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 
 			if (from_item_cnt > idesc.m_StackMax * to_mul) { EM.m_FormHint.Show(Common.Txt.WarningItemMoveHoldOverload,Common.WarningHideTime); return false; }
 
-			var idesc2:Item = UserList.Self.GetItem(to_item_type & 0xffff);
 			if (idesc2 == null) return false;
 			if (to_item_cnt > idesc2.m_StackMax * from_mul) { EM.m_FormHint.Show(Common.Txt.WarningItemMoveHoldOverload,Common.WarningHideTime); return false; }
 
@@ -4027,6 +4095,7 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 		EM.m_FormPlanet.Update();
 		EM.m_FormFleetItem.Update();
 		EM.m_FormFleetBar.Update();
+		EM.SendMouseMove();
 
 		return true;
 	}
@@ -4037,6 +4106,7 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 		
 		var i:int,u:int;
 		var ship:Ship;
+		var idesc:Item;
 		var sec:Sector = EM.GetSector(m_SectorX, m_SectorY);
 		if (sec == null) return false;
 		if (m_PlanetNum < 0 || m_PlanetNum >= sec.m_Planet.length) return false;
@@ -4078,6 +4148,8 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 			return true;
 
 		} else if (m_Kind == 2) {
+			if (EM.m_CotlType == Common.CotlTypeUser && (EM.m_GameState & Common.GameStateEnemy)) { EM.m_FormHint.Show(Common.Txt.WarningOpErrEnemy, Common.WarningHideTime); return false; }
+
 			planet.m_Item[slot].m_Type = 0;
 			planet.m_Item[slot].m_Cnt = 0;
 			planet.m_Item[slot].m_Complete = 0;
@@ -4091,7 +4163,12 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 			if (planet.m_Item[slot].m_Type == 0) return false;
 
 			if ((planet.m_Item[slot].m_Flag & PlanetItem.PlanetItemFlagBuild) == 0) {
-				if (EM.CalcItemDifficult(planet,planet.m_Item[slot].m_Type) <= 0) return false;
+				if (EM.CalcItemDifficult(planet, planet.m_Item[slot].m_Type) <= 0) return false;
+				
+				idesc = UserList.Self.GetItem(planet.m_Item[slot].m_Type);
+				if (!idesc) return false;
+				if (idesc.IsEq()) return false;
+				
 				planet.m_Item[slot].m_Flag |= PlanetItem.PlanetItemFlagBuild;
 			}
 			else planet.m_Item[slot].m_Flag &= ~PlanetItem.PlanetItemFlagBuild;
@@ -4104,8 +4181,9 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 			if (slot >= Planet.PlanetItemCnt) return false;
 			if (slot>=planet.PlanetItemMax()) return false;
 
-//			var item:Item = UserList.Self.GetItem(val);
-//			if (item == null) return;
+			idesc = UserList.Self.GetItem(val);
+			if (!idesc) return false;
+			if (idesc.IsEq()) return false;
 
 			planet.m_Item[slot].m_Type = val;
 			planet.m_Item[slot].m_Cnt = 0;
@@ -4121,7 +4199,9 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 			if (planet.m_Item[slot].m_Cnt > 0) return false;
 			//if ((planet.m_Item[slot].m_Flag & PlanetItem.PlanetItemFlagBuild) != 0) return false;
 
-			var idesc:Item = UserList.Self.GetItem(planet.m_Item[slot].m_Type & 0xffff);
+			idesc = UserList.Self.GetItem(planet.m_Item[slot].m_Type);
+			if (!idesc) return false;
+			if (idesc.m_Id != Common.ItemTypeTechnician && idesc.m_Id != Common.ItemTypeNavigator) return false;
 			if (idesc == null) return false;
 			if (val<4 || val>=12) return false;
 			if (idesc.m_BonusType[val] == 0) return false;
@@ -4203,16 +4283,29 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 			
 		} else if (m_Kind == 8) {
 			if (planet.m_Item[slot].m_Type == 0) return false;
-			if ((planet.m_Item[slot].m_Flag & PlanetItem.PlanetItemFlagToPortal) == 0) planet.m_Item[slot].m_Flag |= PlanetItem.PlanetItemFlagToPortal;
+			if ((planet.m_Item[slot].m_Flag & PlanetItem.PlanetItemFlagToPortal) == 0) {
+				idesc = UserList.Self.GetItem(planet.m_Item[slot].m_Type);
+				if (!idesc) return false;
+				if (idesc.IsEq()) return false;
+
+				planet.m_Item[slot].m_Flag |= PlanetItem.PlanetItemFlagToPortal;
+			}
 			else planet.m_Item[slot].m_Flag &= ~PlanetItem.PlanetItemFlagToPortal;
 
 			EM.m_FormPlanet.Update();
 			return true;
 			
 		} else if (m_Kind == 9) {
+			if (EM.m_CotlType == Common.CotlTypeUser && (EM.m_GameState & Common.GameStateEnemy)) { EM.m_FormHint.Show(Common.Txt.WarningOpErrEnemy, Common.WarningHideTime); return false; }
+
 			var pi:PlanetItem = planet.m_Item[slot];
 			if (pi.m_Type == 0) return false;
-			if (pi.m_Cnt <= 0) return false;
+			if (pi.m_Cnt < 0) return false;
+			
+			idesc = UserList.Self.GetItem(pi.m_Type);
+			if (!idesc) return false;
+			
+			if (!idesc.IsEq() && pi.m_Cnt <= 0) return false;
 			
 			var cm:int;
 			var cmax:int = EM.DirValE(m_Owner, Common.DirTransportCargo);
@@ -4226,14 +4319,15 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 				if(ship.m_Type!=Common.ShipTypeTransport) continue;
 				if(ship.m_Flag & Common.ShipFlagBuild) continue;
 				if (ship.m_ArrivalTime > EM.m_ServerCalcTime) continue;
-				
+				if (idesc.IsEq() && ship.m_CargoType) continue;
+
 				if (!EM.CanTransfer(ship.m_Owner, pi.m_Owner)) { transferon = false; continue; }
 				
 				cm = cmax;
 				if (ship.m_Owner != m_Owner) {
 					cm = EM.DirValE(ship.m_Owner, Common.DirTransportCargo);
 				}
-
+				
 				score=0;
 
 				if(ship.m_CargoType==pi.m_Type && ship.m_CargoCnt<(cm*ship.m_Cnt)) score=4;
@@ -4259,35 +4353,46 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 			
 			ship = planet.m_Ship[u];
 			
-			cm=cmax;
-			if (ship.m_Owner != m_Owner) {
-				cm = EM.DirValE(ship.m_Owner, Common.DirTransportCargo);
-			}
-			
-			var cnt:int=0;
-			if(ship.m_CargoType==pi.m_Type) {
-				cnt=Math.min(pi.m_Cnt,cm*ship.m_Cnt-ship.m_CargoCnt);
-			} else {
-				ship.m_CargoType=pi.m_Type;
-				ship.m_CargoCnt=0;
-				cnt=Math.min(pi.m_Cnt,cm*ship.m_Cnt);
-			}
-			if(cnt>0) {
-				ship.m_CargoCnt+=cnt;
-				pi.m_Cnt -= cnt;
-			}
-
-			while(pi.m_Cnt<=0) {
-				if(pi.m_Flag==0) {}
-				else if(pi.m_Type==Common.ItemTypeModule && pi.m_Flag==PlanetItem.PlanetItemFlagNoMove) {}
-				else break;
+			if (idesc.IsEq()) {
+				ship.m_CargoType = pi.m_Type;
+				ship.m_CargoCnt = pi.m_Cnt;
 
 				pi.m_Broken = 0;
 				pi.m_Cnt = 0;
 				pi.m_Complete = 0;
 				pi.m_Flag = 0;
 				pi.m_Type = 0;
-				break;
+			} else {
+				cm = cmax;
+				if (ship.m_Owner != m_Owner) {
+					cm = EM.DirValE(ship.m_Owner, Common.DirTransportCargo);
+				}
+				
+				var cnt:int=0;
+				if(ship.m_CargoType==pi.m_Type) {
+					cnt = Math.min(pi.m_Cnt, cm * ship.m_Cnt - ship.m_CargoCnt);
+				} else {
+					ship.m_CargoType = pi.m_Type;
+					ship.m_CargoCnt = 0;
+					cnt = Math.min(pi.m_Cnt, cm * ship.m_Cnt);
+				}
+				if(cnt>0) {
+					ship.m_CargoCnt+=cnt;
+					pi.m_Cnt -= cnt;
+				}
+
+				while(pi.m_Cnt<=0) {
+					if(pi.m_Flag==0) {}
+					else if(pi.m_Type==Common.ItemTypeModule && pi.m_Flag==PlanetItem.PlanetItemFlagNoMove) {}
+					else break;
+
+					pi.m_Broken = 0;
+					pi.m_Cnt = 0;
+					pi.m_Complete = 0;
+					pi.m_Flag = 0;
+					pi.m_Type = 0;
+					break;
+				}
 			}
 
 			EM.m_FormPlanet.Update();
@@ -4297,7 +4402,13 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 			if (EM.m_CotlType == Common.CotlTypeUser || (EM.m_CotlType == Common.CotlTypeRich && EM.IsEdit())) { }
 			else return false;
 			if (planet.m_Item[slot].m_Type == 0) return false;
-			if ((planet.m_Item[slot].m_Flag & PlanetItem.PlanetItemFlagImport) == 0) planet.m_Item[slot].m_Flag |= PlanetItem.PlanetItemFlagImport;
+			if ((planet.m_Item[slot].m_Flag & PlanetItem.PlanetItemFlagImport) == 0) {
+				idesc = UserList.Self.GetItem(planet.m_Item[slot].m_Type);
+				if (!idesc) return false;
+				if (idesc.IsEq()) return false;
+
+				planet.m_Item[slot].m_Flag |= PlanetItem.PlanetItemFlagImport;
+			}
 			else planet.m_Item[slot].m_Flag &= ~PlanetItem.PlanetItemFlagImport;
 
 			EM.m_FormPlanet.Update();
@@ -4307,7 +4418,13 @@ if(EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("ProcessActionMove. InOther
 			if (EM.m_CotlType == Common.CotlTypeUser || (EM.m_CotlType == Common.CotlTypeRich && EM.IsEdit())) { }
 			else return false;
 			if (planet.m_Item[slot].m_Type == 0) return false;
-			if ((planet.m_Item[slot].m_Flag & PlanetItem.PlanetItemFlagExport) == 0) planet.m_Item[slot].m_Flag |= PlanetItem.PlanetItemFlagExport;
+			if ((planet.m_Item[slot].m_Flag & PlanetItem.PlanetItemFlagExport) == 0) {
+				idesc = UserList.Self.GetItem(planet.m_Item[slot].m_Type);
+				if (!idesc) return false;
+				if (idesc.IsEq()) return false;
+
+				planet.m_Item[slot].m_Flag |= PlanetItem.PlanetItemFlagExport;
+			}
 			else planet.m_Item[slot].m_Flag &= ~PlanetItem.PlanetItemFlagExport;
 
 			EM.m_FormPlanet.Update();

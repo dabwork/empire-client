@@ -133,9 +133,11 @@ public class GraphMovePath
 			m_Map.m_Action != EmpireMap.ActionLink &&
 			m_Map.m_Action != EmpireMap.ActionEject &&
 			m_Map.m_Action != EmpireMap.ActionWormhole &&
+			m_Map.m_Action != EmpireMap.ActionWormholeAtk &&
 			m_Map.m_Action != EmpireMap.ActionAntiGravitor &&
 			m_Map.m_Action != EmpireMap.ActionGravWell &&
 			m_Map.m_Action != EmpireMap.ActionBlackHole &&
+			m_Map.m_Action != EmpireMap.ActionAntiShield &&
 			m_Map.m_Action != EmpireMap.ActionTransition
 			) return;
 

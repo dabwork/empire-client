@@ -85,6 +85,8 @@ public class FormFleetBar extends Sprite
 	public var m_AutoPilot:Boolean = true;
 	public var m_AutoGive:Boolean = true;
 	
+	public var m_HangarListId:Vector.<uint> = new Vector.<uint>();
+	
 	//public var m_OrderWaitEnd:Array = new Array();
 	
 	public function SlotCnt():int
@@ -270,6 +272,8 @@ public class FormFleetBar extends Sprite
 		
 		m_AutoPilot = true;
 		m_AutoGive = true;
+		
+		m_HangarListId.length = 0;
 	}
 
 	public function StageResize():void
@@ -852,7 +856,14 @@ public class FormFleetBar extends Sprite
 			fi.m_Cnt = sl.LoadInt();
 			fi.m_Broken = sl.LoadInt();
 		}
-		
+
+		m_HangarListId.length = 0;
+		while(true) {
+			var hid:uint = sl.LoadDword();
+			if (!hid) break;
+			m_HangarListId.push(hid);
+		}
+
 		sl.LoadEnd();
 		
 		Update();
@@ -961,6 +972,7 @@ public class FormFleetBar extends Sprite
 			}
 			m_SlotMove=-1;
 			UpdateMove();
+			EM.SendMouseMove();
 		}
 	}
 
@@ -1022,7 +1034,7 @@ public class FormFleetBar extends Sprite
 			var new_slot:int = 0;
 			var inform:Boolean = false;
 			
-			if (EM.m_FormPlanet.IsMouseInTop()) {
+			if (!EM.m_Hangar.visible && EM.m_FormPlanet.IsMouseInTop()) {
 				inform = true;
 				EM.FloatTop(EM.m_FormPlanet);
 
@@ -1046,7 +1058,7 @@ public class FormFleetBar extends Sprite
 			EM.m_MoveItem.m_ToType = 0;
 			EM.m_MoveItem.m_ToSlot = 0;
 
-			if (new_type == 0 && !inform && !EM.HS.visible) {
+			if (new_type == 0 && !inform && !EM.HS.visible && !EM.m_Hangar.visible) {
 				//if (!IsMouseInTop())
 				EM.CalcPick(x + mouseX, y + mouseY);
 
@@ -1335,8 +1347,7 @@ public class FormFleetBar extends Sprite
             var mcnt:int=FleetSysItemGet(Common.ItemTypeModule);
 			
             if (maxmodulecntps > mcnt) maxmodulecntps = mcnt;
-			FleetSysItemExtract(Common.ItemTypeModule,maxmodulecntps);
-            out_module_cnt.cnt=maxmodulecntps;
+			if (FleetSysItemExtract( -1, Common.ItemTypeModule, maxmodulecntps) > 0) out_module_cnt.cnt = maxmodulecntps;
         }
 
         ClearSlotGraph(slot);
@@ -1348,7 +1359,11 @@ public class FormFleetBar extends Sprite
 	{
 		var i:int;
 		var fi:FleetItem;
-		var cnt:int=0;
+		var cnt:int = 0;
+		
+		var idesc:Item = UserList.Self.GetItem(it);
+		if (!idesc || idesc.IsEq()) return 0;
+		
 		for(i=0;i<Common.FleetItemCnt;i++) {
 			fi=EM.m_FormFleetItem.m_FleetItem[i];
 			if(fi.m_Type!=it) continue;
@@ -1392,12 +1407,12 @@ public class FormFleetBar extends Sprite
 		return h;
 	}
 
-	public function FleetSysItemAdd(formation:int, holdlvl:int, it:uint, cnt:int, ttf:Boolean, full:Boolean):int
+	public function FleetSysItemAdd(formation:int, holdlvl:int, wishpos:int, it:uint, cnt:int, ttf:Boolean, full:Boolean):int
 	{
 		var i:int,k:int;
 		var fi:FleetItem;
 
-		if (cnt <= 0) return 0;
+		if (cnt < 0) return 0;
 
 //		var mul:int = Common.FleetFormationCargoMul[formation & 7];
 		var mul:int = Common.FleetHoldCargoMulByLvl[(holdlvl & 0xf0) >> 4];
@@ -1408,7 +1423,35 @@ public class FormFleetBar extends Sprite
 
 		var itdesc:Item = UserList.Self.GetItem(it & 0xffff);
 		if(itdesc==null) return 0;
-		var m:int=itdesc.m_StackMax;
+		var m:int = itdesc.m_StackMax;
+		
+		if (itdesc.IsEq()) {
+			if (wishpos >= ifrom && wishpos < ito) {
+				if (EM.m_FormFleetItem.m_FleetItem[wishpos].m_Type) wishpos = -1;
+			} else wishpos = -1;
+
+			if (wishpos < 0) {
+				for (i = ito - 1; (i >= ifrom); i--) {
+					fi = EM.m_FormFleetItem.m_FleetItem[i];
+					if (fi.m_Type) continue;
+					wishpos = i;
+					break;
+				}
+			}
+			if (wishpos < 0) return 0;
+
+			i=wishpos;
+			fi=EM.m_FormFleetItem.m_FleetItem[i];
+
+			fi.m_Type = it;
+			fi.m_Cnt = cnt;
+			if (fi.m_Cnt > m) fi.m_Cnt = m;
+			fi.m_Broken = 0;
+
+			return 1;
+		}
+
+		if (cnt <= 0) return 0;
 
 		if(full) {
 			var h:int=0;
@@ -1431,89 +1474,155 @@ public class FormFleetBar extends Sprite
 		}
 
 		var addcnt:int = 0;
+		
+		if (wishpos >= ifrom && wishpos < ito) {
+			i = wishpos;
+			fi = EM.m_FormFleetItem.m_FleetItem[i];
+			if (fi.m_Type == it) {
+				if (i < 8) k = m * mul - fi.m_Cnt;
+				else k = m - fi.m_Cnt;
+				if (k > cnt) k = cnt;
+				if (k > 0) {
+					fi.m_Cnt += k;
 
-		for(i=ifrom;(cnt>0) && (i<ito);i++) {
-			fi=EM.m_FormFleetItem.m_FleetItem[i];
-			if(fi.m_Type!=it) continue;
+					cnt -= k;
+					addcnt += k;
+				}
+			} else if (!fi.m_Type) {
+				if (i < 8) k = m * mul;
+				else k = m;
+				if (k > cnt) k = cnt;
+				if (k > 0) {
+					fi.m_Type = it;
+					fi.m_Cnt = k;
+					fi.m_Broken = 0;
+
+					cnt -= k;
+					addcnt += k;
+				}
+			}
+		}
+
+		for (i = ifrom; (cnt > 0) && (i < ito); i++) {
+			fi = EM.m_FormFleetItem.m_FleetItem[i];
+			if (fi.m_Type != it) continue;
 
 			if (i < 8) k = m * mul - fi.m_Cnt;
 			else k = m - fi.m_Cnt;
-			if(k<=0) continue;
+			if (k <= 0) continue;
 
-			if(k>cnt) k=cnt;
-			if(k<=0) continue;
+			if (k > cnt) k = cnt;
+			if (k <= 0) continue;
 
-			fi.m_Cnt+=k;
+			fi.m_Cnt += k;
 
-			cnt-=k;
-			addcnt+=k;
+			cnt -= k;
+			addcnt += k;
 		}
 		
 		if (ttf && mul > 1) {
-			for(i=0;(cnt>0) && (i<8);i++) {
-				fi=EM.m_FormFleetItem.m_FleetItem[i];
-				if(fi.m_Type) continue;
+			for (i = 0; (cnt > 0) && (i < 8); i++) {
+				fi = EM.m_FormFleetItem.m_FleetItem[i];
+				if (fi.m_Type) continue;
 
 				k = m * mul;
 
-				if(k>cnt) k=cnt;
-				if(k<=0) continue;
+				if (k > cnt) k = cnt;
+				if (k <= 0) continue;
 
-				fi.m_Type=it;
-				fi.m_Cnt=k;
-				fi.m_Broken=0;
+				fi.m_Type = it;
+				fi.m_Cnt = k;
+				fi.m_Broken = 0;
 
-				cnt-=k;
-				addcnt+=k;
+				cnt -= k;
+				addcnt += k;
 			}
 		}
 		
-		for(i=ito-1;(cnt>0) && (i>=ifrom);i--) {
-			fi=EM.m_FormFleetItem.m_FleetItem[i];
-			if(fi.m_Type) continue;
+		for (i = ito - 1; (cnt > 0) && (i >= ifrom); i--) {
+			fi = EM.m_FormFleetItem.m_FleetItem[i];
+			if (fi.m_Type) continue;
 
 			if (i < 8) k = m * mul;
 			else k = m;
 
-			if(k>cnt) k=cnt;
-			if(k<=0) continue;
+			if (k > cnt) k = cnt;
+			if (k <= 0) continue;
 
-			fi.m_Type=it;
-			fi.m_Cnt=k;
-			fi.m_Broken=0;
+			fi.m_Type = it;
+			fi.m_Cnt = k;
+			fi.m_Broken = 0;
 
-			cnt-=k;
-			addcnt+=k;
+			cnt -= k;
+			addcnt += k;
 		}
 
 		return addcnt;
 	}
 
-	public function FleetSysItemExtract(it:uint, cnt:int):int
+	public function FleetSysItemExtract(wishpos:int, it:uint, cnt:int):int
 	{
 		var i:int,subcnt:int;
 		var fi:FleetItem;
-		var ret:int=0;
+		var ret:int = 0;
 
-		if(cnt<=0) return 0;
+		var idesc:Item = UserList.Self.GetItem(it);
+		if (!idesc) return -1;
 
-		for(i=Common.FleetItemCnt-1;(i>=0) && (cnt>0);i--) {
-			fi=EM.m_FormFleetItem.m_FleetItem[i];
-			if(fi.m_Type!=it) continue;
+		if (idesc.IsEq()) {
+			if (wishpos<0 || wishpos>=Common.FleetItemCnt) return -1;
+			i = wishpos;
+			fi = EM.m_FormFleetItem.m_FleetItem[i];
+			if (fi.m_Type != it) return -1;
+			
+			ret = fi.m_Cnt;
+			fi.m_Type = 0;
+			fi.m_Cnt = 0;
+			fi.m_Broken = 0;
 
-			subcnt=cnt;
-			if(subcnt>fi.m_Cnt) subcnt=fi.m_Cnt;
-			if(subcnt<=0) continue;
+		} else {
+			if (cnt <= 0) return -1;
+			
+			while (wishpos >= 0 && wishpos < Common.FleetItemCnt) {
+				i = wishpos;
+				fi = EM.m_FormFleetItem.m_FleetItem[i];
+				if (fi.m_Type != it) break;
 
-			ret+=subcnt;
-			fi.m_Cnt-=subcnt;
-			cnt-=subcnt;
+				subcnt = cnt;
+				if (subcnt > fi.m_Cnt) subcnt = fi.m_Cnt;
+				if (subcnt <= 0) break;
 
-			if(fi.m_Cnt>0) continue;
+				ret += subcnt;
+				fi.m_Cnt -= subcnt;
+				cnt -= subcnt;
 
-			fi.m_Type=0;
-			fi.m_Cnt=0;
-			fi.m_Broken=0;
+				if (fi.m_Cnt > 0) break;
+
+				fi.m_Type = 0;
+				fi.m_Cnt = 0;
+				fi.m_Broken = 0;
+
+				break;
+			}
+
+			for (i = Common.FleetItemCnt - 1; (i >= 0) && (cnt > 0); i--) {
+				fi = EM.m_FormFleetItem.m_FleetItem[i];
+				if (fi.m_Type != it) continue;
+
+				subcnt = cnt;
+				if (subcnt > fi.m_Cnt) subcnt = fi.m_Cnt;
+				if (subcnt <= 0) continue;
+
+				ret += subcnt;
+				fi.m_Cnt -= subcnt;
+				cnt -= subcnt;
+
+				if (fi.m_Cnt > 0) continue;
+
+				fi.m_Type = 0;
+				fi.m_Cnt = 0;
+				fi.m_Broken = 0;
+			}
 		}
 
 		return ret;
@@ -1535,12 +1644,279 @@ public class FormFleetBar extends Sprite
 		return true;
 	}
 
+	public function FleetItemMove(fromtype:int, fromslot:int, totype:int, toslot:int, cnt:int):Boolean
+	{
+		// type: 1=planet(no support) 2=hold 9=ship slot 16...16+HangarMax=hangar
+		var fi:FleetItem;
+		var fs:FleetSlot;
+		var vin:int;
+		var vdw:uint;
+		var idesc:Item;
+		var hu:HangarUnit;
+		var hs:HangarSlot;
+		var i:int;
+
+		var from_item_type:uint = 0;
+		var from_item_cnt:int = 0;
+		var from_item_complete:int = 0;
+		var from_item_broken:int = 0;
+		var from_item_flag:uint = 0;
+		var from_mul:int = 1;
+
+		var to_item_type:uint = 0;
+		var to_item_cnt:int = 0;
+		var to_item_complete:int = 0;
+		var to_item_broken:int = 0;
+		var to_item_flag:uint = 0;
+		var to_mul:int = 1;
+		
+		if (fromtype == 2) {
+			if (fromslot<0 || fromslot>=Common.FleetItemCnt) return false;
+			fi = EM.m_FormFleetItem.m_FleetItem[fromslot];
+			from_item_type = fi.m_Type;
+			from_item_cnt = fi.m_Cnt;
+			from_item_broken = fi.m_Broken;
+			if (fromslot < 8) from_mul = Common.FleetHoldCargoMulByLvl[(EM.m_FormFleetBar.m_HoldLvl & 0xf0) >> 4];
+			
+		} else if (fromtype == 9) {
+			if (fromslot<0 || fromslot>=Common.FleetSlotMax) return false;
+			fs = EM.m_FormFleetBar.m_FleetSlot[fromslot];
+			if (fs.m_Type == Common.ShipTypeNone) return false;
+			from_item_type = fs.m_ItemType;
+			from_item_cnt = fs.m_ItemCnt;
+
+		} else if (fromtype >= 16 && fromtype < (16 + Hangar.HangarMax)) {
+			if (fromslot<0 || fromslot>=HangarUnit.SlotMax) return false;
+			if ((fromtype-16) >= EM.m_Hangar.m_HangarUnit.length) return false;
+			hu = EM.m_Hangar.m_HangarUnit[fromtype-16];
+			if (!hu) return false;
+			hs = hu.m_Slot[fromslot];
+			from_item_type = hs.m_ItemType;
+			from_item_cnt = hs.m_ItemCnt;
+			from_item_broken = hs.m_ItemBroken;
+
+		} else return false;
+		
+		if(totype==2) {
+			if (toslot<0 || toslot>=Common.FleetItemCnt) return false;
+			fi = EM.m_FormFleetItem.m_FleetItem[toslot];
+			to_item_type = fi.m_Type;
+			to_item_cnt = fi.m_Cnt;
+			to_item_broken = fi.m_Broken;
+			if (toslot < 8) {
+				to_mul = Common.FleetHoldCargoMulByLvl[(EM.m_FormFleetBar.m_HoldLvl & 0xf0) >> 4];
+				if (to_mul <= 1) return false; // Не транспортный флот
+			}
+			if (toslot >= (Common.FleetHoldRowByLvl[EM.m_FormFleetBar.m_HoldLvl & 0x0f] * 8)) return false;
+			
+		} else if (totype == 9) {
+			if (toslot<0 || toslot>=Common.FleetSlotMax) return false;
+			fs = EM.m_FormFleetBar.m_FleetSlot[toslot];
+			if (fs.m_Type == Common.ShipTypeNone) return false;
+			
+			to_item_type = fs.m_ItemType;
+			to_item_cnt = fs.m_ItemCnt;
+
+		} else if (totype >= 16 && totype < (16 + Hangar.HangarMax)) {
+			if (toslot<0 || toslot>=HangarUnit.SlotMax) return false;
+			if ((totype-16) >= EM.m_Hangar.m_HangarUnit.length) return false;
+			hu = EM.m_Hangar.m_HangarUnit[totype-16];
+			if (!hu) return false;
+			hs = hu.m_Slot[toslot];
+			to_item_type = hs.m_ItemType;
+			to_item_cnt = hs.m_ItemCnt;
+			to_item_broken = hs.m_ItemBroken;
+
+		} else return false;
+		
+		if (from_item_type == 0) return false;
+
+		var fromzero:Boolean = (fromtype == 1) && (totype != 1) && (from_item_complete==0) && (!(from_item_flag == 0 || (from_item_type == Common.ItemTypeModule && from_item_flag == PlanetItem.PlanetItemFlagNoMove)));
+		
+		idesc = UserList.Self.GetItem(from_item_type & 0xffff);
+		if (idesc == null) return false;
+
+        var idesc2:Item = null;
+        if(to_item_type) {
+			idesc2 = UserList.Self.GetItem(to_item_type & 0xffff);
+			if (idesc2 == null) return false;
+        }
+
+		if (idesc.IsEq() || (idesc2 && idesc2.IsEq())) {
+			if (!idesc.IsEq()) {
+				if (from_item_cnt > idesc.m_StackMax * to_mul) { EM.m_FormHint.Show(Common.Txt.WarningItemMoveHoldOverload, Common.WarningHideTime); return false; }
+			}
+
+			if (idesc2 && !idesc2.IsEq()) {
+				if (to_item_cnt > idesc2.m_StackMax * from_mul) { EM.m_FormHint.Show(Common.Txt.WarningItemMoveHoldOverload, Common.WarningHideTime); return false; }
+			}
+
+			vdw = from_item_type; from_item_type = to_item_type; to_item_type = vdw;
+			vin = from_item_cnt; from_item_cnt = to_item_cnt; to_item_cnt = vin;
+			vin = from_item_complete; from_item_complete = to_item_complete; to_item_complete = vin;
+			vin = from_item_broken; from_item_broken = to_item_broken; to_item_broken = vin;
+			vdw = from_item_flag; from_item_flag = to_item_flag; to_item_flag = vdw;
+
+		} else if (to_item_type != 0 && from_item_type != to_item_type) { // Обмен разных итемов
+			if (from_item_cnt > idesc.m_StackMax * to_mul) { EM.m_FormHint.Show(Common.Txt.WarningItemMoveHoldOverload,Common.WarningHideTime); return false; }
+
+			if (idesc2 == null) return false;
+			if (to_item_cnt > idesc2.m_StackMax * from_mul) { EM.m_FormHint.Show(Common.Txt.WarningItemMoveHoldOverload,Common.WarningHideTime); return false; }
+
+			vdw = from_item_type; from_item_type = to_item_type; to_item_type = vdw;
+			vin = from_item_cnt; from_item_cnt = to_item_cnt; to_item_cnt = vin;
+			vin = from_item_complete; from_item_complete = to_item_complete; to_item_complete = vin;
+			vin = from_item_broken; from_item_broken = to_item_broken; to_item_broken = vin;
+			vdw = from_item_flag; from_item_flag = to_item_flag; to_item_flag = vdw;
+			
+		} else if (to_item_type == 0 && cnt == 0 && from_item_cnt <= idesc.m_StackMax * to_mul) { // Полность перемещаем в пустой слот
+
+            if(fromzero) {
+                to_item_type = from_item_type;
+                to_item_cnt = from_item_cnt;
+                to_item_complete = 0;
+                to_item_broken = from_item_broken;
+                to_item_flag = 0;
+
+                from_item_cnt=0;
+                from_item_broken=0;
+            } else {
+				to_item_type = from_item_type;
+				to_item_cnt = from_item_cnt;
+				to_item_complete = from_item_complete;
+				to_item_broken = from_item_broken;
+				to_item_flag = from_item_flag;
+
+				from_item_type=0;
+				from_item_cnt=0;
+				from_item_complete=0;
+				from_item_broken=0;
+				from_item_flag = 0;
+			}
+			if (fromtype != 1 && totype == 1 && to_item_type == Common.ItemTypeModule) to_item_flag |= PlanetItem.PlanetItemFlagNoMove;
+
+		} else if (to_item_type == 0) { // Частично перемещаем в пустой слот
+			if (cnt <= 0) cnt = from_item_cnt;
+			if (cnt > from_item_cnt) cnt = from_item_cnt;
+			if (cnt > idesc.m_StackMax * to_mul) cnt = idesc.m_StackMax * to_mul;
+			if (cnt <= 0) return false;
+			
+			to_item_type = from_item_type;
+			to_item_cnt = cnt;
+			to_item_complete = 0;
+			to_item_broken = from_item_broken;
+			to_item_flag = 0;
+
+			from_item_cnt-=cnt;
+			from_item_broken = 0;
+			
+			if (fromtype != 1 && totype == 1 && to_item_type == Common.ItemTypeModule) to_item_flag |= PlanetItem.PlanetItemFlagNoMove;
+
+		} else if (to_item_type != 0) { // Полностью перемещаем в занятый слот
+			if (from_item_type != to_item_type) return false;
+			if (cnt == 0) cnt = from_item_cnt;
+			if (cnt > from_item_cnt) cnt = from_item_cnt;
+			if (cnt <= 0) return false;
+
+			if ((to_item_cnt + cnt) > idesc.m_StackMax * to_mul) cnt = idesc.m_StackMax * to_mul - to_item_cnt;
+			if (cnt <= 0) return false;
+
+			to_item_cnt += cnt;
+			from_item_cnt -= cnt;
+
+			if (from_item_cnt <= 0) {
+                if(fromzero) {
+                    to_item_broken += from_item_broken;
+                    from_item_broken=0;
+                } else {
+					to_item_complete += from_item_complete;
+					to_item_broken += from_item_broken;
+
+					from_item_type=0;
+					from_item_cnt=0;
+					from_item_complete=0;
+					from_item_broken=0;
+					from_item_flag = 0;
+				}
+			}
+		} else return false;
+		
+		if (fromtype == 9 && from_item_type != 0) {
+			fs = EM.m_FormFleetBar.m_FleetSlot[fromslot];
+			if(!Common.ItemCanOnShip(from_item_type,fs.m_Type)) return false;
+		}
+		
+		if (totype == 9 && to_item_type != 0) {
+			fs = EM.m_FormFleetBar.m_FleetSlot[toslot];
+			if(!Common.ItemCanOnShip(to_item_type,fs.m_Type)) return false;
+		}
+
+		if (fromtype == 2) {
+			fi = EM.m_FormFleetItem.m_FleetItem[fromslot];
+			fi.m_Type = from_item_type;
+			fi.m_Cnt = from_item_cnt;
+			fi.m_Broken = from_item_broken;
+
+		} else if (fromtype == 9) {
+			fs = EM.m_FormFleetBar.m_FleetSlot[fromslot];
+			fs.m_ItemType = from_item_type;
+			fs.m_ItemCnt = from_item_cnt;
+
+		} else if (fromtype >= 16 && fromtype < (16 + Hangar.HangarMax)) {
+			hu = EM.m_Hangar.m_HangarUnit[fromtype-16];
+			hs = hu.m_Slot[fromslot];
+			hs.m_ItemType = from_item_type;
+			hs.m_ItemCnt = from_item_cnt;
+			hs.m_ItemBroken = from_item_broken;
+
+		} else return false;
+
+		if(totype==2) {
+			fi = EM.m_FormFleetItem.m_FleetItem[toslot];
+			fi.m_Type = to_item_type;
+			fi.m_Cnt = to_item_cnt;
+			fi.m_Broken = to_item_broken;
+
+		} else if (totype == 9) {
+			fs = EM.m_FormFleetBar.m_FleetSlot[toslot];
+			fs.m_ItemType = to_item_type;
+			fs.m_ItemCnt = to_item_cnt;
+
+		} else if (totype >= 16 && totype < (16 + Hangar.HangarMax)) {
+			hu = EM.m_Hangar.m_HangarUnit[totype-16];
+			hs = hu.m_Slot[toslot];
+			hs.m_ItemType = to_item_type;
+			hs.m_ItemCnt = to_item_cnt;
+			hs.m_ItemBroken = to_item_broken;
+
+		} else return false;
+
+		EM.m_FormFleetItem.Update();
+		EM.m_FormFleetBar.Update();
+		EM.m_Hangar.Update();
+
+		return true;
+	}
+
 	public function EmpireFleetAdd(slotno:int, shipid:uint, type:int, cnt:int, cntdestroy:int, hp:int, shield:int, itemtype:int, itemcnt:int, cargotype:uint, cargocnt:int, fuel:int, race:uint):int
 	{
 		var u:int,i:int,score:int,bscore:int;
 		var slot:FleetSlot;
+		var idesc:Item;
+		
+		if (!cargotype) {
+			cargocnt = 0;
+		} else {
+			idesc = UserList.Self.GetItem(cargotype);
+			if (!idesc) {
+				cargocnt = 0;
+				cargotype = 0;
+			} else if (idesc.IsEq()) {
+			} else {
+				if(cargocnt<=0) { cargotype=0; cargocnt=0; } else if(cargocnt>1000000000) cargocnt=1000000000;
+			}
+		}
 
-		if(cargocnt<=0) { cargotype=0; cargocnt=0; } else if(cargocnt>1000000000) cargocnt=1000000000;
 		if (fuel<0) fuel=0; else if(fuel>1000000000) fuel=1000000000;
 
 		var ret:int=0;
@@ -1586,8 +1962,8 @@ public class FormFleetBar extends Sprite
 					m_FleetModule += module;
 				}
 			}*/
-			if(cargotype!=0) {
-				FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl ,cargotype,cargocnt,false,false);
+			if (cargotype != 0) {
+				FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl , -1, cargotype, cargocnt, false, false);
 			}
 /*        	if (fuel) {
 				if (m_FleetFuel + fuel > 1000000000) fuel = 1000000000 - m_FleetFuel;
@@ -1603,8 +1979,21 @@ public class FormFleetBar extends Sprite
             	slot.m_CntDestroy=cntdestroy;
 	            slot.m_HP=hp;
     	        slot.m_Shield=shield;
-        	    slot.m_ItemType=itemtype;
-            	slot.m_ItemCnt=itemcnt;
+        	    slot.m_ItemType = 0;
+            	slot.m_ItemCnt = 0;
+				
+				if(itemtype) {
+					idesc = UserList.Self.GetItem(itemtype);
+
+					if(!idesc);
+					else if(idesc.IsEq()) {
+						if (FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl , -1, itemtype, itemcnt, false, false) <= 0) ret = 2;
+					} else {
+						slot.m_ItemType = itemtype;
+						slot.m_ItemCnt = itemcnt;
+					}
+				}
+
         	} else {
 	            slot.m_Cnt+=cnt;
 	            slot.m_CntDestroy+=cntdestroy;
@@ -1615,8 +2004,13 @@ public class FormFleetBar extends Sprite
 	            if(slot.m_HP<=0) { slot.m_HP=maxhp+slot.m_HP; slot.m_Cnt--; slot.m_CntDestroy++; }
 	            if(slot.m_HP<=0 || slot.m_Cnt<=0) { slot.m_Cnt=1; slot.m_HP=1; }
 
-	            if(itemtype!=Common.ItemTypeNone) {
-	                if(slot.m_ItemType==itemtype) {
+	            if (itemtype != Common.ItemTypeNone) {
+					idesc = UserList.Self.GetItem(itemtype);
+
+					if (!idesc);
+					else if (idesc.IsEq()) {
+						if (FleetSysItemAdd(EM.m_FormFleetBar.m_FormationOld, EM.m_FormFleetBar.m_HoldLvl , -1, itemtype, itemcnt, false, false) <= 0) ret = 2;
+					} else if(slot.m_ItemType==itemtype) {
 	                    slot.m_ItemCnt+=itemcnt;
 	                } else if(slot.m_ItemType==Common.ItemTypeNone) {
 	                    slot.m_ItemType=itemtype;
@@ -1720,7 +2114,7 @@ public class FormFleetBar extends Sprite
 		else EM.m_FormFleetItem.Show();
 		Update();
 	}
-	
+
 	public function onMenuClick(e:Event):void
 	{
 		var obj:Object;

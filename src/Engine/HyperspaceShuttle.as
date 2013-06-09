@@ -105,10 +105,10 @@ public class HyperspaceShuttle extends HyperspaceEntity
 
 		m_Model = new C3DModel();
 		cm = m_Model.AddChild();
-		cm.m_MeshPath = "Shuttle/part.mesh";
-		cm.m_Texture0 = C3D.GetTexture("Shuttle/dif.jpg");
-		cm.m_Texture1 = C3D.GetTexture("Shuttle/lum.png");
-		cm.m_Texture2 = C3D.GetTexture("Shuttle/clr.jpg");
+		cm.m_MeshPath = "shuttle/part.mesh";
+		cm.m_Texture0 = C3D.GetTexture("shuttle/dif.jpg");
+		cm.m_Texture1 = C3D.GetTexture("shuttle/lum.png");
+		cm.m_Texture2 = C3D.GetTexture("shuttle/clr.jpg");
 		cm.m_Flag |= C3DModel.FlagMeshShadow;
 		cm.m_FunBeforeDraw = DrawShipBefore;
 	}

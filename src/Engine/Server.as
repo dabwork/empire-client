@@ -40,6 +40,7 @@ public class Server extends EventDispatcher
 	static public const ErrorNoHomeworld:uint = 21;
 	static public const ErrorProtocol:uint = 22;
 	static public const ErrorInDevelopment:uint = 23;
+	static public const ErrorBlocking:uint = 24;
 
 	static public const sqFirst:uint=10000;
 	static public const sqSector:uint=10001;
@@ -51,6 +52,7 @@ public class Server extends EventDispatcher
 	static public const sqChatMsgGet:uint = 10007;
 	static public const sqSpaceD:uint = 10008;
 	static public const sqGv:uint = 10009;
+	static public const sqHangar:uint = 10010;
 
 //	public var m_ServerAdr:String="http://www.elementalgames.com:8888/";
 //	public var m_ServerAdr:String="http://217.112.36.172:7777/";

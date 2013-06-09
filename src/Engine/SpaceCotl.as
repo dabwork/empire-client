@@ -22,6 +22,7 @@ public class SpaceCotl extends SpaceEntity
     static public const fPortalEnterFlagship:int = 64;
 	static public const fPortalEnterAllItem:int = 128;
 	static public const fBeacon:int = 256;
+	static public const fEnemy:int = 1024;
 
 	public var m_CotlType:int=0;
 	public var m_CotlFlag:uint=0;

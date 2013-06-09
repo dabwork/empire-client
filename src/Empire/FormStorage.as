@@ -1197,8 +1197,9 @@ public class FormStorage extends FormStd
 		else if (err == Server.ErrorNoEnoughRes) { EM.m_Info.Hide(); if (m_ErrOpenInput) FI.Show(); FormMessageBox.Run(Common.Txt.NoEnoughRes, Common.Txt.ButClose);  }
 		else if(err==Server.ErrorNoEnoughEGM) { EM.m_Info.Hide(); if(m_ErrOpenInput) FI.Show(); FormMessageBox.Run(Common.Txt.NoEnoughEGM2,Common.Txt.ButClose);  }
 		else if (err == Server.ErrorOverload) { EM.m_Info.Hide(); if (m_ErrOpenInput) FI.Show(); FormMessageBox.Run(Common.Txt.ErrOverload, Common.Txt.ButClose);  }
-		else if(err==Server.ErrorData) { EM.m_Info.Hide(); if(m_ErrOpenInput) FI.Show(); FormMessageBox.Run(Common.Txt.ErrData,Common.Txt.ButClose);  }
+		else if (err == Server.ErrorData) { EM.m_Info.Hide(); if (m_ErrOpenInput) FI.Show(); FormMessageBox.Run(Common.Txt.ErrData, Common.Txt.ButClose);  }
 		else if (err == Server.ErrorNoHomeworld) { EM.m_Info.Hide(); FormMessageBox.Run(Common.Txt.ErrNoHomeworld, Common.Txt.ButClose);  }
+		else if (err == Server.ErrorBlocking) { EM.m_Info.Hide(); FormMessageBox.Run(Common.Txt.WarningOpErrEnemy, Common.Txt.ButClose);  }
 		else if (EM.ErrorFromServer(err)) return;
 
 		m_ErrOpenInput = false;
@@ -1625,7 +1626,7 @@ public class FormStorage extends FormStd
 					s.m_SIcon = Common.ItemImg(item.m_Img);
 					if (s.m_SIcon != null) {
 						s.m_SBox.addChild(s.m_SIcon);
-						s.m_SIcon.mouseEnabled = false;
+//						s.m_SIcon.mouseEnabled = false;
 						s.m_SIcon.x = 35;
 						s.m_SIcon.y = 47 >> 1;
 					}
@@ -1799,7 +1800,7 @@ public class FormStorage extends FormStd
 					s.m_IIcon = Common.ItemImg(item.m_Img);
 					if (s.m_IIcon != null) {
 						s.m_IBox.addChild(s.m_IIcon);
-						s.m_IIcon.mouseEnabled = false;
+//						s.m_IIcon.mouseEnabled = false;
 						s.m_IIcon.x = 35;
 						s.m_IIcon.y = 47 >> 1;
 					}
@@ -1962,7 +1963,7 @@ public class FormStorage extends FormStd
 					s.m_EIcon = Common.ItemImg(item.m_Img);
 					if (s.m_EIcon != null) {
 						s.m_EBox.addChild(s.m_EIcon);
-						s.m_EIcon.mouseEnabled = false;
+//						s.m_EIcon.mouseEnabled = false;
 						s.m_EIcon.x = 35;
 						s.m_EIcon.y = 47 >> 1;
 					}
@@ -2578,7 +2579,7 @@ public class FormStorage extends FormStd
 					ss.m_IIcon = Common.ItemImg(item.m_Img);
 					if (ss.m_IIcon != null) {
 						ss.m_IBox.addChild(ss.m_IIcon);
-						ss.m_IIcon.mouseEnabled = false;
+//						ss.m_IIcon.mouseEnabled = false;
 						ss.m_IIcon.x = 35;
 						ss.m_IIcon.y = 47 >> 1;
 					}
@@ -3865,14 +3866,14 @@ class StorageItem
 	public var m_Razdel:int;
 
 	public var m_SRazdel:CtrlCheckBox;
-	public var m_SIcon:Sprite;
+	public var m_SIcon:DisplayObject;
 	public var m_SBox:CtrlBox;
 	public var m_SName:TextField;
 	public var m_SOwner:TextField;
 	public var m_SCnt:TextField;
 
 	public var m_IRazdel:CtrlCheckBox;
-	public var m_IIcon:Sprite;
+	public var m_IIcon:DisplayObject;
 	public var m_IBox:CtrlBox;
 	public var m_IName:TextField;
 	public var m_IOwner:TextField;
@@ -3881,7 +3882,7 @@ class StorageItem
 	public var m_IStep:TextField;
 
 	public var m_ERazdel:CtrlCheckBox;
-	public var m_EIcon:Sprite;
+	public var m_EIcon:DisplayObject;
 	public var m_EBox:CtrlBox;
 	public var m_EName:TextField;
 	public var m_EOwner:TextField;
@@ -3903,7 +3904,7 @@ class StorageSearch
 	public var m_CX:int = 0;
 	public var m_CY:int = 0;
 
-	public var m_IIcon:Sprite;
+	public var m_IIcon:DisplayObject;
 	public var m_IBox:CtrlBox;
 	public var m_IName:TextField;
 	public var m_IOwner:TextField;

@@ -2,6 +2,8 @@
 
 package Empire
 {
+import Base.*;
+import Engine.*;
 import fl.controls.*;
 import fl.events.*;
 import flash.display.*;
@@ -19,13 +21,14 @@ public class GraphMoveItem extends Shape
 	public var m_FromSlot:int = -1;
 	public var m_ToType:int = 0;
 	public var m_ToSlot:int = -1;
+	public var m_AccessSplit:Boolean = false;
 
 	public function GraphMoveItem(map:EmpireMap)
 	{
 		m_Map=map;
 	}
 
-	public function Begin(fromtype:int, fromslot:int):void
+	public function Begin(fromtype:int, fromslot:int, access_split:Boolean):void
 	{
 		visible = true;
 		
@@ -33,6 +36,7 @@ public class GraphMoveItem extends Shape
 		m_FromSlot = fromslot;
 		m_ToType = 0;
 		m_ToSlot = -1;
+		m_AccessSplit = access_split;
 		
 		stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove, false, 999);
 		stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp, false, 999);
@@ -44,7 +48,23 @@ public class GraphMoveItem extends Shape
 		
 		Update();
 	}
-	
+
+	public function Cancel():void
+	{
+		if (!visible) return;
+
+		stage.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove, false);
+		stage.removeEventListener(MouseEvent.MOUSE_UP, onMouseUp, false);
+		stage.removeEventListener(MouseEvent.MOUSE_OUT, onMouseOut, false);
+
+		stage.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove, true);
+		stage.removeEventListener(MouseEvent.MOUSE_UP, onMouseUp, true);
+		stage.removeEventListener(MouseEvent.MOUSE_OUT, onMouseOut, true);
+
+		graphics.clear();
+		visible = false;
+	}
+
 	public function onMouseMove(e:MouseEvent):void
 	{
 		var type:int, slot:int;
@@ -84,6 +104,13 @@ public class GraphMoveItem extends Shape
 			type = 99;
 			slot = 0;
 		}
+		
+		if (type == 0 && m_Map.m_Hangar.visible) {
+			slot = m_Map.m_Hangar.Pick();
+			if (slot >= 0 && m_Map.m_Hangar.HangarCurNum() >= 0) {
+				type = 16 + m_Map.m_Hangar.HangarCurNum();
+			}
+		}
 	
 		if ((m_ToType != type) || (m_ToSlot != slot)) {
 			m_ToType = type;
@@ -91,6 +118,7 @@ public class GraphMoveItem extends Shape
 			m_Map.m_FormPlanet.Update();
 			m_Map.m_FormFleetItem.Update();
 			m_Map.m_FormFleetBar.Update();
+			m_Map.m_Hangar.Update();
 		}
 
 		Update();
@@ -99,8 +127,10 @@ public class GraphMoveItem extends Shape
 
 	public function onMouseUp(e:MouseEvent):void
 	{
-		graphics.clear();
-		visible = false;
+//		graphics.clear();
+//		visible = false;
+		e.stopImmediatePropagation();
+		Cancel();
 		
 		if (m_ToType == 99) {
 			while (true) {
@@ -131,23 +161,24 @@ public class GraphMoveItem extends Shape
 
 		m_Map.m_FormPlanet.Update();
 		m_Map.m_FormFleetItem.Update();
+		m_Map.m_Hangar.Update();
 
-		stage.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove, false);
-		stage.removeEventListener(MouseEvent.MOUSE_UP, onMouseUp, false);
-		stage.removeEventListener(MouseEvent.MOUSE_OUT, onMouseOut, false);
+//		stage.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove, false);
+//		stage.removeEventListener(MouseEvent.MOUSE_UP, onMouseUp, false);
+//		stage.removeEventListener(MouseEvent.MOUSE_OUT, onMouseOut, false);
 
-		stage.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove, true);
-		stage.removeEventListener(MouseEvent.MOUSE_UP, onMouseUp, true);
-		stage.removeEventListener(MouseEvent.MOUSE_OUT, onMouseOut, true);
-		e.stopImmediatePropagation();
+//		stage.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove, true);
+//		stage.removeEventListener(MouseEvent.MOUSE_UP, onMouseUp, true);
+//		stage.removeEventListener(MouseEvent.MOUSE_OUT, onMouseOut, true);
 
 		//stage.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_MOVE, true, false, stage.mouseX, stage.mouseY));
+		m_Map.SendMouseMove();
 	}
 
 	public function FinMove(addkey:Boolean=false, cnt:int=0):void
 	{
 		if (m_ToType == 0 && m_FromType == 2 && m_Map.HS.visible) {
-			if (addkey) {
+			if (addkey && m_AccessSplit) {
 				SplitOpen();
 				return;
 			}
@@ -163,7 +194,7 @@ public class GraphMoveItem extends Shape
 		
 		if (m_ToType == 0) return;
 
-		if (addkey) {
+		if (addkey && m_AccessSplit) {
 			SplitOpen();
 			return;
 		}
@@ -175,11 +206,57 @@ public class GraphMoveItem extends Shape
 				if (planet.m_Item[m_FromSlot].m_Type == Common.ItemTypeMoney) toslot = -1;
 			}
 		}
-		
-		var ac:Action = new Action(m_Map);
-		if (m_FromType == 1 || m_ToType == 1) ac.ActionItemMove(m_Map.m_FormPlanet.m_SectorX, m_Map.m_FormPlanet.m_SectorY, m_Map.m_FormPlanet.m_PlanetNum, m_FromType, m_FromSlot, m_ToType, toslot, cnt);
-		else ac.ActionItemMove(0, 0, -1, m_FromType, m_FromSlot, m_ToType, toslot, cnt);
-		m_Map.m_LogicAction.push(ac);
+
+		if (m_FromType == 1 || m_ToType == 1) {
+			var ac:Action = new Action(m_Map);
+			ac.ActionItemMove(m_Map.m_FormPlanet.m_SectorX, m_Map.m_FormPlanet.m_SectorY, m_Map.m_FormPlanet.m_PlanetNum, m_FromType, m_FromSlot, m_ToType, toslot, cnt);
+			m_Map.m_LogicAction.push(ac);
+		} else {
+			if (m_Map.m_FormFleetBar.FleetItemMove(m_FromType, m_FromSlot, m_ToType, m_ToSlot, cnt)) {
+				var hu:HangarUnit;
+				var fromanm:uint = 0;
+				var toanm:uint = 0;
+				var fleetanm_ok:Boolean = false;
+				var hangaranmid:uint = 0;
+
+				if (m_FromType == 2 || m_FromType == 9) {
+					if (!fleetanm_ok) {
+						fleetanm_ok = true;
+						Server.Self.m_Anm += 256;
+						EmpireMap.Self.m_FormFleetBar.m_RecvFleetAfterAnm = Server.Self.m_Anm;
+						EmpireMap.Self.m_FormFleetBar.m_RecvFleetAfterAnm_Time = EmpireMap.Self.m_CurTime;
+					}
+					fromanm = Server.Self.m_Anm;
+
+				} else if (m_FromType >= 16 && m_FromType < (16 + Hangar.HangarMax)) {
+					hu = EmpireMap.Self.m_Hangar.m_HangarUnit[m_FromType-16];
+					hu.m_Anm += 256;
+					hu.m_LoadAfterAnm = hu.m_Anm;
+					hu.m_LoadAfterAnm_Time = EmpireMap.Self.m_CurTime;
+					fromanm = hu.m_Anm;
+					hangaranmid = hu.m_HangarId;
+				}
+				if (m_ToType == 2 || m_ToType == 9) {
+					if (!fleetanm_ok) {
+						fleetanm_ok = true;
+						Server.Self.m_Anm += 256;
+						EmpireMap.Self.m_FormFleetBar.m_RecvFleetAfterAnm = Server.Self.m_Anm;
+						EmpireMap.Self.m_FormFleetBar.m_RecvFleetAfterAnm_Time = EmpireMap.Self.m_CurTime;
+					}
+					toanm = Server.Self.m_Anm;
+				} else if (m_ToType >= 16 && m_ToType < (16 + Hangar.HangarMax)) {
+					hu = EmpireMap.Self.m_Hangar.m_HangarUnit[m_ToType-16];
+					if (hu.m_HangarId != hangaranmid) {
+						hu.m_Anm += 256;
+						hu.m_LoadAfterAnm = hu.m_Anm;
+						hu.m_LoadAfterAnm_Time = EmpireMap.Self.m_CurTime;
+						toanm = hu.m_Anm;
+					}
+				}
+				Server.Self.QueryHS("emfleetspecial", "&type=17&ft=" + m_FromType.toString() +"&fs=" + m_FromSlot.toString() + "&fa=" + fromanm.toString() + "&tt=" + m_ToType.toString() + "&ts=" + m_ToSlot.toString() + "&ta=" + toanm.toString() + "&cnt=" + cnt.toString(), EmpireMap.Self.m_FormFleetBar.AnswerSpecial, false);
+			}
+		}
+		//else ac.ActionItemMove(0, 0, -1, m_FromType, m_FromSlot, m_ToType, toslot, cnt);
 	}
 
 	public function onMouseOut(e:MouseEvent):void
@@ -201,6 +278,9 @@ public class GraphMoveItem extends Shape
 		} else if(m_FromType == 2) {
 			tx = m_Map.m_FormFleetItem.GetItemSlotX(m_FromSlot);
 			ty = m_Map.m_FormFleetItem.GetItemSlotY(m_FromSlot);
+		} else if (m_FromType >= 16 && m_FromType < (16 + Hangar.HangarMax)) {
+			tx = m_Map.m_Hangar.GetItemSlotX(m_FromSlot);
+			ty = m_Map.m_Hangar.GetItemSlotY(m_FromSlot);
 		}
 		graphics.moveTo(tx, ty);
 
@@ -212,6 +292,9 @@ public class GraphMoveItem extends Shape
 		} else if(m_ToType == 2) {
 			tx = m_Map.m_FormFleetItem.GetItemSlotX(m_ToSlot);
 			ty = m_Map.m_FormFleetItem.GetItemSlotY(m_ToSlot);
+		} else if(m_ToType >= 16 && m_ToType < (16 + Hangar.HangarMax)) {
+			tx = m_Map.m_Hangar.GetItemSlotX(m_ToSlot);
+			ty = m_Map.m_Hangar.GetItemSlotY(m_ToSlot);
 		}
 		graphics.lineTo(tx, ty);
 	}

@@ -319,10 +319,17 @@ public class FormPlanet extends Sprite
 		if (EM.m_FormMenu.visible) return;
 		if (EM.m_FormConstruction.visible) return;
 
+		var planet:Planet;
+		var idesc:Item;
+
 		if (m_ItemSlotDown >= 0 && -1 != m_ItemSlotDown)
 		{
+			planet = EM.GetPlanet(m_SectorX, m_SectorY, m_PlanetNum);
+			if (!planet) return;
+			idesc = UserList.Self.GetItem(planet.m_Item[m_ItemSlotDown].m_Type);
+			
 			EM.m_Info.Hide();
-			EM.m_MoveItem.Begin(1, m_ItemSlotDown);
+			EM.m_MoveItem.Begin(1, m_ItemSlotDown, idesc && !idesc.IsEq());
 			m_ItemSlotDown = -1;
 			m_ItemSlotMouse = -1;
 			Update();
@@ -445,6 +452,7 @@ public class FormPlanet extends Sprite
 		var ship:Ship;
 		var str:String;
 		var obj:Object;
+		var idesc:Item;
 
 		if (!visible) return;
 
@@ -880,22 +888,34 @@ public class FormPlanet extends Sprite
 				obj.Txt.height = 17;
 				obj.Txt.x = ix + 1;
 				obj.Txt.y = iy + ItemSlotSize-obj.Txt.height;
-
-				if (planet.m_Item[t].m_Cnt >= 500000) str = BaseStr.FormatBigInt(Math.floor(planet.m_Item[t].m_Cnt/1000))/*+"."+Math.floor((planet.m_Item[t].m_Cnt%1000)/100).toString()*/+"k";
-				else str = BaseStr.FormatBigInt(planet.m_Item[t].m_Cnt);
-
-				if ((planet.m_Item[t].m_Cnt < 10) && (planet.m_Item[t].m_Complete > 0) && planet.m_Item[t].m_Type!=Common.ItemTypeModule) {
-					i = EM.CalcItemDifficult(planet, planet.m_Item[t].m_Type);
-					if (i > 1) {
-						i = Math.floor((planet.m_Item[t].m_Complete * 100) / i);
-						if (i < 1) i = 1;
-						else if (i > 99) i = 99;
-						str += " <font color='#00ffff'>(" +i.toString()+ "%)</font>";
+				
+				idesc = UserList.Self.GetItem(planet.m_Item[t].m_Type);
+				if (!idesc) {
+					obj.Txt.visible = false;
+				} else if (idesc.IsEq()) {
+					if (planet.m_Item[t].m_Cnt <= 0) obj.Txt.visible = false;
+					else {
+						obj.Txt.htmlText = Math.max(1, Math.floor(planet.m_Item[t].m_Cnt * 100 / idesc.m_StackMax)) + "%";
+						obj.Txt.visible = true;
 					}
-				}
+					
+				} else {
+					if (planet.m_Item[t].m_Cnt >= 500000) str = BaseStr.FormatBigInt(Math.floor(planet.m_Item[t].m_Cnt/1000))/*+"."+Math.floor((planet.m_Item[t].m_Cnt%1000)/100).toString()*/+"k";
+					else str = BaseStr.FormatBigInt(planet.m_Item[t].m_Cnt);
 
-				obj.Txt.htmlText = str;
-				obj.Txt.visible = true;
+					if ((planet.m_Item[t].m_Cnt < 10) && (planet.m_Item[t].m_Complete > 0) && planet.m_Item[t].m_Type!=Common.ItemTypeModule) {
+						i = EM.CalcItemDifficult(planet, planet.m_Item[t].m_Type);
+						if (i > 1) {
+							i = Math.floor((planet.m_Item[t].m_Complete * 100) / i);
+							if (i < 1) i = 1;
+							else if (i > 99) i = 99;
+							str += " <font color='#00ffff'>(" +i.toString()+ "%)</font>";
+						}
+					}
+
+					obj.Txt.htmlText = str;
+					obj.Txt.visible = true;
+				}
 			} else {
 				obj.Txt.visible = false;
 			}
@@ -1430,6 +1450,7 @@ public class FormPlanet extends Sprite
 
 		var s:int, icell:int, nitem:int;
 		var planet:Planet;
+		var idesc:Item;
 		
 		var hideinfo:Boolean = true;
 
@@ -1451,12 +1472,18 @@ public class FormPlanet extends Sprite
 
 		if (m_ItemSlotDown >= 0 && m_ItemSlotMouse != m_ItemSlotDown)
 		{
-			EM.m_Info.Hide();
-			EM.m_MoveItem.Begin(1, m_ItemSlotDown);
-			m_ItemSlotDown = -1;
-			m_ItemSlotMouse = -1;
-			Update();
-			return;
+			planet = EM.GetPlanet(m_SectorX, m_SectorY, m_PlanetNum);
+			
+			if (planet) {
+				idesc = UserList.Self.GetItem(planet.m_Item[m_ItemSlotDown].m_Type);
+				
+				EM.m_Info.Hide();
+				EM.m_MoveItem.Begin(1, m_ItemSlotDown, idesc && !idesc.IsEq());
+				m_ItemSlotDown = -1;
+				m_ItemSlotMouse = -1;
+				Update();
+				return;
+			}
 		}
 
 		if (hideinfo && s >= 0)	{
@@ -1554,7 +1581,7 @@ public class FormPlanet extends Sprite
 			else EM.m_FormMenu.Add(Common.Txt.AutoBuild, PlanetAutoBuild).Check = (planet.m_Flag & Planet.PlanetFlagAutoBuild) != 0;
 		}
 		
-		if((!EM.IsEdit()) && (planet.m_Owner==Server.Self.m_UserId || planet.m_Owner==0) && (EM.m_CotlType==Common.CotlTypeUser)) EM.m_FormMenu.Add(Common.Txt.BuildSDM, PriceAtSDM).Check = m_BuildAtSDM;
+//		if((!EM.IsEdit()) && (planet.m_Owner==Server.Self.m_UserId || planet.m_Owner==0) && (EM.m_CotlType==Common.CotlTypeUser)) EM.m_FormMenu.Add(Common.Txt.BuildSDM, PriceAtSDM).Check = m_BuildAtSDM;
 
 		EM.m_FormMenu.Add();
 
@@ -2172,6 +2199,7 @@ public class FormPlanet extends Sprite
 		var i:int;
 		var ar:Array = new Array();
 		var obj:Object;
+		var idesc:Item;
 
 		EM.m_Info.Hide();
 
@@ -2204,17 +2232,20 @@ public class FormPlanet extends Sprite
 		if ((!ctrl) && (!sack) && (EM.m_CotlType != Common.CotlTypeProtect && EM.m_CotlType != Common.CotlTypeCombat)) return;
 
 		if (ctrl && (planet.m_Item[m_ItemSlotMouse].m_Type != 0)) {
-			EM.m_FormMenu.Add(Common.Txt.FormPlanetItemShowCnt, MsgItemShowCnt).Check = (planet.m_Item[m_ItemSlotMouse].m_Flag & PlanetItem.PlanetItemFlagShowCnt) != 0;
+			idesc = UserList.Self.GetItem(planet.m_Item[m_ItemSlotMouse].m_Type);
+			if (idesc && !idesc.IsEq()) {
+				EM.m_FormMenu.Add(Common.Txt.FormPlanetItemShowCnt, MsgItemShowCnt).Check = (planet.m_Item[m_ItemSlotMouse].m_Flag & PlanetItem.PlanetItemFlagShowCnt) != 0;
 
-			EM.m_FormMenu.Add();
-
-			EM.m_FormMenu.Add(Common.Txt.FormPlanetItemNoMove, MsgItemNoMove).Check = (planet.m_Item[m_ItemSlotMouse].m_Flag & PlanetItem.PlanetItemFlagNoMove) != 0;
-
-			EM.m_FormMenu.Add(Common.Txt.FormPlanetItemToPortal, MsgItemToPortal).Check = (planet.m_Item[m_ItemSlotMouse].m_Flag & PlanetItem.PlanetItemFlagToPortal) != 0;
+				EM.m_FormMenu.Add();
 			
-			if (EM.m_CotlType == Common.CotlTypeUser || (EM.m_CotlType == Common.CotlTypeRich && EM.IsEdit())) {
-				if (planet.m_Item[m_ItemSlotMouse].m_Type != Common.ItemTypeEGM && planet.m_Item[m_ItemSlotMouse].m_Type != Common.ItemTypeMoney) EM.m_FormMenu.Add(Common.Txt.FormPlanetItemImport, MsgItemImport).Check = (planet.m_Item[m_ItemSlotMouse].m_Flag & PlanetItem.PlanetItemFlagImport) != 0;
-				if(planet.m_Item[m_ItemSlotMouse].m_Type!=Common.ItemTypeEGM) EM.m_FormMenu.Add(Common.Txt.FormPlanetItemExport, MsgItemExport).Check = (planet.m_Item[m_ItemSlotMouse].m_Flag & PlanetItem.PlanetItemFlagExport) != 0;
+				EM.m_FormMenu.Add(Common.Txt.FormPlanetItemNoMove, MsgItemNoMove).Check = (planet.m_Item[m_ItemSlotMouse].m_Flag & PlanetItem.PlanetItemFlagNoMove) != 0;
+
+				EM.m_FormMenu.Add(Common.Txt.FormPlanetItemToPortal, MsgItemToPortal).Check = (planet.m_Item[m_ItemSlotMouse].m_Flag & PlanetItem.PlanetItemFlagToPortal) != 0;
+			
+				if (EM.m_CotlType == Common.CotlTypeUser || (EM.m_CotlType == Common.CotlTypeRich && EM.IsEdit())) {
+					if (planet.m_Item[m_ItemSlotMouse].m_Type != Common.ItemTypeEGM && planet.m_Item[m_ItemSlotMouse].m_Type != Common.ItemTypeMoney) EM.m_FormMenu.Add(Common.Txt.FormPlanetItemImport, MsgItemImport).Check = (planet.m_Item[m_ItemSlotMouse].m_Flag & PlanetItem.PlanetItemFlagImport) != 0;
+					if(planet.m_Item[m_ItemSlotMouse].m_Type!=Common.ItemTypeEGM) EM.m_FormMenu.Add(Common.Txt.FormPlanetItemExport, MsgItemExport).Check = (planet.m_Item[m_ItemSlotMouse].m_Flag & PlanetItem.PlanetItemFlagExport) != 0;
+				}
 			}
 		}
 
@@ -2320,8 +2351,9 @@ public class FormPlanet extends Sprite
 		}
 
 		while (ctrl && (planet.m_Item[m_ItemSlotMouse].m_Type != 0)) {
-			var idesc:Item = UserList.Self.GetItem(planet.m_Item[m_ItemSlotMouse].m_Type & 0xffff);
+			idesc = UserList.Self.GetItem(planet.m_Item[m_ItemSlotMouse].m_Type & 0xffff);
 			if (idesc == null) break;
+			if (idesc.m_Id != Common.ItemTypeNavigator && idesc.m_Id != Common.ItemTypeTechnician) break;
 
 			bh = false;
 
@@ -2344,15 +2376,20 @@ public class FormPlanet extends Sprite
 			break;
 		}
 
-		if(!sack && planet.m_Item[m_ItemSlotMouse].m_Type != 0 && planet.m_Owner!=0/*&& planet.m_Owner==Server.Self.m_UserId*/) {
-			EM.m_FormMenu.Add();
-			EM.m_FormMenu.Add(Common.Txt.FormPlanetItemBalans, ItemBalans);
+		if (!sack && planet.m_Item[m_ItemSlotMouse].m_Type != 0 && planet.m_Owner != 0/*&& planet.m_Owner==Server.Self.m_UserId*/) {
+			
+			idesc = UserList.Self.GetItem(planet.m_Item[m_ItemSlotMouse].m_Type);
+			if (idesc && !idesc.IsEq()) {
+				EM.m_FormMenu.Add();
+				EM.m_FormMenu.Add(Common.Txt.FormPlanetItemBalans, ItemBalans);
+			}
 		}
 
 		EM.m_FormMenu.Add();
 
 		if (!sack && planet.m_Item[m_ItemSlotMouse].m_Type != 0 && (EM.m_EmpireEdit || EM.IsEdit())) {
-			EM.m_FormMenu.Add(Common.TxtEdit.ChangeCnt, MsgItemChangeCnt);
+			if (!EM.IsEdit()) EM.m_FormMenu.Add("dev " + Common.TxtEdit.ChangeCnt, MsgItemChangeCnt);
+			else EM.m_FormMenu.Add(Common.TxtEdit.ChangeCnt, MsgItemChangeCnt);
 		}
 
 		if (ctrl && (planet.m_Item[m_ItemSlotMouse].m_Type != 0)) {

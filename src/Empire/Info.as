@@ -22,6 +22,8 @@ public class Info extends Sprite
 	static public const TypePlanet:int = 4;
 	static public const TypeSearchCombat:int = 5;
 	
+	static public const MinWidthCellCaption:int = 20;
+	
 	public var m_ShowType:int = 0;
 	
 
@@ -33,6 +35,7 @@ public class Info extends Sprite
 
 	public var m_ItemKey:Object = null;
 
+	private var m_SpaceLeft:int;
 	private var m_GridSizeX:int;
 	private var m_GridSizeY:int;
 	
@@ -54,6 +57,12 @@ public class Info extends Sprite
 	private var m_Cfg_Planet:SpacePlanet = null;
 	private var m_Cfg_Cotl:SpaceCotl = null;
 	private var m_Cfg_Tmp:int = 0;
+	
+	private var m_ImgNo:int = 0;
+	private var m_Img:Sprite = null;
+	private var m_ImgFrame:int = 0;
+	private var m_ImgTimer:Timer = new Timer(5);
+	private var m_ImgTime:Number = 0;
 
 	// =МИН(10;ОКРУГЛ(КОРЕНЬ(999/МАКС(1;A1));0))
 	public static const CorvetteMulPower:Vector.<int>=new <int>[
@@ -75,7 +84,11 @@ public class Info extends Sprite
 		
 		mouseEnabled = false;
 		
-		m_TimeLive.addEventListener("timer",LiveUpdate);
+		m_TimeLive.addEventListener("timer", LiveUpdate);
+		
+		m_ImgTimer.addEventListener("timer", ImgTimer);
+		
+		m_ImgTime = Common.GetTime();
 	}
 
 	public function Hide(clearall:Boolean=true):void
@@ -92,9 +105,13 @@ public class Info extends Sprite
 		m_ShipType = Common.ShipTypeNone;
 		m_ItemKey = null;
 		
+		m_ImgNo = 0;
+		
 		if (clearall) {
 			m_ShowType = 0;
 			m_TimeLive.stop();
+			
+			m_ImgTimer.stop();
 
 			m_CfgIB_No=0;
 			m_Cfg_PX=0;
@@ -115,7 +132,7 @@ public class Info extends Sprite
 		//if(txt.length<=0) { Hide(); return; }
 		//m_Txt.htmlText =txt;
 
-		var sx:int=10+m_GridSizeX+10;
+		var sx:int=m_SpaceLeft+m_GridSizeX+10;
 		var sy:int=10+m_GridSizeY+10;
 
 //		var pax:int=-1;
@@ -183,18 +200,23 @@ public class Info extends Sprite
 	
 	public function ClearGrid():void
 	{
-		while(numChildren>0) removeChildAt(numChildren-1);
-		m_GridSizeX=0;
-		m_GridSizeY=0;
+		while (numChildren > 0) removeChildAt(numChildren - 1);
+		m_Img = null;
+		m_SpaceLeft = 0;
+		m_GridSizeX = 0;
+		m_GridSizeY = 0;
 	}
 	
 	public function BuildGrid(ar:Array):void
 	{
 		ClearGrid();
 
-		var i:int, u:int, s:int, curw:int;
+		var i:int, u:int, s:int, curw:int, w:int, need:int, step:int, v:int;
+		var dobj:DisplayObject;
 		var obj:Object;
 		var tf:TextField;
+		
+		var artf:Array = new Array();
 
 		var cntx:int=0;
 		var cnty:int=0;
@@ -204,89 +226,191 @@ public class Info extends Sprite
 			cntx=Math.max(cntx,obj.x+obj.sx);
 			cnty=Math.max(cnty,obj.y+obj.sy);
 		}
-		if(cntx<=0) return;
-		if(cnty<=0) return;
-
+		if (cntx <= 0) return;
+		if (cnty <= 0) return;
+		
 		var sx:Array=new Array(cntx);
 		var sy:Array=new Array(cnty);
 
 		for(i=0;i<cntx;i++) sx[i]=0;
 		for(i=0;i<cnty;i++) sy[i]=0;
 
-		for(i=0;i<ar.length;i++) {
-			obj=ar[i];
+		for (step = 1; step < 10; step++) {
+			for (i = 0; i < ar.length; i++) {
+				obj = ar[i];
+				if (obj.sx != step) continue;
 
-			tf=new TextField();
-			tf.width=0;
-			tf.height=0;
-			tf.type=TextFieldType.DYNAMIC;
-			tf.selectable=false;
-			tf.background=false;
-			tf.multiline=true;
-			tf.autoSize=TextFieldAutoSize.LEFT;
-			tf.antiAliasType=AntiAliasType.ADVANCED;
-			tf.gridFitType=GridFitType.PIXEL;// NONE;
-			tf.defaultTextFormat=new TextFormat("Calibri",obj.fontsize,obj.clr);
-			tf.embedFonts=true;
-			tf.htmlText=BaseStr.FormatTag(obj.txt);
-			addChild(tf);
+				tf=new TextField();
+				tf.width=0;
+				tf.height=0;
+				tf.type=TextFieldType.DYNAMIC;
+				tf.selectable=false;
+				tf.background=false;
+				tf.multiline=true;
+				tf.autoSize=TextFieldAutoSize.LEFT;
+				tf.antiAliasType=AntiAliasType.ADVANCED;
+				tf.gridFitType=GridFitType.PIXEL;// NONE;
+				tf.defaultTextFormat=new TextFormat("Calibri",obj.fontsize,obj.clr);
+				tf.embedFonts=true;
+				tf.htmlText=BaseStr.FormatTag(obj.txt);
+				addChild(tf);
+				artf[i] = tf;
+				
+				tf.width;
+				tf.height;
 
-			curw = tf.width;
-			if (obj.auto_width != undefined) {
-				curw = obj.auto_width;
+				curw = tf.width;
+				if (obj.auto_width != undefined) {
+					curw = obj.auto_width;
+				}
+
+				//if (obj.sx == 1) {
+				//	sx[obj.x] = Math.max(sx[obj.x], obj.cs_left + curw + obj.cs_right);
+				//	continue;
+				//}
+
+				need = obj.cs_left + curw + obj.cs_right;
+				
+				// Минимальная ширина колонок
+				if (obj.min_width_col != undefined) {
+					for (u = 0; u < obj.sx; u++) {
+						sx[obj.x + u] = Math.max(sx[obj.x + u], obj.min_width_col);
+					}
+				}
+
+				// Общая ширина колонок
+				w = 0; for (u = 0; u < obj.sx; u++) w += sx[obj.x + u];
+				if (w >= need) continue;
+				
+				if (w <= 0) {
+					// Равномерно увиличиваем ширину колнок
+					s = Math.ceil(need / obj.sx);
+					if (s < 0) s = 0;
+					for (u = 0; u < obj.sx; u++) {
+						sx[obj.x + u] = s;// Math.max(sx[obj.x + u], s);
+					}
+				} else {
+					// Пропорционально увеличиваем ширину колонок
+					for (u = 0; u < obj.sx; u++) {
+						v = Math.floor((need - w) * sx[obj.x + u] / w);
+						sx[obj.x + u] += v;
+					}
+				}
+
+				// Общая ширина колонок
+				w = 0; for (u = 0; u < obj.sx; u++) w += sx[obj.x + u];
+				if (w >= need) continue;
+
+				// Поочередно раширяем не нулевые колонки по одному пикселю
+				for (u = 0; u < obj.sx; u++) {
+					if (!sx[obj.x + u]) continue;
+					sx[obj.x + u]++;
+					w++;
+					if (w >= need) break;
+				}
+				
+				// Общая ширина колонок
+				w = 0; for (u = 0; u < obj.sx; u++) w += sx[obj.x + u];
+				if (w >= need) continue;
+
+				// Поочередно раширяем колонки по одному пикселю
+				while(w < need) {
+					for (u = 0; u < obj.sx; u++) {
+						sx[obj.x + u]++;
+						w++;
+						if (w >= need) break;
+					}
+				}
 			}
-
-			s=Math.ceil((obj.cs_left+curw+obj.cs_right)/obj.sx);
-			if(s<0) s=0;
-			for(u=0;u<obj.sx;u++) {
-				sx[obj.x+u]=Math.max(sx[obj.x+u],s);
-			}
-
-//trace(tf.width," ",tf.height);
 		}
 
 		for(i=0;i<ar.length;i++) {
-			obj=ar[i];
-			tf = getChildAt(i) as TextField;
+			obj = ar[i];
+			dobj = artf[i];// getChildAt(i);
+			if (!(dobj is TextField)) continue;
+			tf = dobj as TextField;
 			
 			if (obj.auto_width != undefined) {
 				curw = 0;
 				for (u = 0; u < obj.sx; u++) {
 					curw += sx[obj.x + u];
 				}
-				tf.width = curw-obj.cs_left-obj.cs_right;
+				tf.width = curw - obj.cs_left - obj.cs_right;
 				//tf.autoSize = TextFieldAutoSize.NONE;
 				tf.wordWrap = true;
+				tf.height;
 			}
 
-			s=Math.ceil((obj.cs_top+tf.height+obj.cs_bottom)/obj.sy);
-			if(s<0) s=0;
-			for(u=0;u<obj.sy;u++) {
-				sy[obj.y+u]=Math.max(sy[obj.y+u],s);
+			s = Math.ceil((obj.cs_top + tf.height + obj.cs_bottom) / obj.sy);
+			if (s < 0) s = 0;
+			for (u = 0; u < obj.sy; u++) {
+				sy[obj.y + u] = Math.max(sy[obj.y + u], s);
 			}
 		}
 
-		var ox:Array=new Array(cntx);
-		var oy:Array=new Array(cnty);
-		m_GridSizeX=0;
-		m_GridSizeY=0;
-		for(i=0;i<cntx;i++) { ox[i]=m_GridSizeX; m_GridSizeX+=sx[i]; }
-		for(i=0;i<cnty;i++) { oy[i]=m_GridSizeY; m_GridSizeY+=sy[i]; }
+		var ox:Array = new Array(cntx);
+		var oy:Array = new Array(cnty);
+		m_SpaceLeft = 10;
+		if (m_ImgNo > 0) m_SpaceLeft += 100;
+		m_GridSizeX = 0;
+		m_GridSizeY = 0;
+		for (i = 0; i < cntx; i++) { ox[i] = m_GridSizeX; m_GridSizeX += sx[i]; }
+		for (i = 0; i < cnty; i++) { oy[i] = m_GridSizeY; m_GridSizeY += sy[i]; }
 
 		for(i=0;i<ar.length;i++) {
 			obj=ar[i];
-			tf=getChildAt(i) as TextField;
+			dobj = artf[i];// getChildAt(i);
+			if (!(dobj is TextField)) continue;
+			tf = dobj as TextField;
 
-			if(obj.ax<0) tf.x=10+obj.cs_left+ox[obj.x];
-			else if(obj.ax>0) tf.x=10+ox[obj.x+obj.sx-1]+sx[obj.x+obj.sx-1]-obj.cs_right-Math.ceil(tf.width);
-			else tf.x=10+((ox[obj.x]+ox[obj.x+obj.sx-1]+sx[obj.x+obj.sx-1])>>1)-(Math.ceil(tf.width)>>1);
+			if (obj.ax < 0) tf.x = m_SpaceLeft + obj.cs_left + ox[obj.x];
+			else if (obj.ax > 0) tf.x = m_SpaceLeft + ox[obj.x + obj.sx - 1] + sx[obj.x + obj.sx - 1] - obj.cs_right - Math.ceil(tf.width);
+			else tf.x = m_SpaceLeft + ((ox[obj.x] + ox[obj.x + obj.sx - 1] + sx[obj.x + obj.sx - 1]) >> 1) - (Math.ceil(tf.width) >> 1);
 
-			if(obj.ay<0) tf.y=10+obj.cs_top+oy[obj.y];
-			else if(obj.ay>0) tf.y=10+oy[obj.y+obj.sy-1]+sy[obj.y+obj.sy-1]-obj.cs_bottom-Math.ceil(tf.height);
-			else tf.y=10+((oy[obj.y]+oy[obj.y+obj.sy-1]+sy[obj.y+obj.sy-1])>>1)-(Math.ceil(tf.height)>>1);
+			if (obj.ay < 0) tf.y = 10 + obj.cs_top + oy[obj.y];
+			else if (obj.ay > 0) tf.y = 10 + oy[obj.y + obj.sy - 1] + sy[obj.y + obj.sy - 1] - obj.cs_bottom - Math.ceil(tf.height);
+			else tf.y = 10 + ((oy[obj.y] + oy[obj.y + obj.sy - 1] + sy[obj.y + obj.sy - 1]) >> 1) - (Math.ceil(tf.height) >> 1);
+		}
+		
+		if (m_ImgNo > 0) {
+			m_Img = new Sprite();
+			addChild(m_Img);
+			//Common.ItemEqImg(m_ImgNo, true);
+			ImgUpdate();
+			m_ImgTimer.start();
 		}
 
 //		trace(cntx+" "+cnty);
+	}
+
+	public function ImgUpdate():void
+	{
+		if (!m_Img) return;
+
+		m_Img.graphics.clear();
+
+		if (m_ImgNo <= 0) return;
+
+		var bm:BitmapData = Common.ItemEqImg(m_ImgNo, true);
+		if (!bm) return;
+
+		var no:int = m_ImgFrame % 100;
+
+		var m:Matrix = new Matrix();
+		m.translate( -(no % 10) * 100, -Math.floor(no / 10) * 100);
+
+		m_Img.graphics.beginBitmapFill(bm, m, false, false);
+		m_Img.graphics.drawRect(0, 0, 100, 100);
+		m_Img.graphics.endFill();
+	}
+	
+	public function ImgTimer(event:TimerEvent):void
+	{
+		//m_ImgFrame++;
+		var no:int = Math.floor((Common.GetTime() - m_ImgTime) / 30);
+		if (m_ImgFrame == no) return;
+		m_ImgFrame = no;
+		ImgUpdate();
 	}
 
 	public function CreateHint(t1:int, t2:int=0, t3:int=0):String
@@ -371,7 +495,7 @@ public class Info extends Sprite
 		if(shiptype==Common.ShipTypeFlagship) {
 			str="";
 			if(cpt!=null) str=" (<font color='#ffff00'>"+(cpt.CalcAllLvl()+1).toString()+"</font>)";
-			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipName[shiptype]+str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipName[shiptype]+str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, min_width_col:MinWidthCellCaption });
 			y++;
 
 			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipDesc[shiptype], clr:0xD0D0D0, ax:-1, ay:0, fontsize:13,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3+6, auto_width:200 });
@@ -407,7 +531,7 @@ public class Info extends Sprite
 				str += " (" + u.toString()+")";
 			}
 
-			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, min_width_col:MinWidthCellCaption });
 			y++;
 
 			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipDesc[shiptype], clr:0xD0D0D0, ax:-1, ay:0, fontsize:13,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3+6, auto_width:200 });
@@ -416,8 +540,9 @@ public class Info extends Sprite
 			var vag:int = EM.DirValE(owner, Common.DirQuarkBaseAntiGravitor);
 			var vgw:int = EM.DirValE(owner, Common.DirQuarkBaseGravWell);
 			var vbh:int = EM.DirValE(owner, Common.DirQuarkBaseBlackHole);
+			var vas:int = EM.DirValE(owner, Common.DirQuarkBaseAntiShield);
 
-			if (vag != 0 || vgw != 0 || vbh != 0) {
+			if (vag != 0 || vgw != 0 || vbh != 0 || vas != 0) {
 				str = "";
 				if (vag != 0) {
 					if (str.length > 0) str += "[br]";
@@ -431,12 +556,16 @@ public class Info extends Sprite
 					if (str.length > 0) str += "[br]";
 					str += Common.Txt.InfoBlackHole + " (" + vbh.toString() + ")";
 				}
+				if (vas != 0) {
+					if (str.length > 0) str += "[br]";
+					str += Common.Txt.InfoAntiShield + " (" + vas.toString() + ")";
+				}
 
 				ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0x25fa53, ax:-1, ay:0, fontsize:13,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, auto_width:200 });
 				y++;
 			}
 		} else {
-			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipName[shiptype], clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipName[shiptype], clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, min_width_col:MinWidthCellCaption });
 			y++;
 			
 			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipDesc[shiptype], clr:0xD0D0D0, ax:-1, ay:0, fontsize:13,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3+6, auto_width:200});
@@ -697,14 +826,14 @@ public class Info extends Sprite
 		
 		var pnax:int=1;
 		
-		var planet:Planet=EM.GetPlanet(secx,secy,planetnum);
-		if(planet==null) return;
+		var planet:Planet = EM.GetPlanet(secx, secy, planetnum);
+		if (planet == null) return;
 
-		var ship:Ship=EM.GetShip(secx,secy,planetnum,shipnum);
-		if(ship==null || ship.m_Type==Common.ShipTypeNone) return;
+		var ship:Ship = EM.GetShip(secx, secy, planetnum, shipnum);
+		if (ship == null || ship.m_Type == Common.ShipTypeNone) return;
 
-		var gs:GraphShip=EM.GetGraphShip(secx,secy,planetnum,shipnum);
-		if(gs==null) return;
+		var gs:GraphShip = EM.GetGraphShip(secx, secy, planetnum, shipnum);
+		if (gs == null) return;
 
 		var monuk:Boolean=false;
 		var warbase_armourall:Boolean=false;
@@ -753,7 +882,7 @@ public class Info extends Sprite
 
 		// Name - Desc
 		if (ship.m_Flag & Common.ShipFlagPhantom) {
-			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.Txt.Phantom, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.Txt.Phantom, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, min_width_col:MinWidthCellCaption });
 			y++;
 			
 		} else if(ship.m_Type==Common.ShipTypeFlagship) {
@@ -764,7 +893,7 @@ public class Info extends Sprite
 
 			str="";
 			if(cpt!=null) str=" (<font color='#ffff00'>"+(cpt.CalcAllLvl()+1).toString()+"</font>)";
-			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipName[ship.m_Type]+str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipName[ship.m_Type]+str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, min_width_col:MinWidthCellCaption });
 			y++;
 
 			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipDesc[ship.m_Type], clr:0xD0D0D0, ax:-1, ay:0, fontsize:13,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3+6, auto_width:200 });
@@ -800,7 +929,7 @@ public class Info extends Sprite
 				str += " (" + u.toString()+")";
 			}
 
-			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, min_width_col:MinWidthCellCaption });
 			y++;
 
 			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipDesc[ship.m_Type], clr:0xD0D0D0, ax:-1, ay:0, fontsize:13,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3+6, auto_width:200 });
@@ -809,8 +938,9 @@ public class Info extends Sprite
 			var vag:int = EM.DirValE(ship.m_Owner, Common.DirQuarkBaseAntiGravitor);
 			var vgw:int = EM.DirValE(ship.m_Owner, Common.DirQuarkBaseGravWell);
 			var vbh:int = EM.DirValE(ship.m_Owner, Common.DirQuarkBaseBlackHole);
+			var vas:int = EM.DirValE(ship.m_Owner, Common.DirQuarkBaseAntiShield);
 
-			if (vag != 0 || vgw != 0 || vbh != 0) {
+			if (vag != 0 || vgw != 0 || vbh != 0 || vas != 0) {
 				str = "";
 				if (vag != 0) {
 					if (str.length > 0) str += "[br]";
@@ -824,13 +954,17 @@ public class Info extends Sprite
 					if (str.length > 0) str += "[br]";
 					str += Common.Txt.InfoBlackHole + " (" + vbh.toString() + ")";
 				}
+				if (vas != 0) {
+					if (str.length > 0) str += "[br]";
+					str += Common.Txt.InfoAntiShield + " (" + vas.toString() + ")";
+				}
 
 				ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0x25fa53, ax:-1, ay:0, fontsize:13,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, auto_width:200 });
 				y++;
 			}
 
 		} else {
-			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipName[ship.m_Type], clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipName[ship.m_Type], clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, min_width_col:MinWidthCellCaption });
 			y++;
 
 			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipDesc[ship.m_Type], clr:0xD0D0D0, ax:-1, ay:0, fontsize:13,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3+6, auto_width:200 });
@@ -1392,10 +1526,26 @@ public class Info extends Sprite
 //				ar.push({x:2, y:y, sx:1, sy:1, txt:str, clr:0xffff00, ax: 1, ay:0, fontsize:14,		cs_left:20, cs_right:0, cs_top:-3, cs_bottom:-3 });
 //			y++;
 		}
-		
+
 		// Invu
-		if((ship.m_Flag & (Common.ShipFlagInvu | Common.ShipFlagInvu2))!=0) {
+		if ((ship.m_Flag & (Common.ShipFlagInvu | Common.ShipFlagInvu2)) != 0) {
 			val = 0;
+			while ((ship.m_Flag & Common.ShipFlagInvu) != 0 && ship.m_Owner == Server.Self.m_UserId) {
+				if (ship.m_Type != Common.ShipTypeQuarkBase) break;
+
+				user = UserList.Self.GetUser(ship.m_Owner, false);
+				if (user == null) break;
+
+				var cd:int = EM.DirValE(ship.m_Owner, Common.DirQuarkBaseAntiShield);
+				if (cd <= 0) break;
+
+				val = ship.m_AbilityCooldown3 - cd * 60 * 1000 + 1 * 60 * 1000;
+				if (val < 0) break;
+
+				val = val - EM.m_ServerCalcTime;
+
+				break;
+			}
 			while ((ship.m_Flag & Common.ShipFlagInvu) != 0) {
 				if(ship.m_Type!=Common.ShipTypeFlagship) break;
 
@@ -1446,8 +1596,13 @@ public class Info extends Sprite
 				y++;
 			}
 			if (ship.m_AbilityCooldown2 > EM.m_ServerCalcTime) {
-				str=Common.FormatPeriod((ship.m_AbilityCooldown2-EM.m_ServerCalcTime)/1000);
-				ar.push({x:0, y:y, sx:3, sy:1, txt:Common.Txt.CooldownBlackHole+": <font color='#ffff00'>"+str+"</font>", clr:0xffffff, ax:-1, ay:0, fontsize:14,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+				str = Common.FormatPeriod((ship.m_AbilityCooldown2 - EM.m_ServerCalcTime) / 1000);
+				ar.push( { x:0, y:y, sx:3, sy:1, txt:Common.Txt.CooldownBlackHole + ": <font color='#ffff00'>" + str + "</font>", clr:0xffffff, ax: -1, ay:0, fontsize:14,			cs_left:0, cs_right:0, cs_top: -3, cs_bottom: -3 } );
+				y++;
+			}
+			if (ship.m_AbilityCooldown3 > EM.m_ServerCalcTime) {
+				str = Common.FormatPeriod((ship.m_AbilityCooldown3 - EM.m_ServerCalcTime) / 1000);
+				ar.push( { x:0, y:y, sx:3, sy:1, txt:Common.Txt.CooldownAntiShield + ": <font color='#ffff00'>" + str + "</font>", clr:0xffffff, ax: -1, ay:0, fontsize:14,			cs_left:0, cs_right:0, cs_top: -3, cs_bottom: -3 } );
 				y++;
 			}
 			if ((ship.m_BattleTimeLock > EM.m_ServerCalcTime) && ((ship.m_Flag & Common.ShipFlagBattle) != 0) && (ship.m_Flag & (Common.ShipFlagPortal | Common.ShipFlagBuild | Common.ShipFlagBomb)) == 0) {
@@ -1736,7 +1891,7 @@ public class Info extends Sprite
 
 			str="";
 			if(cpt!=null) str=" (<font color='#ffff00'>"+(cpt.CalcAllLvl()+1).toString()+"</font>)";
-			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipName[slot.m_Type]+str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipName[slot.m_Type]+str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, min_width_col:MinWidthCellCaption });
 			y++;
 
 			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipDesc[slot.m_Type], clr:0xD0D0D0, ax:-1, ay:0, fontsize:13,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3+6, auto_width:200 });
@@ -1754,7 +1909,7 @@ public class Info extends Sprite
 			}
 
 		} else {
-			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipName[slot.m_Type], clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipName[slot.m_Type], clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, min_width_col:MinWidthCellCaption });
 			y++;
 
 			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.ShipDesc[slot.m_Type], clr:0xD0D0D0, ax:-1, ay:0, fontsize:13,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3+6, auto_width:200 });
@@ -2214,7 +2369,7 @@ public class Info extends Sprite
 //				}
 			}
 
-			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,												cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3+5 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,												cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3+5, min_width_col:MinWidthCellCaption });
 			y++;
 		}
 
@@ -2242,14 +2397,19 @@ public class Info extends Sprite
 		}*/
 
 		var needspace:Boolean = false;
-		if(isvis && !(planet.m_Flag & (Planet.PlanetFlagWormhole | Planet.PlanetFlagSun | Planet.PlanetFlagGigant))) {
+		while(isvis && !(planet.m_Flag & (/*Planet.PlanetFlagWormhole |*/ Planet.PlanetFlagSun | Planet.PlanetFlagGigant))) {
 			// Owner
-			if(planet.m_Owner!=0) {
+			var own:uint = planet.m_Owner;
+			if (planet.m_Flag & Planet.PlanetFlagWormhole) {
+				own = planet.m_PortalOwner;
+				if (!own) break;
+			}
+			if (own != 0) {
 //				str=Common.Txt.Load;
 				str = "";
-				user = UserList.Self.GetUser(planet.m_Owner);
-				if (user && (planet.m_Owner & Common.OwnerAI) == 0) str += Common.UserRankName[(user.m_Flag & Common.UserFlagRankMask) >> Common.UserFlagRankShift] + " ";
-				str += EM.Txt_CotlOwnerName(Server.Self.m_CotlId, planet.m_Owner);
+				user = UserList.Self.GetUser(own);
+				if (user && (own & Common.OwnerAI) == 0) str += Common.UserRankName[(user.m_Flag & Common.UserFlagRankMask) >> Common.UserFlagRankShift] + " ";
+				str += EM.Txt_CotlOwnerName(Server.Self.m_CotlId, own);
 				
 				ar.push({x:0, y:y, sx:3, sy:1, txt:Common.Txt.Owner+": <font color='#ffff00'>"+str+"</font>", clr:0xD0D0D0, ax:-1, ay:0, fontsize:13,			cs_left:0, cs_right:0, cs_top:-2, cs_bottom:-2 });
 				y++;
@@ -2259,12 +2419,12 @@ public class Info extends Sprite
 			}
 			
 			// Union
-			while(planet.m_Owner!=0) {
-				user=UserList.Self.GetUser(planet.m_Owner);
-				if(user==null) break;
-				if(user.m_UnionId==0) break;
-				uni=UserList.Self.GetUnion(user.m_UnionId);
-				if(uni==null) break;
+			while (own != 0) {
+				user = UserList.Self.GetUser(own);
+				if (user == null) break;
+				if (user.m_UnionId == 0) break;
+				uni = UserList.Self.GetUnion(user.m_UnionId);
+				if (uni == null) break;
 
 				ar.push({x:0, y:y, sx:3, sy:1, txt:uni.NameUnion()+" "+uni.m_Name, clr:0x00b7ff, ax:-1, ay:0, fontsize:13,			cs_left:0, cs_right:0, cs_top:-2, cs_bottom:-2 });
 				y++;
@@ -2273,6 +2433,7 @@ public class Info extends Sprite
 			}
 			
 			needspace = true;
+			break;
 		}
 		
 		if (isvis) {
@@ -2785,7 +2946,7 @@ public class Info extends Sprite
 				}
 			}
 
-			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,												cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3+5 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,												cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3+5, min_width_col:MinWidthCellCaption });
 			y++;
 		}
 //			var user_portal:User = UserList.Self.GetUser(planet.m_PortalOwner);
@@ -2874,7 +3035,7 @@ public class Info extends Sprite
 		if (idesc == null) return;
 
 		if(1) {
-			ar.push({x:0, y:y, sx:3, sy:1, txt:EM.ItemName(itype), clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push( { x:0, y:y, sx:3, sy:1, txt:EM.ItemName(itype), clr:0xffff00, ax: -1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top: -3, cs_bottom: -3, min_width_col:MinWidthCellCaption } );
 			y++;
 		}
 
@@ -2914,9 +3075,26 @@ public class Info extends Sprite
 			ar.push({x:1, y:y, sx:1, sy:1, txt:" ",  clr:0xffffff, ax:-1, ay:0, fontsize:10,						cs_left:0, cs_right:0, cs_top:-5, cs_bottom:-5 });
 			y++;
 		}
-		
 
-		if (1) {
+		if (idesc.IsEq()) {
+			m_ImgNo = idesc.m_Img;
+
+			if (icnt > 0) {
+				k = Math.floor((icnt * 100) / idesc.m_StackMax); if (k < 1) k = 1;
+				str = k.toString() + "%";
+				if (k >= 90) str = "[crt]" + str + "[/crt]";
+
+				ar.push({x:1, y:y, sx:1, sy:1, txt:Common.Txt.Broken+":",  clr:0xffffff, ax:-1, ay:0, fontsize:14,						cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+					ar.push( { x:2, y:y, sx:1, sy:1, txt:str, clr:0xffff00, ax: 1, ay:0, fontsize:14,							cs_left:20, cs_right:0, cs_top: -3, cs_bottom: -3 } );
+				y++;
+
+				if(1) { // Space
+					ar.push({x:1, y:y, sx:1, sy:1, txt:" ",  clr:0xffffff, ax:-1, ay:0, fontsize:10,						cs_left:0, cs_right:0, cs_top:-5, cs_bottom:-5 });
+					y++;
+				}
+			}
+
+		} else {
 			str = BaseStr.FormatBigInt(icnt);
 			if (itype == Common.ItemTypeMoney) str += " cr";
 			
@@ -2925,21 +3103,47 @@ public class Info extends Sprite
 			y++;
 		}
 
-		for (i = 0; i < 4; i++) {
-			if (idesc.m_BonusType[i] == 0) continue;
-			
-			ar.push({x:1, y:y, sx:1, sy:1, txt:Common.ItemBonusName[idesc.m_BonusType[i]]+":",  clr:0xffffff, ax:-1, ay:0, fontsize:14,						cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
-				ar.push( { x:2, y:y, sx:1, sy:1, txt:"+" + Math.round(idesc.m_BonusVal[i] * 100.0 / 256.0).toString() + "%", clr:0xffff00, ax: 1, ay:0, fontsize:14,							cs_left:20, cs_right:0, cs_top: -3, cs_bottom: -3 } );
-			y++;
-		}
-		for (i = 0; i < 4; i++) {
-			u = (itype >> (16 + i * 4)) & 15;
-			if (u == 0) continue;
-			if (idesc.m_BonusType[u] == 0) continue;
-			
-			ar.push({x:1, y:y, sx:1, sy:1, txt:Common.ItemBonusName[idesc.m_BonusType[u]]+":",  clr:0xffffff, ax:-1, ay:0, fontsize:14,						cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
-				ar.push( { x:2, y:y, sx:1, sy:1, txt:"+" + Math.round(idesc.m_BonusVal[u] * 100.0 / 256.0).toString() + "%", clr:0xffff00, ax: 1, ay:0, fontsize:14,							cs_left:20, cs_right:0, cs_top: -3, cs_bottom: -3 } );
-			y++;
+		if ((itype & 0xffff) == Common.ItemTypeNavigator || (itype & 0xffff) == Common.ItemTypeTechnician) {
+			for (i = 0; i < 4; i++) {
+				if (idesc.m_BonusType[i] == 0) continue;
+				
+				ar.push({x:1, y:y, sx:1, sy:1, txt:Common.ItemBonusName[idesc.m_BonusType[i]]+":",  clr:0xffffff, ax:-1, ay:0, fontsize:14,						cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+					ar.push( { x:2, y:y, sx:1, sy:1, txt:"+" + Math.round(idesc.m_BonusVal[i] * 100.0 / 256.0).toString() + "%", clr:0xffff00, ax: 1, ay:0, fontsize:14,							cs_left:20, cs_right:0, cs_top: -3, cs_bottom: -3 } );
+				y++;
+			}
+			for (i = 0; i < 4; i++) {
+				u = (itype >> (16 + i * 4)) & 15;
+				if (u == 0) continue;
+				if (idesc.m_BonusType[u] == 0) continue;
+				
+				ar.push({x:1, y:y, sx:1, sy:1, txt:Common.ItemBonusName[idesc.m_BonusType[u]]+":",  clr:0xffffff, ax:-1, ay:0, fontsize:14,						cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+					ar.push( { x:2, y:y, sx:1, sy:1, txt:"+" + Math.round(idesc.m_BonusVal[u] * 100.0 / 256.0).toString() + "%", clr:0xffff00, ax: 1, ay:0, fontsize:14,							cs_left:20, cs_right:0, cs_top: -3, cs_bottom: -3 } );
+				y++;
+			}
+		} else {
+			for (i = 0; i < Item.BonusCnt; i++) {
+				if (!idesc.m_BonusType[i]) continue;
+				if (Common.ItemBonusParent[idesc.m_BonusType[i]]) continue;
+				
+				if (idesc.m_CoefCnt[i] > 0) {
+					k = (itype >> (16 + idesc.m_CoefShift[i])) & ((1 << idesc.m_CoefBit[i]) - 1);
+					if (k >= idesc.m_CoefCnt[i]) k = idesc.m_CoefCnt[i] - 1;
+
+					str = idesc.m_Coef[i * Item.CoefCnt + k].toString();
+
+					for (u = 0; u < Item.BonusCnt; u++) {
+						if (!idesc.m_BonusType[u]) continue;
+						if (idesc.m_BonusType[i] != Common.ItemBonusParent[idesc.m_BonusType[u]]) continue;
+						if (idesc.m_CoefBit[u] <= 0) continue;
+
+						str += "/"+idesc.m_Coef[u * Item.CoefCnt + k].toString();
+					}
+
+					ar.push( { x:1, y:y, sx:1, sy:1, txt:Common.ItemBonusName[idesc.m_BonusType[i]] + ":",  clr:0xffffff, ax: -1, ay:0, fontsize:14,						cs_left:0, cs_right:0, cs_top: -3, cs_bottom: -3 } );
+						ar.push( { x:2, y:y, sx:1, sy:1, txt:str, clr:0xffff00, ax: 1, ay:0, fontsize:14,							cs_left:20, cs_right:0, cs_top: -3, cs_bottom: -3 } );
+					y++;
+				}
+			}
 		}
 
 		if(itype==Common.ItemTypePower || itype==Common.ItemTypePower2) {
@@ -3248,6 +3452,26 @@ public class Info extends Sprite
 			break;
 		}
 
+		if (key is HangarSlot) {
+			var hs:HangarSlot = key as HangarSlot;
+			
+			if (1) { // Space
+				ar.push({x:1, y:y, sx:1, sy:1, txt:" ",  clr:0xffffff, ax:-1, ay:0, fontsize:10,						cs_left:0, cs_right:0, cs_top:-5, cs_bottom:-5 });
+				y++;
+			}
+
+			if (hs.m_Type == Hangar.stCore && hs.m_Energy >= 0) {
+				ar.push({x:1, y:y, sx:1, sy:1, txt:Common.Txt.HangarCoreEnergy+":",  clr:0xffffff, ax:-1, ay:0, fontsize:14,						cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+					ar.push( { x:2, y:y, sx:1, sy:1, txt:"+" + BaseStr.FormatBigInt(hs.m_Energy), clr:(hs.m_Energy <= 0)?0xff0000:0x00ff00, ax: 1, ay:0, fontsize:14,							cs_left:20, cs_right:0, cs_top: -3, cs_bottom: -3 } );
+				y++;
+			}
+
+			if (hs.m_Energy < 0) {
+				ar.push( { x:0, y:y, sx:3, sy:1, txt:"[crt]" + Common.Txt.HangarNeedMoreEnergy + ": " + ( -hs.m_Energy).toString() + "[/crt]", clr:0xffffff, ax: -1, ay:1, fontsize:14,			cs_left:0, cs_right:0, cs_top: -3 + 5, cs_bottom: -3 } );
+				y++;
+			}
+		}
+
 		BuildGrid(ar);
 
 //		var planet:Planet=EM.GetPlanet(secx,secy,planetnum);
@@ -3277,7 +3501,7 @@ public class Info extends Sprite
 		var y:int = 0;
 
 		if(1) {
-			ar.push( { x:0, y:y, sx:3, sy:1, txt:Common.BuildingName[btype] + " " + Common.RomanNum[blvl] , clr:0xffff00, ax: -1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top: -3, cs_bottom: -3 } );
+			ar.push( { x:0, y:y, sx:3, sy:1, txt:Common.BuildingName[btype] + " " + Common.RomanNum[blvl] , clr:0xffff00, ax: -1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top: -3, cs_bottom: -3, min_width_col:MinWidthCellCaption } );
 			y++;
 		}
 
@@ -3389,7 +3613,7 @@ public class Info extends Sprite
 			else if (itype == Common.ItemTypeSilicon) str = Common.Txt.FormPlanetOreSiliconName;
 			else return;
 
-			ar.push( { x:0, y:y, sx:3, sy:1, txt:str , clr:0xffff00, ax: -1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top: -3, cs_bottom: -3 } );
+			ar.push( { x:0, y:y, sx:3, sy:1, txt:str , clr:0xffff00, ax: -1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top: -3, cs_bottom: -3, min_width_col:MinWidthCellCaption } );
 			y++;
 		}
 
@@ -3608,7 +3832,7 @@ public class Info extends Sprite
 		if(user==null) return;
 
 		if(1) {
-			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.Txt.Stat, clr:0xffff00, ax:-1, ay:0, fontsize:16,												cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3+5 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:Common.Txt.Stat, clr:0xffff00, ax:-1, ay:0, fontsize:16,												cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3+5, min_width_col:MinWidthCellCaption });
 			y++;
 		}
 
@@ -3795,17 +4019,17 @@ public class Info extends Sprite
 			y++;
 		}
 
-		if(1) {
-			ar.push({x:1, y:y, sx:1, sy:1, txt:Common.Txt.SDMMax+":",  clr:0xffffff, ax:-1, ay:0, fontsize:14,							cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
-				ar.push({x:2, y:y, sx:1, sy:1, txt:BaseStr.FormatBigInt(EM.m_UserSDMMax)+" sdm", clr:0xffff00, ax: 1, ay:0, fontsize:14,				cs_left:20, cs_right:0, cs_top:-3, cs_bottom:-3 });
-			y++;
-		}
+//		if(1) {
+//			ar.push({x:1, y:y, sx:1, sy:1, txt:Common.Txt.SDMMax+":",  clr:0xffffff, ax:-1, ay:0, fontsize:14,							cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+//				ar.push({x:2, y:y, sx:1, sy:1, txt:BaseStr.FormatBigInt(EM.m_UserSDMMax)+" sdm", clr:0xffff00, ax: 1, ay:0, fontsize:14,				cs_left:20, cs_right:0, cs_top:-3, cs_bottom:-3 });
+//			y++;
+//		}
 
-		if(1) {
-			ar.push({x:1, y:y, sx:1, sy:1, txt:Common.Txt.SDM+":",  clr:0xffffff, ax:-1, ay:0, fontsize:14,							cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
-				ar.push({x:2, y:y, sx:1, sy:1, txt:BaseStr.FormatBigInt(EM.m_UserSDM)+" sdm", clr:0xffff00, ax: 1, ay:0, fontsize:14,				cs_left:20, cs_right:0, cs_top:-3, cs_bottom:-3 });
-			y++;
-		}
+//		if(1) {
+//			ar.push({x:1, y:y, sx:1, sy:1, txt:Common.Txt.SDM+":",  clr:0xffffff, ax:-1, ay:0, fontsize:14,							cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+//				ar.push({x:2, y:y, sx:1, sy:1, txt:BaseStr.FormatBigInt(EM.m_UserSDM)+" sdm", clr:0xffff00, ax: 1, ay:0, fontsize:14,				cs_left:20, cs_right:0, cs_top:-3, cs_bottom:-3 });
+//			y++;
+//		}
 
 		if(EM.m_EmpireLifeTime!=0 && EM.m_UserPlanetCnt>0) {
 			ar.push({x:1, y:y, sx:1, sy:1, txt:Common.Txt.EmpireDestroyTime+":",  clr:0xffffff, ax:-1, ay:0, fontsize:14,							cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
@@ -4022,6 +4246,7 @@ public class Info extends Sprite
 		else if (dir == Common.DirQuarkBaseShield) ad = Common.DirQuarkBaseShieldDesc;
 		else if (dir == Common.DirQuarkBaseShieldReduce) ad = Common.DirQuarkBaseShieldReduceDesc;
 		else if (dir == Common.DirQuarkBaseShieldInc) ad = Common.DirQuarkBaseShieldIncDesc;
+		else if (dir == Common.DirQuarkBaseAntiShield) ad = Common.DirQuarkBaseAntiShieldDesc;
 
 		var offval:Boolean = (dir == Common.DirCorvetteStealth) || (dir == Common.DirCruiserAccess) || (dir == Common.DirDreadnoughtAccess) || (dir == Common.DirDevastatorAccess) || (dir == Common.DirWarBaseAccess) || (dir == Common.DirShipyardAccess) || (dir == Common.DirSciBaseAccess) || (dir == Common.DirQuarkBaseAccess);
 
@@ -4031,7 +4256,7 @@ public class Info extends Sprite
 				str+=" "+lvl.toString();
 				if((pl!=null) && (lvl<pl.length-1)) str+="/"+(pl.length-1).toString();
 			}
-			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, min_width_col:MinWidthCellCaption });
 			y++;
 		}
 		
@@ -4201,7 +4426,7 @@ public class Info extends Sprite
 				str+=" "+lvl.toString();
 				if((pl!=null) && /*(lvl<pl.length-1)*/pl.length>1) str+="/"+(pl.length-1).toString();
 			}
-			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, min_width_col:MinWidthCellCaption });
 			y++;
 		}
 		
@@ -4271,8 +4496,9 @@ public class Info extends Sprite
 		
 		var s:int = ticket.State;
 
-		if(ticket.Type==Common.TicketTypeAttack) {
-			if (ticket.State == 0) str = Common.Txt.TicketAttack;
+		if (ticket.Type == Common.TicketTypeAttack) {
+			if (ticket.State == 2) str = Common.Txt.TicketAttackUserCotl;
+			else if (ticket.State == 0) str = Common.Txt.TicketAttack;
 			else str = Common.Txt.TicketAttackEnd;
 			str = BaseStr.Replace(str, "<SectorX>", "[clr]" + (ticket.SectorX - ticket.m_SectorMinX + 1).toString() + "[/clr]");
 			str = BaseStr.Replace(str, "<SectorY>", "[clr]" + (ticket.SectorY - ticket.m_SectorMinY + 1).toString() + "[/clr]");
@@ -4454,12 +4680,13 @@ public class Info extends Sprite
 		
 		if (1) {
 			if (ticket.Type == Common.TicketTypeAttack && ticket.State == 0) str = Common.Txt.TicketExAttack;
-			else if (ticket.Type == Common.TicketTypeAttack && ticket.State != 0) str = Common.Txt.TicketExAttackEnd;
+			else if (ticket.Type == Common.TicketTypeAttack && ticket.State == 1) str = Common.Txt.TicketExAttackEnd;
+			else if (ticket.Type == Common.TicketTypeAttack && ticket.State == 2) str = Common.Txt.TicketExAttackCotlUser;
 			else if (ticket.Type == Common.TicketTypeCapture && (ticket.State & 0x10000) != 0) str = Common.Txt.TicketCaptureTake;
 			else if (ticket.Type == Common.TicketTypeCapture && (ticket.State & 0x10000) == 0) str = Common.Txt.TicketCaptureLost;
 			else if (ticket.Type == Common.TicketTypeSack) str = Common.Txt.TicketExSack;
 
-			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, min_width_col:MinWidthCellCaption });
 			y++;
 		}
 		if (true) {
@@ -4748,7 +4975,7 @@ public class Info extends Sprite
 			str = Common.Txt.FleetUser;
 			if (user != null) str += " " + EmpireMap.Self.Txt_CotlOwnerName(0, user.m_Id);
 
-			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, min_width_col:MinWidthCellCaption });
 			y++;
 		}
 
@@ -4846,7 +5073,7 @@ public class Info extends Sprite
 			if (cotl.m_CotlFlag & SpaceCotl.fDevelopment) str += " [crt](" +Common.Txt.HyperspaceCotlDevelopment + ")[/crt]";
 			if (cotl.m_CotlFlag & SpaceCotl.fTemplate) str += " [crt](" +Common.Txt.HyperspaceCotlTemplate + ")[/crt]";
 
-			ar.push({x:0, y:y, sx:3, sy:1, txt:BaseStr.Trim(str), clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:BaseStr.Trim(str), clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, min_width_col:MinWidthCellCaption });
 			y++;
 		}
 
@@ -5353,7 +5580,7 @@ public class Info extends Sprite
 			else if (zonelvl == 3) str = Common.Txt.Zone3;
 			else str = "Unknow";
 			
-			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:str, clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, min_width_col:MinWidthCellCaption });
 			y++;
 		}
 		
@@ -5423,7 +5650,7 @@ public class Info extends Sprite
 		if (idesc == null) return;
 
 		if(1) {
-			ar.push({x:0, y:y, sx:3, sy:1, txt:EM.ItemName(itype&0xffff7fff), clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3 });
+			ar.push({x:0, y:y, sx:3, sy:1, txt:EM.ItemName(itype&0xffff7fff), clr:0xffff00, ax:-1, ay:0, fontsize:16,			cs_left:0, cs_right:0, cs_top:-3, cs_bottom:-3, min_width_col:MinWidthCellCaption });
 			y++;
 		}
 

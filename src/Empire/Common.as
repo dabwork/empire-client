@@ -747,6 +747,7 @@ public class Common
 	static public const DirQuarkBaseShield:int = 100;
 	static public const DirQuarkBaseShieldReduce:int = 101;
 	static public const DirQuarkBaseShieldInc:int = 102;
+	static public const DirQuarkBaseAntiShield:int = 103;
 
 	static public const DirEmpireMaxLvl:Array=[ 40, 60, 90, 120, 150 ];//[ 30, 40, 60, 80, 110 ];
 	static public const DirEnclaveMaxLvl:Array=[ 5, 20, 40, 60, 100 ];//[ 2, 20, 30, 40, 70 ];
@@ -871,11 +872,12 @@ public class Common
 	static public const DirQuarkBaseRepairLvl:Array = [50,500,1000,2000];
 	static public const DirQuarkBaseAntiGravitorLvl:Array = [0, 20, 15, 10, 5];
 	static public const DirQuarkBaseGravWellLvl:Array = [0, 55, 35, 15];
-	static public const DirQuarkBaseBlackHoleLvl:Array = [0, 70, 50, 30];
+	static public const DirQuarkBaseBlackHoleLvl:Array = [0, 30, 10];// [0, 70, 50, 30];
 	static public const DirQuarkBaseHPLvl:Array = [500000,1000000,2000000];
 	static public const DirQuarkBaseShieldLvl:Array = [500000,1000000,2000000];
 	static public const DirQuarkBaseShieldReduceLvl:Array = [0,26,51];//[0, 51, 102];
 	static public const DirQuarkBaseShieldIncLvl:Array = [25, 250, 500, 750];
+	static public const DirQuarkBaseAntiShieldLvl:Array = [0, 30, 15, 5];
 
 	static public const ResearchPeriod:Array=[50,100,150,200,300,500,800,1200,1700,2300,3000,3800,4700];
 
@@ -999,7 +1001,7 @@ public class Common
 	static public const DirQuarkBaseShieldDesc:Array = new Array();
 	static public const DirQuarkBaseShieldReduceDesc:Array = new Array();
 	static public const DirQuarkBaseShieldIncDesc:Array = new Array();
-
+	static public const DirQuarkBaseAntiShieldDesc:Array = new Array();
 
 	static public const DirImg:Array=["",
 		"DirEmpireMax","DirEnclaveMax","DirColonyMax","DirPlanetLevelMax"/*"DirPlanetLevelMax"*/,"DirShipSpeed","DirPlanetProtect","DirCaptureSlow","",
@@ -1014,7 +1016,7 @@ public class Common
 		"DirShipyardAccess","DirPrice","DirCnt","DirSupply","DirArmour","DirAccuracy","DirRepair","DirRepairAll",
 		"DirSciBaseAccess","DirPrice","DirCnt","DirSupply","DirArmour","DirAccuracy","DirRepair","DirStabilizer",
 		"DirBomb",
-		"DirQuarkBaseAccess","DirSupply","DirWeapon","DirAccuracy","DirArmour","DirRepair","DirQuarkBaseAntiGravitor","DirQuarkBaseGravWell","DirQuarkBaseBlackHole","VecProtectHP","VecProtectShield","VecProtectShieldReduce","VecProtectShieldInc"
+		"DirQuarkBaseAccess","DirSupply","DirWeapon","DirAccuracy","DirArmour","DirRepair","DirQuarkBaseAntiGravitor","DirQuarkBaseGravWell","DirQuarkBaseBlackHole","VecProtectHP","VecProtectShield","VecProtectShieldReduce","VecProtectShieldInc","VecProtectInvulnerability2"
 	];
 
 	static public const TechDir:Array=[
@@ -1146,14 +1148,14 @@ public class Common
 		,
 
 // QuarkBase
-        DirQuarkBaseAccess,     0,                      DirQuarkBaseWeapon,     DirQuarkBaseArmour,
+        DirQuarkBaseAccess,     DirQuarkBaseBlackHole,	DirQuarkBaseWeapon,     DirQuarkBaseArmour,
         DirQuarkBaseShieldInc,  DirQuarkBaseHP,         DirQuarkBaseAccuracy,   DirQuarkBaseAntiGravitor,
         DirQuarkBaseShieldInc,  DirQuarkBaseShield,     DirQuarkBaseRepair,     DirQuarkBaseShieldReduce,
-        DirQuarkBaseGravWell,   DirQuarkBaseHP,         DirQuarkBaseRepair,     DirQuarkBaseAntiGravitor,
-        DirQuarkBaseShieldInc,  DirQuarkBaseShield,     DirQuarkBaseAccuracy,   DirQuarkBaseAntiGravitor,
-        DirQuarkBaseGravWell,   DirQuarkBaseBlackHole,  DirQuarkBaseRepair,     DirQuarkBaseShieldReduce,
-        0,                      DirQuarkBaseBlackHole,  DirQuarkBaseWeapon,     DirQuarkBaseArmour,
-        DirQuarkBaseGravWell,   DirQuarkBaseBlackHole,  0,                      DirQuarkBaseAntiGravitor
+        DirQuarkBaseGravWell,   DirQuarkBaseAntiShield,	DirQuarkBaseRepair,     DirQuarkBaseAntiGravitor,
+        DirQuarkBaseShieldInc,  DirQuarkBaseHP,     	DirQuarkBaseAccuracy,   DirQuarkBaseAntiGravitor,
+        DirQuarkBaseGravWell,   DirQuarkBaseAntiShield, DirQuarkBaseRepair,     DirQuarkBaseShieldReduce,
+        0,                      DirQuarkBaseShield,  	DirQuarkBaseWeapon,     DirQuarkBaseArmour,
+        DirQuarkBaseGravWell,   DirQuarkBaseAntiShield, DirQuarkBaseBlackHole,	DirQuarkBaseAntiGravitor
 	];
 
 	static public const CptSlotMax:int=4;
@@ -1543,8 +1545,51 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 	static public const ItemBonusAccuracyCruiser:int = 6;
 	static public const ItemBonusAccuracyDreadnought:int = 7;
 	static public const ItemBonusAccuracyDevastator:int = 8;
-	static public const ItemBonusCnt:int = 9;
+
+	static public const ItemBonusEnergy:int = 16;
+	static public const ItemBonusCharge:int = 17;
+	static public const ItemBonusChargeMax:int = 18;
+	static public const ItemBonusSpeed:int = 19;
+	static public const ItemBonusManoeuvrability:int = 20;
+	static public const ItemBonusShieldReduce:int = 21;
+	static public const ItemBonusShieldMax:int = 22;
+	static public const ItemBonusShieldInc:int = 23;
+	static public const ItemBonusShieldIncA:int = 24;
+	static public const ItemBonusSpeedA:int = 25;
+	static public const ItemBonusManoeuvrabilityA:int = 26;
 	
+	static public const ItemBonusParent:Vector.<int> = new <int>[
+	0,//0
+	0,//ItemBonusArmourCorvette:int = 1;
+	0,//ItemBonusArmourCruiser:int = 2;
+	0,//ItemBonusArmourDreadnought:int = 3;
+	0,//ItemBonusArmourDevastator:int = 4;
+	0,//ItemBonusAccuracyCorvette:int = 5;
+	0,//ItemBonusAccuracyCruiser:int = 6;
+	0,//ItemBonusAccuracyDreadnought:int = 7;
+	0,//ItemBonusAccuracyDevastator:int = 8;
+	0,//9
+	0,//10
+	0,//11
+	0,//12
+	0,//13
+	0,//14
+	0,//15
+	0,//ItemBonusEnergy:int = 16;
+	0,//ItemBonusCharge:int = 17;
+	0,//ItemBonusChargeMax:int = 18;
+	0,//ItemBonusSpeed:int = 19;
+	0,//ItemBonusManoeuvrability:int = 20;
+	0,//ItemBonusShieldReduce:int = 21;
+	0,//ItemBonusShieldMax:int = 22;
+	0,//ItemBonusShieldInc:int = 23;
+	ItemBonusShieldInc,//ItemBonusShieldIncA:int = 24;
+	ItemBonusSpeed,//ItemBonusSpeedA:int = 25;
+	ItemBonusManoeuvrability//ItemBonusManoeuvrabilityA:int = 26;
+	];
+
+//	static public const ItemBonusCnt:int = 15;
+
 	static public const UnionTypeAlliance:int = 1;
 	static public const UnionTypePirate:int = 2;
 	static public const UnionTypeClan:int = 3;
@@ -1598,7 +1643,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 	
 	static public const UnionTypeName:Array =	["None", "Альянс", "Пираты", "Клан", "Наемники", "Торговцы", "Империя", "Республика"];
 
-	static public const ItemBonusName:Array =	["None", "Armour corvette", "Armour cruiser", "Armour dreadnought", "Armour devastator", "Accuracy corvette", "Accuracy cruiser", "Accuracy dreadnought", "Accuracy devastator"];
+	static public const ItemBonusName:Array =	[];// ["None", "Armour corvette", "Armour cruiser", "Armour dreadnought", "Armour devastator", "Accuracy corvette", "Accuracy cruiser", "Accuracy dreadnought", "Accuracy devastator"];
 
 	static public const TxtMonthForDate:Array = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
 
@@ -1636,6 +1681,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		Build:"Построить",
 		BuildFlagship:"Построить флагман для",
 		Count:"Количество",
+		Broken:"Повреждения",
 		ItemComplete:"Завершено",
 		Price:"Цена",
 		Sum:"Сумма",
@@ -1799,7 +1845,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		ButDestroyEmpire:"Уничтожить империю",
 		ButChangeRace:"Сменить расу",
 		DestroyEmpireQuery:"Для уничтожения империи введите слово 'DELETE'",
-		DestroyEmpireCom:"После уничтожения вам начисляется остаток очков развития,\nна которые вы сможете построить новую империю.\nТакже при уничтожении теряются две технологии.\nИмперию нельзя уничтожить, если в созвездии есть враг.",
+		DestroyEmpireCom:"При уничтожении империи теряются одна технология в каждой ветке.\nИмперию нельзя уничтожить, если в созвездии есть враг.",
 		DestroyEmpire:"Уничтожить",
 		ButLoad:"Загрузить модули",
 		ButUnloadModule:"Выгрузить модули",
@@ -1992,9 +2038,11 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		InfoAntiGravitor:"Гравитационный стабилизатор",
 		InfoGravWell:"Гравитационный колодец",
 		InfoBlackHole:"Черная дыра",
+		InfoAntiShield:"Инвариатор",
 		CooldownAntiGravitor:"До гравитационного стабилизатора",
 		CooldownGravWell:"До гравитационного колодца",
 		CooldownBlackHole:"До черной дыры",
+		CooldownAntiShield:"До инвариатора",
 		GravWellOff:"До окончания гравитационного колодца",
 		PotentialOff:"До окончания гравитационного потенциала",
 		ReloadReactor:"Перезагрузка реактора",
@@ -2390,6 +2438,8 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		FormFleetItemUse:"Использовать",
 		FormFleetItemDestroy:"Уничтожить",
 		FormFleetItemDestroyQuery:"Вы действительно хотите уничтожить товар в трюме флота?",
+		FormFleetItemAdd:"Добавить",
+		FormFleetItemChangeBroken:"Повреждения",
 
 		FormGiveCaption:"Снарядить",
 		FormGiveOk:"Снарядить",
@@ -2521,6 +2571,12 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		FormMenuCotlJump:"Перенос созвездия",
 		FormMenuCotlNew:"Новое созвездие",
 		FormMenuExit:"Выход",
+		FormMenuDefSave:"Запомнить оборону",
+		FormMenuDefSaveQuery:"Вы уверены, что хотите запомнить расстановку кораблей, чтобы в дальнейшем можно было автоматически восстановить оборону?",
+		FormMenuDefLoad:"Восстановить оборону",
+		FormMenuDefLoadQuery:"Вы уверены, что хотите восстановить оборону в сохраненной ранее конфигурации?",
+		FormMenuDefOpOk:"Операция успешно выполнена.",
+		FormMenuDefNeedModule:"Для восстановления не хватает <Val> модулей в трюме флота.",
 
 		FormItemBalansCaption:"Баланс",
 		FormItemBalansCnt:"В наличии",
@@ -2638,6 +2694,29 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		FormFleetType2Txt:"[center]Масса флота: [clr]1 400 000[/clr][/center]",
 		FormFleetType3Txt:"[center]Масса флота: [clr]450 000[/clr][/center][center]Транспортный трюм: [clr]x5[/clr][/center]",
 		FormFleetType4Txt:"[center]Масса флота: [clr]600 000[/clr][/center][center]Транспортный трюм: [clr]x10[/clr][/center]",
+		
+		HangarMoveSlot:"Переместить платформу",
+		HangarDelSlot:"Уничтожить платформу",
+		HangarDelSlotQuery:"Вы уверены, что хотите уничтожить платформу?",
+		HangarAddSlot:"Купить платформу",
+		HangarAddSlotCaption:"Платформа",
+		HangarAddSlotBuy:"Купить",
+		HangarAddSlotText:"За <Price> cr вы можете купить новую платформу для размещения на ней нового оборудования.",
+		HangarAddSlotType:"Тип платформы",
+		HangarAddSlotErrMax:"У корабля не может быть более 32 платформ.",
+		
+		HangarNeedMoreEnergy:"Не хватает энергии",
+		HangarCoreEnergy:"Заряд",
+
+		HangarSlotEnergy:"Распределитель",//"Платформа распределения",//"Распределитель",//"Энергетическая платформа",
+		HangarSlotCharge:"Концентратор",//"Платформа потребления",//"Концентратор",//"Энергетическая платформа",
+		HangarSlotCore:"Ядро",//"Концентратор",//"Платформа ядра",
+		HangarSlotSupply:"Снабжение",//"Платформа снаряжения",//"Уселитель",//"Платформа снабжения",
+
+		HangarSlotEnergyDesc:"Распределитель служит для коммутации оборудования установленного в нем. Распределительные платформы могут быть соединены между собой и подключены к ядру, в который поступает излишек энергии.",
+		HangarSlotChargeDesc:"Концентратор непосредственно подключается к ядру и потребляет заряд, тем самым позволяет оборудованию работать в активной фазе, что увеличивает характеристики оборудования установленного в нем.",
+		HangarSlotCoreDesc:"Ядро преобразует излишек энергии в заряд и накапливает его для дальнейшего использования в концентраторах для активной фазы работы оборудования.",
+		HangarSlotSupplyDesc:"Платформы снабжения обеспечивают хранение и использование материалов для различных нужд корабля.",
 
 		StorageCaption:"Созвездие",
 		StoragePageDesc:"i",//"Описание",
@@ -2689,14 +2768,20 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		ItemPageOutfit:"Снаряжение",
 		ItemPagePilot:"Пилоты",
 		ItemPageOther:"Другое",
+		ItemPageEq:"Оборудование",
+		
+		BonusPagePilot:"Пилоты",
+		BonusPageShip:"Корабли",
 
 		TicketExAttack:"Идет бой",
 		TicketExAttackEnd:"Завершился бой",
+		TicketExAttackCotlUser:"Вторжение",
 		TicketCaptureTake:"Захват планеты",
 		TicketCaptureLost:"Потеря планеты",
 		TicketExSack:"Разграбление ресурсов",
 		TicketExSackNewOwner:"Грабитель",
 
+		TicketAttackUserCotl:"Нападение на ваше созвездие в секторе <SectorX>,<SectorY>. Агрессор <User> (<UserUnion>) ",
 		TicketAttack:"Идет бой на вашей планете в секторе <SectorX>,<SectorY> с агрессором <User> (<UserUnion>) ",
 		TicketAttackEnd:"Завершился бой в секторе <SectorX>,<SectorY> с агрессором <User> (<UserUnion>).",
 		TicketPactSend:"Вы отправили договор игроку <User> (<UserUnion>)",
@@ -2837,6 +2922,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		ExitDate:"До выхода",
 		ExitBegin:"Начат процесс выхода из игры.",
 		ExitTimeout:"Вы не можете войти на сервер. Попробуйте зайти через: <Val>",
+		ActiveAtk:"Активное нападение.",
 		Ban:"Заблокирован доступ в игру для этого аккаунта.", // [br]Пожалуйста, внимательно прочитайте правила, чтобы больше их не нарушать.
 		BanDate:"Заблокирован доступ в игру для этого аккаунта.[br]Вход будет разрешен через: <Val>", // [br]Пожалуйста, внимательно прочитайте правила, чтобы больше их не нарушать.
 		WarningNoAttackFleetInStealth:"[center][crt]ВНИМАНИЕ![/crt] Вы не можете определить координаты флота,[br]а следовательно не можете напасть на него.",
@@ -2939,9 +3025,12 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		WarningNoGravWellRadiation:"[center][crt]ВНИМАНИЕ![/crt] При радиации нельзя активировать гравитационный колодец.[/center]",
 		WarningNoOpEnemy:"[center][crt]ВНИМАНИЕ![/crt] Даная операция невозможна, так как созвездие[br]блокируют вражеские корабли.[/center]",
 		WarningQuarkBasePortalLimit:"[crt]ВНИМАНИЕ![/crt] Разрушитель можно портировать только в личное[br]созвездие, между планетами анклава или на орбиту цитадели.",
-
+		WarningNotFoundWormhole:"[center][crt]ВНИМАНИЕ![/crt] В радиусе перелета от научной[br]станции отсутствует место для червоточины.[/center]",
+		WarningNotQuarkCoreForWormhole:"[center][crt]ВНИМАНИЕ![/crt] Для открытия червоточины[br]требуется [clr]10[/clr] кварковых ядер у научной станции.[/center]",
 		WarningAutoPilotOn:"[center][clr]ВНИМАНИЕ![/clr] Активация пилотов.[/center]",
 		WarningAutoPilotOff:"[center][clr]ВНИМАНИЕ![/clr] Пилоты отключены.[/center]",
+		WarningOpErrEnemy:"[center][crt]ВНИМАНИЕ![/crt] Операция не возможна,[br]пока в созвездии есть вражеские корабли.[/center]",
+		WarningItemActiveAtk:"[center][crt]ВНИМАНИЕ![/crt] Вывозить товары из созвездия[br]может только тот, кто активно нападает.[/center]",
 
 		ButBuyEgm:"Пополнить счет",
 		LostQuery:"Сервер не ответил на запрос", // Связь неустойчива.
@@ -3826,6 +3915,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		DirName[DirQuarkBaseShield] = "Щит";
 		DirName[DirQuarkBaseShieldReduce] = "Рассеивание";
 		DirName[DirQuarkBaseShieldInc] = "Регенерация";
+		DirName[DirQuarkBaseAntiShield]="Инвариатор";
 
 		DirPar[DirEmpireMax]="Максимальное количество планет в империи";
 		DirPar[DirEnclaveMax]="Максимальное количество планет в анклаве";
@@ -4182,11 +4272,13 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		DirQuarkBaseShieldReduceDesc.push("Энергетическое поле получает максимальный урон.");
 		DirQuarkBaseShieldReduceDesc.push("Урон энергетическому полю уменьшается на <Val>%.");
 		DirQuarkBaseShieldIncDesc.push("Энергетическое поле восстанавливает <Val> ед. в секунду\nВ режиме поляризации щита: <Val2> ед. в секунду.");
+		DirQuarkBaseAntiShieldDesc.push("Технология инвариатор - [clr]не изучена[/clr].");
+		DirQuarkBaseAntiShieldDesc.push("Разрушитель переносит на себя протонный щит с цели, раз в <Val> минут.");
 
-		TalentName[TalentMove]="Движение";
-		TalentName[TalentDef]="Защита";
-		TalentName[TalentAtc]="Атака";
-		TalentName[TalentSys]="Системы";
+		TalentName[TalentMove] = "Движение";
+		TalentName[TalentDef] = "Защита";
+		TalentName[TalentAtc] = "Атака";
+		TalentName[TalentSys] = "Системы";
 		
 		VecName[VecMoveSpeed]="Двигатель";
 //		VecName[VecMoveFuel]="Топливный бак";
@@ -4344,15 +4436,27 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		ItemBonusName[ItemBonusArmourCruiser] = "Защита крейсеров";
 		ItemBonusName[ItemBonusArmourDreadnought] = "Защита дредноутов";
 		ItemBonusName[ItemBonusArmourDevastator] = "Защита девастаторов";
-
 		ItemBonusName[ItemBonusAccuracyCorvette] = "Точность корветов";
 		ItemBonusName[ItemBonusAccuracyCruiser] = "Точность крейсеров";
 		ItemBonusName[ItemBonusAccuracyDreadnought] = "Точность дредноутов";
 		ItemBonusName[ItemBonusAccuracyDevastator] = "Точность девастаторов";
 
-		CotlName[5]="Орион";
+		ItemBonusName[ItemBonusEnergy] = "Энергия";
+		ItemBonusName[ItemBonusCharge] = "Заряд"; // Заряд
+		ItemBonusName[ItemBonusChargeMax] = "Ёмкость";
+		ItemBonusName[ItemBonusSpeed] = "Скорость";
+		ItemBonusName[ItemBonusManoeuvrability] = "Маневренность";
+		ItemBonusName[ItemBonusShieldReduce] = "Рассеивание";
+		ItemBonusName[ItemBonusShieldMax] = "Щит";
+		ItemBonusName[ItemBonusShieldInc] = "Регенерация";
+
+		ItemBonusName[ItemBonusShieldIncA] = "Регенерация (А)";
+		ItemBonusName[ItemBonusSpeedA] = "Скорость (А)";
+		ItemBonusName[ItemBonusManoeuvrabilityA] = "Маневренность (А)";
+
+		CotlName[5] = "Орион";
 		CotlName[6] = "Эридан";
-		
+
 		ChangeWordForNews1["Модули"] = "модуля";
 		ChangeWordForNews1["Броня I"] = "брони I";
 		ChangeWordForNews1["Броня II"] = "брони II";
@@ -4903,8 +5007,9 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		var cl:Class;
 		
 		if(ItemImgList[no]!=undefined) {
-			var obj:Object=ItemImgList[no];
-			if(obj.VecName!=null) {
+			var obj:Object = ItemImgList[no];
+			if (obj.VecScale < 0) {
+			} else if(obj.VecName!=null) {
 				cl=ApplicationDomain.currentDomain.getDefinition("Item"+obj.VecName) as Class;
 				s=new cl();
 				s.scaleX=obj.VecScale;
@@ -4918,18 +5023,30 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 			s.scaleX=2.0;
 			s.scaleY=2.0;
 		}
+		s.mouseEnabled = false;
 		
 		return s;
 	}
 	
-	public static function ItemImg(no:int, nonull:Boolean=true):Sprite
+	public static function ItemImg(no:int, nonull:Boolean = true):DisplayObject
 	{
 		var s:Sprite=null;
 		var cl:Class;
 		
-		if(ItemImgList[no]!=undefined) {
-			var obj:Object=ItemImgList[no];
-			if(obj.VecName!=null) {
+		if (ItemImgList[no] != undefined) {
+			var obj:Object = ItemImgList[no];
+			if (obj.VecScale < 0) {
+				obj = LoadManager.Self.Get("item/" + obj.VecName + "h.png");
+				if (obj is Bitmap) {
+					//var bm:Bitmap = obj as Bitmap;
+					var bm:Bitmap = new Bitmap();
+					bm.bitmapData = (obj as Bitmap).bitmapData;
+					s = new Sprite();
+					bm.x = -(bm.width >> 1);
+					bm.y = -(bm.height >> 1);
+					s.addChild(bm);
+				} else return null;
+			} else if(obj.VecName!=null) {
 				cl=ApplicationDomain.currentDomain.getDefinition("sp"+obj.VecName) as Class;
 				s=new cl();
 			}
@@ -4941,10 +5058,29 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 			s.scaleX=2.0;
 			s.scaleY=2.0;
 		}
+		if(s) s.mouseEnabled = false;
 		
 		return s;
 	}
 	
+	public static function ItemEqImg(no:int, anim:Boolean):BitmapData
+	{
+		var s:Sprite=null;
+		var cl:Class;
+		
+		if (ItemImgList[no] != undefined) {
+			var obj:Object = ItemImgList[no];
+			if (obj.VecScale < 0) {
+				obj = LoadManager.Self.Get("item/" + obj.VecName + (anim?"a.png":"i.png"));
+				if (obj is Bitmap) {
+					return (obj as Bitmap).bitmapData;
+				} else return null;
+			}
+		}
+
+		return null;
+	}
+
 	public static function ItemScale(no:int):Number
 	{
 		if (ItemImgList[no] != undefined) {
@@ -4957,14 +5093,30 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 	public static function ItemTex(no:int):Texture
 	{
 		var s:Sprite;
+		var ob:Object;
 		var cl:Class;
 
 		if (ItemImgList[no] != undefined) {
 			var obj:Object = ItemImgList[no];
 			if (obj.Tex == undefined || obj.Tex == null) {
-				cl = ApplicationDomain.currentDomain.getDefinition("sp" + obj.VecName) as Class;
-				s = new cl();
-				obj.Tex = C3D.CreateTextureFromSprite(64, 64, s, 32, 32);
+				if (obj.VecScale < 0) {
+					ob = LoadManager.Self.Get("item/" + obj.VecName + "h.png");
+					if (ob is Bitmap) {
+						var bm:BitmapData = (ob as Bitmap).bitmapData;
+						
+						if (bm.width < 64 && bm.height < 64) {
+							var nbm:BitmapData = new BitmapData(64, 64, true, 0);
+							nbm.copyPixels(bm, new Rectangle(0, 0, bm.width, bm.height), new Point((nbm.width >> 1) - (bm.width >> 1), (nbm.height >> 1) - (bm.height >> 1)));
+							bm = nbm;
+						}
+
+						obj.Tex = C3D.CreateTextureFromBM(bm, false);
+					} else return null;
+				} else {
+					cl = ApplicationDomain.currentDomain.getDefinition("sp" + obj.VecName) as Class;
+					s = new cl();
+					obj.Tex = C3D.CreateTextureFromSprite(64, 64, s, 32, 32);
+				}
 			}
 			return obj.Tex;
 		}
@@ -5034,6 +5186,11 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		ItemImgAdd(37, "Technician", 0.8);
 		ItemImgAdd(38, "Navigator", 0.8);
 		ItemImgAdd(39, "Egm", 1.0);
+		
+		ItemImgAdd(256, "engine0", -1);
+		ItemImgAdd(257, "reactor0", -1);
+		ItemImgAdd(258, "core0", -1);
+		ItemImgAdd(259, "generator0", -1);
 	}
 	
 	public static function ItemIsFinalLoop(itype:int):Boolean
@@ -5070,11 +5227,54 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		//else if (itype == ItemTypeMine && shiptype == ShipTypeFlagship) return true;
 		return false;
 	}
-	
-	public static function FillMenuItem(menu:CtrlPopupMenu, curit:uint = 0, money:Boolean = true, egm:Boolean = true):int
+
+	public static function FillBonusItem(menu:CtrlPopupMenu, curit:uint = 0):int
 	{
 		var str:String;
 		var i:int, k:int;
+		var idesc:Item;
+		var ba:Array = new Array();
+
+		var em:EmpireMap = EmpireMap.Self;
+
+		menu.widthMin = 300;
+		
+		var off:int = menu.ItemCnt;
+		
+		menu.ItemAdd(Common.Txt.BonusPagePilot, null, 0, null, false);
+		menu.ItemAdd(ItemBonusName[ItemBonusArmourCorvette], ItemBonusArmourCorvette, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusArmourCruiser], ItemBonusArmourCruiser, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusArmourDreadnought], ItemBonusArmourDreadnought, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusArmourDevastator], ItemBonusArmourDevastator, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusAccuracyCorvette], ItemBonusAccuracyCorvette, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusAccuracyCruiser], ItemBonusAccuracyCruiser, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusAccuracyDreadnought], ItemBonusAccuracyDreadnought, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusAccuracyDevastator], ItemBonusAccuracyDevastator, 1);
+
+		menu.ItemAdd(Common.Txt.BonusPageShip, null, 0, null, false);
+		menu.ItemAdd(ItemBonusName[ItemBonusEnergy], ItemBonusEnergy, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusCharge], ItemBonusCharge, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusChargeMax], ItemBonusChargeMax, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusSpeed], ItemBonusSpeed, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusSpeedA], ItemBonusSpeedA, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusManoeuvrability], ItemBonusManoeuvrability, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusManoeuvrabilityA], ItemBonusManoeuvrabilityA, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusShieldReduce], ItemBonusShieldReduce, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusShieldMax], ItemBonusShieldMax, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusShieldInc], ItemBonusShieldInc, 1);
+		menu.ItemAdd(ItemBonusName[ItemBonusShieldIncA], ItemBonusShieldIncA, 1);
+		
+		for (; off < menu.ItemCnt; off++) {
+			if (menu.ItemSelect(off)!=undefined && menu.ItemData(off) == curit) return off;
+		}
+		return -1;
+	}
+
+	public static function FillMenuItem(menu:CtrlPopupMenu, curit:uint = 0, money:Boolean = true, egm:Boolean = true, eq:Boolean = false):int
+	{
+		var str:String;
+		var i:int, u:int, k:int, p:int, r:int;
+		var idesc:Item;
 //		var ar:Array = new Array();
 		var ba:Array = new Array();
 
@@ -5123,14 +5323,14 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		menu.ItemAdd(em.Txt_ItemName(Common.ItemTypeMonuk), Common.ItemTypeMonuk, 1);
 
 		menu.ItemAdd(Common.Txt.ItemPagePilot, null, 0, null, false);
-		
+
 		var itn:int;
 		var it:uint = 0;
 		for (itn = 0; itn < 2; itn++) {
 			if (itn == 0) it = Common.ItemTypeTechnician;
 			else if (itn == 1) it = Common.ItemTypeNavigator;
 			
-			var idesc:Item = UserList.Self.GetItem(it);
+			idesc = UserList.Self.GetItem(it);
 			if (idesc == null) continue;
 
 			ba.length = 0;
@@ -5157,14 +5357,43 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 				menu.SwitchAdd(ba[idesc.m_BonusType[i]], "*"/*Math.round(idesc.m_BonusVal[i] * 100.0 / 256.0).toString() + "%"*/, i, false, FillMenuItemPilotCB);
 			}
 		}
-		
+
+		menu.ItemAdd(Common.Txt.ItemPageEq, null, 0, null, false);
+		for (itn = 0; itn <= 3; itn++) {
+			if (itn == 0) it = 256;
+			else if (itn == 1) it = 257;
+			else if (itn == 2) it = 258;
+			else if (itn == 3) it = 259;
+
+			idesc = UserList.Self.GetItem(it);
+			if (idesc == null) continue;
+
+			k = menu.ItemAdd(em.ItemName(it), it, 1);
+			
+			for (i = 0; i < Item.BonusCnt; i++) {
+				if (!idesc.m_BonusType[i]) continue;
+				if (ItemBonusParent[idesc.m_BonusType[i]]) continue;
+				if (idesc.m_CoefCnt[i] <= 0) continue;
+
+				r = (it >> (16 + idesc.m_CoefShift[i])) & ((1 << idesc.m_CoefBit[i]) - 1);
+				if (r >= idesc.m_CoefCnt[i]) r = idesc.m_CoefCnt[i] - 1;
+
+				str = Common.ItemBonusName[idesc.m_BonusType[i]] + ": " + idesc.m_Coef[i * Item.CoefCnt + r].toString();
+				p = menu.ItemAdd(str, i, 2, null, k);
+
+				for (u = 0; u < idesc.m_CoefCnt[i]; u++) {
+					menu.SwitchAdd(p, "*", u, u == r, FillMenuItemEqCB);
+				}
+			}
+		}
+
 		for (; off < menu.ItemCnt; off++) {
-			if (menu.ItemSelect(off)!=undefined && menu.ItemData(off) == curit) return off;
+			if (menu.ItemSelect(off) === true && menu.ItemData(off) == curit) return off;
 		}
 		return -1;
 	}
 	
-	public static function FillMenuItemPilotCB(menu:CtrlPopupMenu, itno:int, swno:int):void
+	private static function FillMenuItemPilotCB(menu:CtrlPopupMenu, itno:int, swno:int):void
 	{
 		var i:int, u:int, k:int, p:int;
 		var cnt:int = menu.switchCnt(itno);
@@ -5197,6 +5426,43 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 			}
 		}
 		
+		menu.itemDataSet(itp, it);
+		menu.itemTextSet(itp, EmpireMap.Self.ItemName(it));
+	}
+	
+	private static function FillMenuItemEqCB(menu:CtrlPopupMenu, itno:int, swno:int):void
+	{
+		var i:int, u:int, k:int, p:int, r:int;
+		var str:String;
+		
+		var cnt:int = menu.switchCnt(itno);
+		for (i = 0; i < cnt; i++) menu.switchOn(itno, i, i == swno);
+		var itp:int = menu.itemParent(itno);
+		if (itp < 0) return;
+
+		var idesc:Item = UserList.Self.GetItem(menu.ItemData(itp));
+		if (idesc == null) return;
+
+		i = menu.ItemData(itno);
+		r = menu.switchData(itno, swno);
+
+		str = Common.ItemBonusName[idesc.m_BonusType[i]] + ": " + idesc.m_Coef[i * Item.CoefCnt + r].toString();
+		menu.itemTextSet(itno, str);
+
+		var it:uint = menu.ItemData(itp) & 0xffff;
+		
+		for (p = 0; (u = menu.itemChild(itp, p)) >= 0; p++ ) {
+			i = menu.ItemData(u);
+			cnt = menu.switchCnt(u);
+			for (k = 0; k < cnt; k++) {
+				if (menu.switchOn(u, k)) {
+					r = menu.switchData(u, k);
+
+					it |= (((1 << idesc.m_CoefBit[i]) - 1) & r) << (16 + idesc.m_CoefShift[i]);
+				}
+			}
+		}
+
 		menu.itemDataSet(itp, it);
 		menu.itemTextSet(itp, EmpireMap.Self.ItemName(it));
 	}

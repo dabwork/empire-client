@@ -34,8 +34,12 @@ public class FormFleetItem extends Sprite
 
 	public var m_ItemMouse:int = -1;
 	public var m_ItemPrepare:int = -1;
+	
+	public var m_ItemSlot:int = -1;
 
 	public var m_ShowTransportRow:Boolean = true;
+	
+	public function get FI():FormInputEx { return m_Map.m_FormInputEx; }
 
 	public function FormFleetItem(map:EmpireMap)
 	{
@@ -120,6 +124,7 @@ public class FormFleetItem extends Sprite
 	{
 		var i:int, px:int, py:int, row:int, col:int;
 		var fi:FleetItem;
+		var idesc:Item;
 		
 		if (!visible) return;
 		
@@ -238,10 +243,10 @@ public class FormFleetItem extends Sprite
 					fi.m_Txt.embedFonts=true;
 					fi.m_Txt.alpha=0.8;
 				}
-				
+
 				var item:Item = null;
 				if (fi.m_Type!=0) item = UserList.Self.GetItem(fi.m_Type & 0xffff);
-				
+
 				if (!rowok || item==null || item.m_Img != fi.m_ImgNo) {
 					if (fi.m_Img != null) {
 						m_ItemLayer.removeChild(fi.m_Img);
@@ -249,7 +254,7 @@ public class FormFleetItem extends Sprite
 					}
 					fi.m_ImgNo = 0;
 				}
-				
+
 				if (rowok && fi.m_Type != 0 && (fi.m_Img == null) && item!=null) {
 					fi.m_ImgNo = item.m_Img;
 					fi.m_Img = Common.ItemImg(fi.m_ImgNo);
@@ -263,13 +268,27 @@ public class FormFleetItem extends Sprite
 					fi.m_Img.y = py + (ItemSlotSize >> 1);
 				}
 
-				if(rowok && fi.m_Type != 0) {
-					fi.m_Txt.height = 17;
-					fi.m_Txt.x = px + 1;
-					fi.m_Txt.y = py + ItemSlotSize-fi.m_Txt.height;
-					if (fi.m_Cnt >= 500000) fi.m_Txt.text = BaseStr.FormatBigInt(Math.floor(fi.m_Cnt/1000))/*+"."+Math.floor((fi.m_Cnt%1000)/100).toString()*/+"k";
-					else fi.m_Txt.text = BaseStr.FormatBigInt(fi.m_Cnt);
-					fi.m_Txt.visible = true;
+				if (rowok && fi.m_Type != 0) {
+					idesc = UserList.Self.GetItem(fi.m_Type);
+					if (idesc == null) {
+						fi.m_Txt.visible = false;
+					} else if (idesc.IsEq()) {
+						if (fi.m_Cnt <= 0) fi.m_Txt.visible = false;
+						else {
+							fi.m_Txt.height = 17;
+							fi.m_Txt.x = px + 1;
+							fi.m_Txt.y = py + ItemSlotSize-fi.m_Txt.height;
+							fi.m_Txt.text = Math.max(1, Math.floor(fi.m_Cnt * 100 / idesc.m_StackMax)) + "%";
+							fi.m_Txt.visible = true;
+						}
+					} else {
+						fi.m_Txt.height = 17;
+						fi.m_Txt.x = px + 1;
+						fi.m_Txt.y = py + ItemSlotSize-fi.m_Txt.height;
+						if (fi.m_Cnt >= 500000) fi.m_Txt.text = BaseStr.FormatBigInt(Math.floor(fi.m_Cnt / 1000))/*+"."+Math.floor((fi.m_Cnt%1000)/100).toString()*/+"k";
+						else fi.m_Txt.text = BaseStr.FormatBigInt(fi.m_Cnt);
+						fi.m_Txt.visible = true;
+					}
 				} else {
 					fi.m_Txt.visible = false;
 				}
@@ -362,6 +381,7 @@ public class FormFleetItem extends Sprite
 		e.stopImmediatePropagation();
 
 		var i:int;
+		var fi:FleetItem;
 
 		if (FormMessageBox.Self.visible) return;
 		if (m_Map.m_FormInput.visible) return;
@@ -371,8 +391,11 @@ public class FormFleetItem extends Sprite
 		i = PickItem();
 		if (i != m_ItemMouse) {
 			if (m_ItemPrepare >= 0) {
+				fi = m_FleetItem[m_ItemPrepare];
+				var idesc:Item = UserList.Self.GetItem(fi.m_Type);
+
 				m_Map.m_Info.Hide();
-				m_Map.m_MoveItem.Begin(2, m_ItemPrepare);
+				m_Map.m_MoveItem.Begin(2, m_ItemPrepare, idesc && !idesc.IsEq());
 				m_ItemPrepare = -1;
 				m_ItemMouse = -1;
 				Update();
@@ -384,7 +407,7 @@ public class FormFleetItem extends Sprite
 		}
 
 		if (hideinfo && m_ItemMouse >= 0) {
-			var fi:FleetItem = m_FleetItem[m_ItemMouse];
+			fi = m_FleetItem[m_ItemMouse];
 			if(fi.m_Type!=0) {
 				m_Map.m_Info.ShowItemEx(fi, fi.m_Type, fi.m_Cnt, 0, 0, fi.m_Broken, GetItemSlotX(m_ItemMouse) - (ItemSlotSize >> 1), GetItemSlotY(m_ItemMouse) - (ItemSlotSize >> 1), ItemSlotSize, ItemSlotSize);
 				hideinfo = false;
@@ -399,10 +422,15 @@ public class FormFleetItem extends Sprite
 		if(FormMessageBox.Self.visible) return;
 		if (m_Map.m_FormInput.visible) return;
 		if (m_Map.m_FormMenu.visible) return;
-		
-		if (-1 != m_ItemMouse && m_ItemPrepare >= 0) {
+
+		var fi:FleetItem;
+
+		if ( -1 != m_ItemMouse && m_ItemPrepare >= 0) {
+			fi = m_FleetItem[m_ItemPrepare];
+			var idesc:Item = UserList.Self.GetItem(fi.m_Type);
+
 			m_Map.m_Info.Hide();
-			m_Map.m_MoveItem.Begin(2, m_ItemPrepare);
+			m_Map.m_MoveItem.Begin(2, m_ItemPrepare, idesc && !idesc.IsEq());
 			m_ItemPrepare = -1;
 			m_ItemMouse = -1;
 			Update();
@@ -446,14 +474,24 @@ public class FormFleetItem extends Sprite
 		m_Map.m_FormMenu.Clear();
 
 		var fi:FleetItem = m_FleetItem[slot];
-		if (fi.m_Type == 0) return;
-
+		
+		var idesc:Item = null;
+		if (fi.m_Type) {
+			idesc = UserList.Self.GetItem(fi.m_Type);
+		}
+		
 		if((fi.m_Type & 0xffff)==Common.ItemTypeTechnician || (fi.m_Type & 0xffff)==Common.ItemTypeNavigator) {
 			obj = m_Map.m_FormMenu.Add(Common.Txt.FormFleetItemUse);
 			if (fi.m_Cnt <= 0) obj.Disable = true;
 			else obj.Fun = MsgItemUse;
 		}
-		
+
+		m_Map.m_FormMenu.Add();
+		//if (m_Map.m_UserAccess & User.AccessGalaxyOps) {
+		if (m_Map.m_EmpireEdit) {
+			m_Map.m_FormMenu.Add("dev " + Common.Txt.FormFleetItemAdd, MsgItemAdd);
+			if (idesc && idesc.IsEq()) m_Map.m_FormMenu.Add("dev " + Common.Txt.FormFleetItemChangeBroken, MsgItemChangeBroken);
+		}
 		m_Map.m_FormMenu.Add(Common.Txt.FormFleetItemDestroy,MsgItemDestroy);
 
 		var tx:int = GetItemSlotX(slot) - (ItemSlotSize >> 1);
@@ -473,7 +511,7 @@ public class FormFleetItem extends Sprite
 	{
 		FormMessageBox.Run(Common.Txt.FormFleetItemDestroyQuery, null, null, ActionItemDestroy);
 	}
-	
+
 	public function ActionItemDestroy():void
 	{
 		if (!EmpireMap.Self.m_FormFleetBar.FleetSysItemDestroy(m_ItemMouse)) return;
@@ -482,6 +520,79 @@ public class FormFleetItem extends Sprite
 
 		Server.Self.m_Anm += 256;
 		Server.Self.QuerySS("emfleetspecial", "&type=13&islot=" + m_ItemMouse.toString() + "&fanm=" + Server.Self.m_Anm.toString(), EmpireMap.Self.m_FormFleetBar.AnswerSpecial, false);
+		EmpireMap.Self.m_FormFleetBar.m_RecvFleetAfterAnm = Server.Self.m_Anm;
+		EmpireMap.Self.m_FormFleetBar.m_RecvFleetAfterAnm_Time = EmpireMap.Self.m_CurTime;
+	}
+
+	public function MsgItemAdd(...args):void
+	{
+		var cb:CtrlComboBox;
+		
+		m_ItemSlot = m_ItemMouse;
+
+		var fi:FleetItem = null;
+		fi = m_FleetItem[m_ItemMouse];
+
+		FI.Init(380, 220);
+		FI.caption = Common.Txt.FormFleetItemAdd;
+
+		cb = FI.AddComboBox(); cb.current = Common.FillMenuItem(cb.menu, fi?fi.m_Type:0, true, false, true);
+
+		FI.AddInput("0", 8, true, 0, false);
+
+		FI.Run(ActionItemAdd, Common.Txt.FormFleetItemAdd, StdMap.Txt.ButCancel);
+	}
+
+	public function ActionItemAdd():void
+	{
+		var itype:uint = FI.GetInt(0);
+		var icnt:int = FI.GetInt(1);
+
+		if (EmpireMap.Self.m_FormFleetBar.FleetSysItemAdd(m_Map.m_FormFleetBar.m_FormationOld, m_Map.m_FormFleetBar.m_HoldLvl, m_ItemSlot, itype, icnt, false, false) <= 0) return;
+
+		Update();
+
+		Server.Self.m_Anm += 256;
+		Server.Self.QuerySS("emfleetspecial", "&type=15&islot=" + m_ItemSlot.toString() +"&itype=" + itype.toString() + "&icnt=" + icnt.toString() + "&fanm=" + Server.Self.m_Anm.toString(), EmpireMap.Self.m_FormFleetBar.AnswerSpecial, false);
+		EmpireMap.Self.m_FormFleetBar.m_RecvFleetAfterAnm = Server.Self.m_Anm;
+		EmpireMap.Self.m_FormFleetBar.m_RecvFleetAfterAnm_Time = EmpireMap.Self.m_CurTime;
+	}
+
+	public function MsgItemChangeBroken(...args):void
+	{
+		m_ItemSlot = m_ItemMouse;
+
+		var fi:FleetItem = m_FleetItem[m_ItemSlot];
+		if (!fi.m_Type) return;
+		var idesc:Item = UserList.Self.GetItem(fi.m_Type);
+		if (!idesc) return;
+
+		FI.Init(380, 220);
+		FI.caption = Common.Txt.FormFleetItemChangeBroken;
+
+		FI.AddLabel("0..." + idesc.m_StackMax.toString());
+		FI.AddInput(fi.m_Cnt.toString(), 8, true, 0, false);
+
+		FI.Run(ActionItemChangeBroken, StdMap.Txt.ButSave, StdMap.Txt.ButCancel);
+	}
+
+	public function ActionItemChangeBroken():void
+	{
+		var fi:FleetItem = m_FleetItem[m_ItemSlot];
+		if (!fi.m_Type) return;
+		var idesc:Item = UserList.Self.GetItem(fi.m_Type);
+		if (!idesc) return;
+
+		if (!idesc.IsEq())  return;
+
+		fi.m_Cnt = FI.GetInt(0);
+		if (fi.m_Cnt < 0) fi.m_Cnt = 0;
+		else if (fi.m_Cnt > idesc.m_StackMax) fi.m_Cnt = idesc.m_StackMax;
+
+		Update();
+
+		Server.Self.m_Anm += 256;
+		Server.Self.QuerySS("emfleetspecial", "&type=16&islot=" + m_ItemSlot.toString() +"&val=" + fi.m_Cnt.toString() + "&fanm=" + Server.Self.m_Anm.toString(), EmpireMap.Self.m_FormFleetBar.AnswerSpecial, false);
 		EmpireMap.Self.m_FormFleetBar.m_RecvFleetAfterAnm = Server.Self.m_Anm;
 		EmpireMap.Self.m_FormFleetBar.m_RecvFleetAfterAnm_Time = EmpireMap.Self.m_CurTime;
 	}

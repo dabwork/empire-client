@@ -7,6 +7,7 @@ public class  BtlEvent
 {
 	static public const TypeExplosion:uint = 1;
 	static public const TypeBlackHole:uint = 2;
+	static public const TypeExplosionBig:uint = 3;
 
 	public var m_Type:uint = 0;
 	public var m_Slot:uint = 0;
