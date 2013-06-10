@@ -25,7 +25,7 @@ import Empire.FormDialog;
 
 public class EmpireMap extends StdMap
 {
-	public static const GameVersion:int = 181;
+	public static const GameVersion:int = 182;
 	public static const GameVersionSub:int = 0;// String = "";
 
 	public var RunFromLocal:Boolean = true;
@@ -3451,7 +3451,7 @@ if((t08 - t00) > 50 && EmpireMap.Self.m_Debug) FormChat.Self.AddDebugMsg("!SLOW.
 						planet=sec.m_Planet[i];
 
 						if (!planet.IsExist()) {
-							if ((planet.m_Flag & Planet.PlanetFlagWormhole) && m_Set_ShowWormholePoint) { }
+							if ((planet.m_Flag & Planet.PlanetFlagWormhole) && (m_CotlType != Common.CotlTypeUser || !(planet.m_Flag & Planet.PlanetFlagNoMove)) && m_Set_ShowWormholePoint) { }
 							else if (!IsEdit()) continue;
 						}
 
@@ -7860,7 +7860,7 @@ var tm0:int=System.totalMemory;
 //trace("load ship cnt="+ship.m_Cnt);
 					}
 					
-					planet.m_ExistEnemy = sl.LoadDword() != 0;
+					planet.m_AccessEnemy = sl.LoadDword();
 				}
 				sl.LoadEnd();
 
@@ -8602,10 +8602,15 @@ at flash.net::URLLoader/onComplete()*/
 		}
 
 		if ((m_GameState & Common.GameStateWait) == 0) {
-			while(!IsEdit() && (planet.m_Owner==0) && (planet.m_Flag & Planet.PlanetFlagNoCapture)==0 && !(planet.m_Flag & (Planet.PlanetFlagWormhole | Planet.PlanetFlagSun | Planet.PlanetFlagGigant))) {
+			while(!IsEdit() && (planet.m_Flag & Planet.PlanetFlagNoCapture)==0 && !(planet.m_Flag & (Planet.PlanetFlagWormhole | Planet.PlanetFlagSun | Planet.PlanetFlagGigant))) {
 				if(m_CotlType==0) {}
 				else if(m_CotlType==Common.CotlTypeUser && Server.Self.m_UserId==m_CotlOwnerId) {}
 				else break;
+
+				if (planet.m_Owner == 0);
+				else if (m_HomeworldCotlId == 0);
+				else break;
+
 				m_FormMenu.Add(Common.Txt.NewHomeworld,MsgNewHomeworld);
 				break;
 			}
@@ -9488,6 +9493,11 @@ at flash.net::URLLoader/onComplete()*/
 
 	private function MsgWormholeAtk(...args):void
 	{
+		if (!m_UserActiveAtk) {
+			m_FormHint.Show(Common.Txt.WarningOpActiveAtk, Common.WarningHideTime);
+			return;
+		}
+		
 		var planet:Planet=GetPlanet(m_CurSectorX,m_CurSectorY,m_CurPlanetNum);
 		if(planet==null) return;
 		var ship:Ship=GetShip(m_CurSectorX,m_CurSectorY,m_CurPlanetNum,m_CurShipNum);
@@ -14225,8 +14235,9 @@ at flash.net::URLLoader/onComplete()*/
 			else if(!IsFriendEx(planet, ship.m_Owner, Common.RaceNone, owner, Common.RaceNone)) return false;
 		}
 		if(ff) return true;*/
+		
+		if ((planet.m_AccessEnemy & 1) != 0 && (planet.m_AccessEnemy & 2) == 0) return true;
 
-		if (planet.m_ExistEnemy) return false;
 /*		var ff:Boolean = false;
 		if (planet.m_Owner == owner || IsFriendEx(planet, planet.m_Owner, Common.RaceNone, owner, Common.RaceNone)) ff = true;
 		var sopl:int = planet.ShipOnPlanetLow;
@@ -14253,7 +14264,7 @@ at flash.net::URLLoader/onComplete()*/
 				for(i=0;i<sec.m_Planet.length;i++) {
 					planet = sec.m_Planet[i];
 					
-					if (planet.m_ExistEnemy) return false;
+					if ((planet.m_AccessEnemy & (2 | 4)) != 0) return false;
 
 /*					if(planet.m_Owner!=0) {
 						if(!IsFriendEx(planet, planet.m_Owner, Common.RaceNone, owner, Common.RaceNone)) return false;

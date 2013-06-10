@@ -1605,8 +1605,11 @@ public class FormPlanet extends Sprite
 			EM.m_FormMenu.Add(Common.Txt.ButLeave,MsgDestroy);
 		}
 
-		if ((planet.m_Flag & Planet.PlanetFlagHomeworld) && !(planet.m_Flag & Planet.PlanetFlagWormhole) && (planet.m_Owner == Server.Self.m_UserId) && EM.m_CotlType == Common.CotlTypeUser) {
+		if (!(planet.m_Flag & Planet.PlanetFlagWormhole) && (planet.m_Owner == Server.Self.m_UserId) && EM.m_CotlType == Common.CotlTypeUser && EM.m_RootCotlId == Server.Self.m_CotlId) {
 			EM.m_FormMenu.Add(Common.Txt.ButChangeRace, MsgChangeRace);
+		}
+		
+		if ((planet.m_Flag & Planet.PlanetFlagHomeworld) && !(planet.m_Flag & Planet.PlanetFlagWormhole) && (planet.m_Owner == Server.Self.m_UserId) && EM.m_CotlType == Common.CotlTypeUser) {
 			EM.m_FormMenu.Add(Common.Txt.ButDestroyEmpire, MsgDestroyEmpire);
 		}
 	

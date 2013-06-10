@@ -411,9 +411,10 @@ public class FormRace extends Sprite
 	public function clickOk(event:MouseEvent):void
 	{
 		if (m_Pay) {
-			if (m_Map.m_UserEGM < 10000) { FormMessageBox.Run(Common.Txt.NoEnoughEGM2); return; }
+			if ((!m_Map.m_EmpireEdit) && (m_Map.m_UserEGM < 10000)) { FormMessageBox.Run(Common.Txt.NoEnoughEGM2); return; }
 
-			Server.Self.QueryHS("emfleetspecial", "&type=12&val=" + m_CurRace.toString(), EmpireMap.Self.m_FormFleetBar.AnswerSpecial, false);
+			//Server.Self.QueryHS("emfleetspecial", "&type=12&val=" + m_CurRace.toString(), EmpireMap.Self.m_FormFleetBar.AnswerSpecial, false);
+			m_Map.SendAction("emnewhomeworld", "" + m_Map.m_FormPlanet.m_SectorX.toString() + "_" + m_Map.m_FormPlanet.m_SectorY.toString() + "_" + m_Map.m_FormPlanet.m_PlanetNum.toString() + "_" + m_CurRace.toString() + "_1");
 
 			FormMessageBox.Run(Common.Txt.FormRaceWarningWait);
 		} else {

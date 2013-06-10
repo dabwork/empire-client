@@ -140,7 +140,7 @@ public class FormExit extends FormStd
 			ItemLabel(Common.Txt.FormExitLongText, true);
 			LocNextRow();
 			i = ItemLabel(Common.Txt.FormExitLongHour + ":"); ItemCellCnt(i, 1); ItemSpace(i, 0, 10); ItemAlign(i, 1, 0);
-			i = ItemInput("2", 2, true, 0, false); ItemCellCnt(i, 1); ItemSpace(i, 0, 10); m_ExitLongHour = ItemObj(i) as CtrlInput;
+			i = ItemInput("1", 2, true, 0, false); ItemCellCnt(i, 1); ItemSpace(i, 0, 10); m_ExitLongHour = ItemObj(i) as CtrlInput;
 			//LocNextRow();
 			//i = ItemBut(Common.Txt.FormExitLongBut); ItemAlign(i, 1); ItemSpace(i, 0, 20); ItemObj(i).addEventListener(MouseEvent.CLICK, clickExitLong);
 			
