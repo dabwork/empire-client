@@ -15,7 +15,7 @@ package Engine {
 			if (timeout) return true;
 			if (tm == null)
 			{
-				tm = new Timer(300, 150);
+				tm = new Timer(100, 50);
 				
 				tm.addEventListener(TimerEvent.TIMER, onTick); 
 				tm.addEventListener(TimerEvent.TIMER_COMPLETE, onTimerComplete); 
@@ -23,11 +23,11 @@ package Engine {
 				tm.start();
 				
 				//Localization.LocalizationLoad( Server.Self.m_Lang );
-				Localization.LocalizationLoad( Server.LANG_RUS );
+				Localization.Load( Server.LANG_RUS );
 				
 				return false;
 			} else {
-				if ( CommonText.IsLoadingDone() &&
+				if ( Localization.IsLoadingDone() &&
 				     true )
 				{
 					tm.stop();
