@@ -10,8 +10,7 @@ import flash.events.*;
 
 public class Localization
 {
-	static public var Self:CommonText = null;
-	
+
 	static private var key: Array;
 	static private var val: Array;
 	static private var loading: Boolean = false;
