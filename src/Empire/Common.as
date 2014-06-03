@@ -1641,14 +1641,14 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		0,0
 	];
 	
-	static public const UnionTypeName:Array =	["None", "Альянс", "Пираты", "Клан", "Наемники", "Торговцы", "Империя", "Республика"];
+	static public const UnionTypeName:Array = [];//@	["None", "Альянс", "Пираты", "Клан", "Наемники", "Торговцы", "Империя", "Республика"];
 
 	static public const ItemBonusName:Array =	[];// ["None", "Armour corvette", "Armour cruiser", "Armour dreadnought", "Armour devastator", "Accuracy corvette", "Accuracy cruiser", "Accuracy dreadnought", "Accuracy devastator"];
 
-	static public const TxtMonthForDate:Array = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+	static public const TxtMonthForDate:Array = [];//@ ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
 
 	static public const News:Object = {
-		Export:"Продажа <Cnt> <Goods> по цене <Price> cr за <Step> ед. Созвездие игрока <F> (<FUnion>).",
+	/*@	Export:"Продажа <Cnt> <Goods> по цене <Price> cr за <Step> ед. Созвездие игрока <F> (<FUnion>).",
 		Import:"Покупка <Cnt> <Goods> по цене <Price> cr за <Step> ед. Созвездие игрока <F> (<FUnion>).",
 		Export2:"Продажа <Cnt> <Goods> по цене <Price> cr за <Step> ед. Созвездие <Cotl>. Игрок <F> (<FUnion>).",
 		Import2:"Покупка <Cnt> <Goods> по цене <Price> cr за <Step> ед. Созвездие <Cotl>. Игрок <F> (<FUnion>).",
@@ -1672,12 +1672,12 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		HomeworldCapture:"Игрок <F> (<FUnion>) захватил столицу игрока <S> (<SUnion>). Получено <Exp> опыта.",
 		Invasion:"Вторжение игрока <F> (<FUnion>) в созвездие игрока <S> (<SUnion>).",
 		Battle:"Столкновение между <F> (<FUnion>) и <S> (<SUnion>) в созвездии <Cotl>.",
-		Battle2:"Столкновение между <F> (<FUnion>) и <S> (<SUnion>) в созвездии игрока <Cotl>."
+		Battle2:"Столкновение между <F> (<FUnion>) и <S> (<SUnion>) в созвездии игрока <Cotl>."@*/
 	};
 
 	static public const Txt:Object = {
 		FormatDate:"<D> <M> <Y>",
-		Select:"Выбрать",
+	/*@	Select:"Выбрать",
 		Build:"Построить",
 		BuildFlagship:"Построить флагман для",
 		Count:"Количество",
@@ -2315,10 +2315,10 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		FormEnterTxtTraining:"[justify]Начав обучение, вы в интерактивном режиме познакомитесь со многими аспектами достаточно сложной, но интересной игры. По завершению обучения вам предложат создать новый аккаунт, после чего вы сможете совместно играть с другими игроками.[/justify]",
 		FormEnterTabTraining:"обучение",
 		FormEnterTabLogin:"логин",
-		FormEnterTabSet:"настройки",
+		FormEnterTabSet:"настройки",@*/
 		FormEnterProtocolRaw:"Raw",
-		FormEnterProtocolDefaultHTTP:"Default HTTP",
-		FormEnterNewNameCaption:"ИМЯ",
+		FormEnterProtocolDefaultHTTP:"Default HTTP"
+		/*@FormEnterNewNameCaption:"ИМЯ",
 		FormEnterNewNameCaptionNewName:"НОВОЕ ИМЯ",
 		FormEnterNewNameTxtNewName:"Ваш псевдоним купил другой игрок. Введите ваш новый псевдоним:",
 		FormEnterNewNameTxt:"Введите ваш публичный псевдоним, чтобы отличать вас от других игроков:",
@@ -3058,11 +3058,11 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		Zone3:"Защищенная зона",
 		ZoneModuleMul:"Приход модулей",
 		ZoneRatingRange:"Если разместить свое созвездие в этой зоне, то на вас сможет напасть игрок с рейтингом развития в диапазоне [clr]<Min>[/clr]...[clr]<Max>[/clr].",
-		ZoneRatingRangeAny:"Если разместить свое созвездие в дальнем космосе, то на вас сможет напасть любой игрок."
+		ZoneRatingRangeAny:"Если разместить свое созвездие в дальнем космосе, то на вас сможет напасть любой игрок."@*/
 	};
 	
 	static public const TxtQuest:Object = {
-		BreakQuestQuery:"Вы действительно хотите отказаться от задания?",
+		/*@BreakQuestQuery:"Вы действительно хотите отказаться от задания?",
 		Task:"Цель",
 		TaskPlanet:"на <Val> планетах",
 		TaskPlanetNeutral:"нейтральных",
@@ -3084,13 +3084,13 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		ErrHoldPlace:"Не хватает места в трюме для получения награды!",
 		Reward:"Награда",
 		RewardExp:"Опыт",
-		RewardMoney:"Деньги"
+		RewardMoney:"Деньги"@*/
 	};
 	
 
-	public static const PlanetAtmName:Array = ["Разряженная", "Водородная", "Углекислотная", "Кислородная", "Азотная"];
-	public static const PlanetTmpName:Array = ["Холодная", "Теплая", "Горячая"];
-	public static const PlanetTecName:Array = ["Пассивная", "Динамическая", "Сейсмическая"];
+	public static const PlanetAtmName:Array = [];//@["Разряженная", "Водородная", "Углекислотная", "Кислородная", "Азотная"];
+	public static const PlanetTmpName:Array = [];//@["Холодная", "Теплая", "Горячая"];
+	public static const PlanetTecName:Array = [];//@["Пассивная", "Динамическая", "Сейсмическая"];
 
 	public static const kwImport:int = 1;
 	public static const kwExport:int = 2;
@@ -3172,7 +3172,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 	public static const WarningHideTime:int = 4000;
 
 	static public const TxtChat:Object = {
-		LikeLetter:""
+	/*@	LikeLetter:""
 			+"еёe"
 			+",оo"
 			+",аa"
@@ -3263,11 +3263,11 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		IgnoreOut:"Удалить из списка",
 		IgnoreGeneral:"Игнорировать: Общий чат",
 		IgnoreClan:"Игнорировать: Альянсовый чат",
-		IgnoreWhisper:"Игнорировать: Личные сообщения"
+		IgnoreWhisper:"Игнорировать: Личные сообщения"@*/
 	};
 
 	static public const TxtEdit:Object = {
-		ChangeCnt:"Изменить количество",
+	/*@	ChangeCnt:"Изменить количество",
 		CotlSet:"Параметры созвездия",
 		MapEdit:"Редактировать карту",
 		MapSave:"Сохранить карту",
@@ -3517,11 +3517,11 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		StatMaxSize: "Размер карты",
 		StatShipKeys: "Ключи кораблей",
 		ConsumptionCaption:"Потребление"
-//		Consumption:""
+//		Consumption:""@*/
 	};
 
 	static public const Hint:Object={
-		Load:"Загрузка",
+		/*@Load:"Загрузка",
 		ConnectServer:"Соединение с сервером",
 		NoServer:"Связь с сервером прервана.",
 		IncorrectNameOrPassword:"Связь с сервером прервана. Неправильное имя или пароль.",
@@ -3529,7 +3529,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		ErrorNo:"Ошибка",
 		ErrorVersion:"Неправильная версия клиента.",
 		FirstNewHomeworld:"New Homeworld",
-		WaitBeginGame:"Wait while game begins"
+		WaitBeginGame:"Wait while game begins"@*/
 	};
 	
 	public static const HintWormhole:int = 1;
@@ -3578,7 +3578,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 	];
 	
 	public static const Hist:Object = {
-		Battle:"Битва между игроками [clr]<Owner1>[/clr] и [clr]<Owner2>[/clr].", 
+	/*@	Battle:"Битва между игроками [clr]<Owner1>[/clr] и [clr]<Owner2>[/clr].", 
 		Defence:"Защита игрока [clr]<Owner1>[/clr] от игрока [clr]<Owner2>[/clr].", 
 		Period:"Продолжительность", 
 		UserRecv:"Игрок [clr]<Owner>[/clr] заработал [clr]<Score>[/clr] очков боевой славы, а также [clr]<Exp>[/clr] ед. опыта.", 
@@ -3610,14 +3610,14 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		Sack:"Грабёж игроком <User>",
 		Goods:"Товар",
 		GoodsCnt:"Количество",
-		GoodsSum:"Сумма"
+		GoodsSum:"Сумма"@*/
 		};
 
 	// (прошло 1,2,5) (через 1,2,5)
-	public static const ScSecond:Array = 	['секунда',	'секунды',	'секунд',			'секунду',	'секунды',	'секунд'];
-    public static const ScMinute:Array = 	['минута',	'минуты',	'минут',			'минуту',	'минуты',	'минут'];
-    public static const ScHour:Array = 		['час',		'часа',		'часов',			'час',		'часа',		'часов'];
-	public static const ScDay:Array = 		['день',	'дня',		'дней',				'день',		'дня',		'дней'];
+	public static const ScSecond:Array = [];//@	['секунда',	'секунды',	'секунд',			'секунду',	'секунды',	'секунд'];
+    public static const ScMinute:Array = [];//@	['минута',	'минуты',	'минут',			'минуту',	'минуты',	'минут'];
+    public static const ScHour:Array = [];//@		['час',		'часа',		'часов',			'час',		'часа',		'часов'];
+	public static const ScDay:Array = [];//@		['день',	'дня',		'дней',				'день',		'дня',		'дней'];
 	
 	public static const RomanNum:Array = 	["0", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 	
@@ -3627,7 +3627,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 
 	public static function LangInitRus():void
 	{
-		ShipName[ShipTypeTransport]="Транспорт";
+	/*@	ShipName[ShipTypeTransport]="Транспорт";
 		ShipName[ShipTypeCorvette]="Корвет";
 		ShipName[ShipTypeCruiser]="Крейсер";
 		ShipName[ShipTypeDreadnought]="Дредноут";
@@ -4543,7 +4543,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		ChangeWordForNews5["Инженеры"] = "инженеров";
 		ChangeWordForNews5["Механик"] = "механиков";
 		ChangeWordForNews5["Навигатор"] = "навигаторов";
-		ChangeWordForNews5["Кварковые ядра"] = "кварковых ядер";
+		ChangeWordForNews5["Кварковые ядра"] = "кварковых ядер";@*/
 	}
 
 	public static function ChangeWord(w:String, dl:Dictionary):String
