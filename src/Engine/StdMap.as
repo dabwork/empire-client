@@ -17,7 +17,7 @@ public class StdMap extends Sprite
 	public static var Main:StdMap = null;
 	
 	static public const Txt:Object = {
-		ButYes:"ДА",
+		/*ButYes:"ДА",
 		ButNo:"НЕТ",
 		ButClose:"ЗАКРЫТЬ",
 		ButSave:"СОХРАНИТЬ",
@@ -28,7 +28,7 @@ public class StdMap extends Sprite
 
 		FormMessageBoxMsg:"СООБЩЕНИЕ",
 		FormMessageBoxQuery:"ВОПРОС",
-		FormMessageBoxErr:"ОШИБКА"
+		FormMessageBoxErr:"ОШИБКА"*/
 	}
 
 	public var m_Debug:Boolean = false;
