@@ -525,6 +525,8 @@ public class EmpireMap extends StdMap
 
 	public function EmpireMap()
 	{
+		if (!PreloadTimer.PreloadDone()) return;
+		
 		super();
 		Self = this;
 		
