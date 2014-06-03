@@ -116,13 +116,13 @@ public class Localization
 		StdMap.Txt["FormMessageBoxErr"] = GetText("StdMap.Txt.FormMessageBoxErr");
 		
 		Common.UnionTypeName[0] = GetText("UnionTypeName0");
-		Common.UnionTypeName[1] = GetText("UnionTypeName1");
-		Common.UnionTypeName[2] = GetText("UnionTypeName2");
-		Common.UnionTypeName[3] = GetText("UnionTypeName3");
-		Common.UnionTypeName[4] = GetText("UnionTypeName4");
-		Common.UnionTypeName[5] = GetText("UnionTypeName5");
-		Common.UnionTypeName[6] = GetText("UnionTypeName6");
-		Common.UnionTypeName[7] = GetText("UnionTypeName7");
+		Common.UnionTypeName[Common.UnionTypeAlliance] = GetText("UnionTypeName.UnionTypeAlliance");
+		Common.UnionTypeName[Common.UnionTypePirate] = GetText("UnionTypeName.UnionTypePirate");
+		Common.UnionTypeName[Common.UnionTypeClan] = GetText("UnionTypeName.UnionTypeClan");
+		Common.UnionTypeName[Common.UnionTypeMercenary] = GetText("UnionTypeName.UnionTypeMercenary");
+		Common.UnionTypeName[Common.UnionTypeTrader] = GetText("UnionTypeName.UnionTypeTrader");
+		Common.UnionTypeName[Common.UnionTypeEmpire] = GetText("UnionTypeName.UnionTypeEmpire");
+		Common.UnionTypeName[Common.UnionTypeRepublic] = GetText("UnionTypeName.UnionTypeRepublic");
 		
 		Common.TxtMonthForDate[0] = GetText("TxtMonthForDate0");
 		Common.TxtMonthForDate[1] = GetText("TxtMonthForDate1");
