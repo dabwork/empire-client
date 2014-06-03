@@ -525,8 +525,6 @@ public class EmpireMap extends StdMap
 
 	public function EmpireMap()
 	{
-		if (!PreloadTimer.PreloadDone()) return;
-		
 		super();
 		Self = this;
 		
@@ -540,6 +538,8 @@ public class EmpireMap extends StdMap
 	
 	public override function init():void
 	{
+		if (!PreloadTimer.PreloadDone()) return;
+		
 		super.init();
 
 		BaseStr.TagSetCallback("user", TagUser);
