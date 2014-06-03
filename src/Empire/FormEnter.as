@@ -122,6 +122,12 @@ public class FormEnter extends FormStd
 		m_ButEnter.caption = Common.Txt.FormEnterBut;
 		m_ButEnter.addEventListener(MouseEvent.CLICK, clickEnter);
 		
+		TabAdd("Language");
+		( ItemObj( ItemBut("Русский") ) as CtrlBut ).addEventListener(MouseEvent.CLICK, function(e:Event):void { Localization.Load( Server.LANG_RUS ) });
+		LocNextRow();
+		( ItemObj( ItemBut("English") ) as CtrlBut ).addEventListener(MouseEvent.CLICK, function(e:Event):void { Localization.Load( Server.LANG_ENG ) } );
+		LocNextRow();
+		
 		tab = 0;
 		
 		addEventListener("page", onChangePage);
