@@ -22,8 +22,12 @@ package Empire {
 				
 				tm.start();
 				
-				//Localization.Load( Server.Self.m_Lang );
-				Localization.Load( Server.LANG_RUS );
+				var so:SharedObject = SharedObject.getLocal("EGEmpireData");
+				if ( (so != null) && (so.data.lang != undefined) ) {
+					Localization.Load( so.data.lang );
+				} else {
+					Localization.Load( Server.LANG_RUS );
+				}
 				
 				return false;
 			} else {
