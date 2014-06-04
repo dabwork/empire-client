@@ -21,7 +21,7 @@ public class Localization
 		switch(lng)
 		{
 			case Server.LANG_ENG:
-				fn = "empire/localization/default.ru";
+				fn = "empire/localization/default.en";
 				break;
 			case Server.LANG_RUS:
 				fn = "empire/localization/default.ru";
@@ -2669,10 +2669,14 @@ public class Localization
 		Common.ChangeWordForNews5["Навигатор"] = GetText("ChangeWordForNews5.Навигатор");
 		Common.ChangeWordForNews5["Кварковые ядра"] = GetText("ChangeWordForNews5.Кварковые ядра");
 		
-
+		if (EmpireMap.Self != null) {
+			if( EmpireMap.Self.m_FormEnter != null ) {
+				EmpireMap.Self.m_FormEnter.UpdateLocalization();
+			}
+		}
 	
-		if (key.length > 0) trace(key);
-		if (val.length > 0) trace(val);
+		//if (key.length > 0) trace(key);
+		//if (val.length > 0) trace(val);
 		key = null;
 		val = null;
 		done = true;
