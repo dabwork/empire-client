@@ -182,10 +182,10 @@ public class FormEnter extends FormStd
 		//m_TabLanguageText.htmlText = BaseStr.FormatTag( );
 	
 		m_LabelTrainingText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterTxtTraining, true, true );
-		m_LabelLoginNameText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterName, true, true );
-		m_LabelLoginPasswordText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterPassword, true, true );
-		m_LabelServerText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterServer, true, true );
-		m_LabelProtocolText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterProtocol, true, true );
+		m_LabelLoginNameText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterName+":", true, true );
+		m_LabelLoginPasswordText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterPassword+":", true, true );
+		m_LabelServerText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterServer+":", true, true );
+		m_LabelProtocolText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterProtocol+":", true, true );
 		
 		m_SaveName.Caption = Common.Txt.FormEnterSaveName;
 		m_SaveAll.Caption = Common.Txt.FormEnterSaveAll;
