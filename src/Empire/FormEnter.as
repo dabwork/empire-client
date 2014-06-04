@@ -133,12 +133,7 @@ public class FormEnter extends FormStd
 		//i = ItemBut(Common.Txt.FormEnterBut); ItemCellCnt(i, 2); ItemAlign(i, 1); ItemSpace(i, 0, 5); m_ButEnter = ItemObj(i) as CtrlBut; m_ButEnter.addEventListener(MouseEvent.CLICK, clickEnter);
 		//LocNextRow();
 		
-		m_ButEnter = new CtrlBut();
-		addChild(m_ButEnter);
-		m_ButEnter.caption = Common.Txt.FormEnterBut;
-		m_ButEnter.addEventListener(MouseEvent.CLICK, clickEnter);
-		
-		m_TabLanguageText = TabGet( TabAdd("Language") ).m_Caption;
+		m_TabLanguageText = TabGet( TabAdd("language") ).m_Caption;
 		( ItemObj( ItemBut("Русский") ) as CtrlBut ).addEventListener(MouseEvent.CLICK, 
 			function(e:Event):void { 
 				Localization.Load( Server.LANG_RUS ); 
@@ -157,6 +152,12 @@ public class FormEnter extends FormStd
 				} 
 			} );
 		LocNextRow();
+		
+		m_ButEnter = new CtrlBut();
+		addChild(m_ButEnter);
+		m_ButEnter.caption = Common.Txt.FormEnterBut;
+		m_ButEnter.addEventListener(MouseEvent.CLICK, clickEnter);
+		
 		
 		tab = 0;
 		
@@ -178,21 +179,22 @@ public class FormEnter extends FormStd
 		m_TabTrainingText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterTabTraining );
 		m_TabLoginText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterTabLogin );
 		m_TabServerText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterTabSet );
-		m_TabLanguageText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterTabTraining );
+		//m_TabLanguageText.htmlText = BaseStr.FormatTag( );
 	
-		m_LabelTrainingText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterTxtTraining );
-		m_LabelLoginNameText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterName );
-		m_LabelLoginPasswordText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterPassword );
-		m_LabelServerText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterServer );
-		m_LabelProtocolText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterProtocol );
+		m_LabelTrainingText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterTxtTraining, true, true );
+		m_LabelLoginNameText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterName, true, true );
+		m_LabelLoginPasswordText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterPassword, true, true );
+		m_LabelServerText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterServer, true, true );
+		m_LabelProtocolText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterProtocol, true, true );
 		
 		m_SaveName.Caption = Common.Txt.FormEnterSaveName;
 		m_SaveAll.Caption = Common.Txt.FormEnterSaveAll;
 		
+		var i:int = m_Protocol.current;
 		m_Protocol.ItemClear();
 		m_Protocol.ItemAdd(Common.Txt.FormEnterProtocolRaw, Server.ProtocolRaw);
 		m_Protocol.ItemAdd(Common.Txt.FormEnterProtocolDefaultHTTP, Server.ProtocolDefaultHTTP);
-	}
+		m_Protocol.current = i;
 	
 	public function onChangePage(e:Event):void
 	{
