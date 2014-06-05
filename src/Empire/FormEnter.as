@@ -195,6 +195,7 @@ public class FormEnter extends FormStd
 		m_Protocol.ItemAdd(Common.Txt.FormEnterProtocolRaw, Server.ProtocolRaw);
 		m_Protocol.ItemAdd(Common.Txt.FormEnterProtocolDefaultHTTP, Server.ProtocolDefaultHTTP);
 		m_Protocol.current = i;
+	}
 	
 	public function onChangePage(e:Event):void
 	{
