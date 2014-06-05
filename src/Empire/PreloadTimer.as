@@ -2,7 +2,7 @@
 package Empire {
 	
 	import Engine.Server;
- 
+	import flash.net.SharedObject;
     import flash.events.TimerEvent; 
     import flash.utils.Timer;
 	
