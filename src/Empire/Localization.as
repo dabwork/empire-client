@@ -1,121 +1,126 @@
-// (C) mod0
+/**
+ * (C) Elemental Games
+ * author: mod0
+ */
 package Empire
 {
 
-import Empire.*;
-import Engine.*;
-import flash.net.*;
-import flash.events.*;
-
-public class Localization
-{
-
-	static private var key: Array;
-	static private var val: Array;
-	static private var loading: Boolean = false;
-	static private var done: Boolean = true;
+	import Empire.*;
+	import Engine.*;
+	import flash.net.*;
+	import flash.events.*;
 	
-	static public function Load(lng:int):void
+	public class Localization
 	{
-		var fn: String;
-		switch(lng)
+	
+		static private var key: Array = null;
+		static private var val: Array = null;
+		static private var working: Boolean = false;
+		static private var onFailed: Function = null;
+		static private var onSuccess: Function = null;
+		
+		
+		static public function Load(lng:int,onFail:Function=null,onSucc:Function=null):Boolean
 		{
-			case Server.LANG_ENG:
-				fn = "empire/localization/default.en";
-				break;
-			case Server.LANG_RUS:
-				fn = "empire/localization/default.ru";
-				break;
-			default:
-				fn = "empire/localization/default.ru";
-				break;
-		}
-		LoadFromFile( fn );
-	}
-
-	static public function IsLoadingDone(): Boolean
-	{
-		return done;
-		//trace.apply(null, [""]);
-		//trace("");
-	}
-	
-	static private function LoadFromFile( fn: String ): void
-	{
-		if (loading || (!done) ) return;
-		loading = true;
-		done = false;
-		var urll:URLLoader = new URLLoader();
-		
-		urll.addEventListener(Event.COMPLETE, onLoaded);
-		//urll.addEventListener(ProgressEvent.PROGRESS, onProgress);
-		urll.addEventListener(IOErrorEvent.IO_ERROR, onError);
-		urll.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onErrorSec);
-		
-		function onLoaded(e:Event):void {
-			var str: String = e.target.data as String;
-			if ( str != null ) {
-				key = new Array();
-				val = new Array();
-				var ar: Array = str.split("\n");
-				var i: int;
-				for (i = 0; i < ar.length; i++) {
-					if (ar[i] == "") continue;
-					if (ar[i].charAt(0) == '/') continue; // comment
-					if (ar[i].charAt(0) == '@') {
-						//trace(ar[i]);
-						ar[i] = ar[i].substr( 1, ar[i].length - 1 );
-					}
-					var pos:int = ar[i].indexOf(":");
-					if (pos == -1) {
-						//trace("can't parse '" + ar[i] + "'");
-						continue;
-					}
-					key.push( ar[i].substr( 0, pos ) );
-					val.push( ar[i].substr( pos + 1, ar.length - pos - 1 - 1 ) );
-				}
-				LocalizationApply();
-				loading = false;
-				return;
-			} else {
-				done = true;
-				loading = false;
-				return;
+			if (working) return false;
+			working = true;
+			onFailed = onFail;
+			onSuccess = onSucc;
+			var fn: String;
+			switch(lng)
+			{
+				case Server.LANG_ENG:
+					fn = "empire/localization/default.en";
+					break;
+				case Server.LANG_RUS:
+					fn = "empire/localization/default.ru";
+					break;
+				default:
+					fn = "empire/localization/default.ru";
+					break;
 			}
-		}
-		function onError(e:IOErrorEvent):void {
-			done = true;
-			loading = false;
-		}
-		function onErrorSec(e:SecurityErrorEvent):void {
-			done = true;
-			loading = false;
-		}
-		urll.load(new URLRequest( fn ));
-	}
 
-	static private function GetText( k: String, ind: int=0 ):String
-	{
-		var i: int;
-		var curr: int = 0;
-		for(i=0; i<key.length; i++)	{
-			if (key[i] == k) {
-				if (curr == ind) {
-					var res: String = val[i];
-					key.splice(i,1);
-					val.splice(i,1);
-					return res;
+			var urll:URLLoader = new URLLoader();
+			
+			urll.addEventListener(Event.COMPLETE, onComplete);
+			//urll.addEventListener(ProgressEvent.PROGRESS, onProgress);
+			urll.addEventListener(IOErrorEvent.IO_ERROR, onErrorIO);
+			urll.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onErrorSec);
+			
+			function onComplete(e:Event):void {
+				var str: String = e.target.data as String;
+				if ( str != null ) {
+					key = new Array();
+					val = new Array();
+					var ar: Array = str.split("\n");
+					var i: int;
+					for (i = 0; i < ar.length; i++) {
+						if (ar[i] == "") continue;
+						if (ar[i].charAt(0) == '/') continue; // comment
+						if (ar[i].charAt(0) == '@') { // метка
+							//trace(ar[i]);
+							ar[i] = ar[i].substr( 1, ar[i].length - 1 );
+						}
+						var pos:int = ar[i].indexOf(":");
+						if (pos == -1) {
+							//trace("can't parse '" + ar[i] + "'");
+							continue;
+						}
+						key.push( ar[i].substr( 0, pos ) );
+						val.push( ar[i].substr( pos + 1, ar.length - pos - 1 - 1 ) );
+					}
+					LocalizationApply();
+					if(onSuccess!=null)onSuccess();
+					working = false;
+					return;
 				} else {
-					curr++;
+					if(onFailed!=null)onFailed();
+					working = false;
+					return;
 				}
 			}
+			function onErrorIO(e:IOErrorEvent):void {
+				if(onFailed!=null)onFailed();
+				working = false;
+			}
+			function onErrorSec(e:SecurityErrorEvent):void {
+				if(onFailed!=null)onFailed();
+				working = false;
+			}
+			urll.load(new URLRequest( fn ));
+			
+			return true;
 		}
-		//trace("key '" + k + "' not found.");
-		return "null";
-	}
 	
-	static private function LocalizationApply(): void
-	{
+		static public function IsWorking(): Boolean
+		{
+			return working;
+			//trace.apply(null, [""]);
+			//trace("");
+		}
+
+		static private function GetText( k: String, ind: int=0 ):String
+		{
+			var i: int;
+			var curr: int = 0;
+			for(i=0; i<key.length; i++)	{
+				if (key[i] == k) {
+					if (curr == ind) {
+						var res: String = val[i];
+						key.splice(i,1);
+						val.splice(i,1);
+						return res;
+					} else {
+						curr++;
+					}
+				}
+			}
+			//trace("key '" + k + "' not found.");
+			return "null";
+		}
+		
+		static private function LocalizationApply(): void
+		{
 		StdMap.Txt["ButYes"] = GetText("StdMap.Txt.ButYes");
 		StdMap.Txt["ButNo"] = GetText("StdMap.Txt.ButNo");
 		StdMap.Txt["ButClose"] = GetText("StdMap.Txt.ButClose");
@@ -2680,20 +2685,18 @@ public class Localization
 		Common.ChangeWordForNews5["Механик"] = GetText("ChangeWordForNews5.Механик");
 		Common.ChangeWordForNews5["Навигатор"] = GetText("ChangeWordForNews5.Навигатор");
 		Common.ChangeWordForNews5["Кварковые ядра"] = GetText("ChangeWordForNews5.Кварковые ядра");
+			
+			/*if (EmpireMap.Self != null) {
+				if( EmpireMap.Self.m_FormEnter != null ) {
+					EmpireMap.Self.m_FormEnter.UpdateLocalization();
+				}
+			}*/
 		
-		if (EmpireMap.Self != null) {
-			if( EmpireMap.Self.m_FormEnter != null ) {
-				EmpireMap.Self.m_FormEnter.UpdateLocalization();
-			}
+			//if (key.length > 0) trace(key);
+			//if (val.length > 0) trace(val);
+			key = null;
+			val = null;
+			return;
 		}
-	
-		//if (key.length > 0) trace(key);
-		//if (val.length > 0) trace(val);
-		key = null;
-		val = null;
-		done = true;
-
-		return;
 	}
-}
 }
