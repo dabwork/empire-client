@@ -48,6 +48,10 @@ public class Localization
 		var urll:URLLoader = new URLLoader();
 		
 		urll.addEventListener(Event.COMPLETE, onLoaded);
+		//urll.addEventListener(ProgressEvent.PROGRESS, onProgress);
+		urll.addEventListener(IOErrorEvent.IO_ERROR, onError);
+		urll.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onErrorSec);
+		
 		function onLoaded(e:Event):void {
 			var str: String = e.target.data as String;
 			if ( str != null ) {
@@ -78,6 +82,14 @@ public class Localization
 				loading = false;
 				return;
 			}
+		}
+		function onError(e:IOErrorEvent):void {
+			done = true;
+			loading = false;
+		}
+		function onErrorSec(e:SecurityErrorEvent):void {
+			done = true;
+			loading = false;
 		}
 		urll.load(new URLRequest( fn ));
 	}
