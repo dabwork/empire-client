@@ -567,7 +567,7 @@ public class EmpireMap extends StdMap
 
 		Common.CalcFinalPower(4000);
 
-		Common.LangInitRus();
+		//Common.LangInitRus();
 
 		Server.Self=new Server();
 		Server.Self.addEventListener("ConnectClose", RecvConnectClose);
@@ -956,6 +956,10 @@ public class EmpireMap extends StdMap
 		LoadGraphBegin();
 
 //			startSampling();
+
+		if (C3D.m_FatalError != ""){
+			LoadError(null);
+		}
 	}
 
 	public override function InitializeC3D():void
