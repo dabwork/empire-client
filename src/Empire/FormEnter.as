@@ -136,7 +136,9 @@ public class FormEnter extends FormStd
 		m_TabLanguageText = TabGet( TabAdd("language") ).m_Caption;
 		( ItemObj( ItemBut("Русский") ) as CtrlBut ).addEventListener(MouseEvent.CLICK, 
 			function(e:Event):void { 
-				Localization.Load( Server.LANG_RUS ); 
+				Localization.Load( Server.LANG_RUS, null, function():void {
+					UpdateLocalization();
+				}); 
 				var so:SharedObject = SharedObject.getLocal("EGEmpireData");
 				if (so != null) {
 					so.data.lang = Server.LANG_RUS
@@ -145,7 +147,9 @@ public class FormEnter extends FormStd
 		LocNextRow();
 		( ItemObj( ItemBut("English") ) as CtrlBut ).addEventListener(MouseEvent.CLICK, 
 			function(e:Event):void { 
-				Localization.Load( Server.LANG_ENG ) 
+				Localization.Load( Server.LANG_ENG, null, function():void {
+					UpdateLocalization();
+				});
 				var so:SharedObject = SharedObject.getLocal("EGEmpireData");
 				if (so != null) {
 					so.data.lang = Server.LANG_ENG
