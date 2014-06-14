@@ -542,6 +542,11 @@ public class EmpireMap extends StdMap
 		
 		super.init();
 
+		if (C3D.m_FatalError != ""){
+			m_FormHint.Show("Fatal error:\n" + C3D.m_FatalError);
+			m_PCE = true;
+		}
+
 		BaseStr.TagSetCallback("user", TagUser);
 
 		var i:int;
@@ -957,9 +962,6 @@ public class EmpireMap extends StdMap
 
 //			startSampling();
 
-		if (C3D.m_FatalError != ""){
-			LoadError(null);
-		}
 	}
 
 	public override function InitializeC3D():void
