@@ -538,7 +538,14 @@ public class EmpireMap extends StdMap
 	
 	public override function init():void
 	{
+		if (!PreloadTimer.PreloadDone()) return;
+		
 		super.init();
+
+		if (C3D.m_FatalError != ""){
+			m_FormHint.Show("Fatal error:\n" + C3D.m_FatalError);
+			m_PCE = true;
+		}
 
 		BaseStr.TagSetCallback("user", TagUser);
 
@@ -565,7 +572,7 @@ public class EmpireMap extends StdMap
 
 		Common.CalcFinalPower(4000);
 
-		Common.LangInitRus();
+		//Common.LangInitRus();
 
 		Server.Self=new Server();
 		Server.Self.addEventListener("ConnectClose", RecvConnectClose);
@@ -954,6 +961,7 @@ public class EmpireMap extends StdMap
 		LoadGraphBegin();
 
 //			startSampling();
+
 	}
 
 	public override function InitializeC3D():void

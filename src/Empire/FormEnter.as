@@ -41,6 +41,17 @@ public class FormEnter extends FormStd
 	private var m_SaveName:CtrlCheckBox = null;
 	private var m_SaveAll:CtrlCheckBox = null;
 
+	private var m_TabTrainingText:TextField = null;
+	private var m_TabLoginText:TextField = null;
+	private var m_TabServerText:TextField = null;
+	private var m_TabLanguageText:TextField = null;
+	
+	private var m_LabelTrainingText:TextField = null;
+	private var m_LabelLoginNameText:TextField = null;
+	private var m_LabelLoginPasswordText:TextField = null;
+	private var m_LabelServerText:TextField = null;
+	private var m_LabelProtocolText:TextField = null;
+	
 	private var m_Server:CtrlComboBox = null;
 	private var m_Protocol:CtrlComboBox = null;
 	private var m_Scale:CtrlComboBox = null;
@@ -63,14 +74,16 @@ public class FormEnter extends FormStd
 		caption = Common.Txt.FormEnterCaption;
 		closeDisable = true;
 
-		TabAdd(Common.Txt.FormEnterTabTraining);
+		m_TabTrainingText = TabGet( TabAdd(Common.Txt.FormEnterTabTraining) ).m_Caption;
 
 		i = ItemLabel(Common.Txt.FormEnterTxtTraining, true); //ItemAlign(i, 1, 0); //ItemCellCnt(i, 2);
+		m_LabelTrainingText = ( ItemObj( i ) as TextField );
 		LocNextRow();
 		
-		TabAdd(Common.Txt.FormEnterTabLogin);
+		m_TabLoginText = TabGet( TabAdd(Common.Txt.FormEnterTabLogin) ).m_Caption;
 
 		i = ItemLabel(Common.Txt.FormEnterName + ":"); ItemAlign(i, 1, 0);
+		m_LabelLoginNameText = ( ItemObj( i ) as TextField );
 		i = ItemInput("", 33, true, Server.LANG_RUS, true, "@"); m_Name = ItemObj(i) as CtrlInput; //m_Name.input.addEventListener(Event.CHANGE, nameChange);
 		//m_Name.input.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDownHandler);
 		m_Name.input.addEventListener(Event.CHANGE, onNameChange);
@@ -78,6 +91,7 @@ public class FormEnter extends FormStd
 		LocNextRow();
 
 		i = ItemLabel(Common.Txt.FormEnterPassword + ":"); ItemAlign(i, 1, 0);
+		m_LabelLoginPasswordText = ( ItemObj( i ) as TextField );
 		i = ItemInput("", 33, true, Server.LANG_RUS, true); m_Password = ItemObj(i) as CtrlInput; //m_Name.input.addEventListener(Event.CHANGE, nameChange);
 		//m_Password.input.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDownHandler);
 		m_Password.input.addEventListener(Event.CHANGE, onPasswordChange);
@@ -93,13 +107,15 @@ public class FormEnter extends FormStd
 		m_SaveAll.addEventListener(MouseEvent.CLICK, onSaveAllClick);
 		LocNextRow();
 		
-		TabAdd(Common.Txt.FormEnterTabSet);
+		m_TabServerText = TabGet( TabAdd(Common.Txt.FormEnterTabSet) ).m_Caption;
 		
 		i = ItemLabel(Common.Txt.FormEnterServer + ":"); ItemAlign(i, 1, 0);
+		m_LabelServerText = ( ItemObj( i ) as TextField );
 		i = ItemComboBox(); m_Server = ItemObj(i) as CtrlComboBox;
 		LocNextRow();
 
 		i = ItemLabel(Common.Txt.FormEnterProtocol + ":"); ItemAlign(i, 1, 0);
+		m_LabelProtocolText = ( ItemObj( i ) as TextField );
 		i = ItemComboBox(); m_Protocol = ItemObj(i) as CtrlComboBox;
 		m_Protocol.ItemAdd(Common.Txt.FormEnterProtocolRaw, Server.ProtocolRaw);
 		m_Protocol.ItemAdd(Common.Txt.FormEnterProtocolDefaultHTTP, Server.ProtocolDefaultHTTP);
@@ -117,10 +133,35 @@ public class FormEnter extends FormStd
 		//i = ItemBut(Common.Txt.FormEnterBut); ItemCellCnt(i, 2); ItemAlign(i, 1); ItemSpace(i, 0, 5); m_ButEnter = ItemObj(i) as CtrlBut; m_ButEnter.addEventListener(MouseEvent.CLICK, clickEnter);
 		//LocNextRow();
 		
+		m_TabLanguageText = TabGet( TabAdd("language") ).m_Caption;
+		( ItemObj( ItemBut("Русский") ) as CtrlBut ).addEventListener(MouseEvent.CLICK, 
+			function(e:Event):void { 
+				Localization.Load( Server.LANG_RUS, null, function():void {
+					UpdateLocalization();
+				}); 
+				var so:SharedObject = SharedObject.getLocal("EGEmpireData");
+				if (so != null) {
+					so.data.lang = Server.LANG_RUS
+				} 
+			} );
+		LocNextRow();
+		( ItemObj( ItemBut("English") ) as CtrlBut ).addEventListener(MouseEvent.CLICK, 
+			function(e:Event):void { 
+				Localization.Load( Server.LANG_ENG, null, function():void {
+					UpdateLocalization();
+				});
+				var so:SharedObject = SharedObject.getLocal("EGEmpireData");
+				if (so != null) {
+					so.data.lang = Server.LANG_ENG
+				} 
+			} );
+		LocNextRow();
+		
 		m_ButEnter = new CtrlBut();
 		addChild(m_ButEnter);
 		m_ButEnter.caption = Common.Txt.FormEnterBut;
 		m_ButEnter.addEventListener(MouseEvent.CLICK, clickEnter);
+		
 		
 		tab = 0;
 		
@@ -132,6 +173,34 @@ public class FormEnter extends FormStd
 		}
 	}
 
+	public function UpdateLocalization():void
+	{
+		if (tab == 0) m_ButEnter.caption = Common.Txt.FormEnterButTraining;
+		else m_ButEnter.caption = Common.Txt.FormEnterBut;
+		
+		caption = Common.Txt.FormEnterCaption;
+		
+		m_TabTrainingText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterTabTraining );
+		m_TabLoginText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterTabLogin );
+		m_TabServerText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterTabSet );
+		//m_TabLanguageText.htmlText = BaseStr.FormatTag( );
+	
+		m_LabelTrainingText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterTxtTraining, true, true );
+		m_LabelLoginNameText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterName+":", true, true );
+		m_LabelLoginPasswordText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterPassword+":", true, true );
+		m_LabelServerText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterServer+":", true, true );
+		m_LabelProtocolText.htmlText = BaseStr.FormatTag( Common.Txt.FormEnterProtocol+":", true, true );
+		
+		m_SaveName.Caption = Common.Txt.FormEnterSaveName;
+		m_SaveAll.Caption = Common.Txt.FormEnterSaveAll;
+		
+		var i:int = m_Protocol.current;
+		m_Protocol.ItemClear();
+		m_Protocol.ItemAdd(Common.Txt.FormEnterProtocolRaw, Server.ProtocolRaw);
+		m_Protocol.ItemAdd(Common.Txt.FormEnterProtocolDefaultHTTP, Server.ProtocolDefaultHTTP);
+		m_Protocol.current = i;
+	}
+	
 	public function onChangePage(e:Event):void
 	{
 		if (tab == 0) m_ButEnter.caption = Common.Txt.FormEnterButTraining;

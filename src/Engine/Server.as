@@ -328,7 +328,7 @@ public class Server extends EventDispatcher
 		if(querysize==0) {}
 		else if(querysize<=255) fb|=1;
 		else if(querysize<=65535) fb|=2;
-		else querysize|=3;
+		else fb|=3;
 
 		if(queryaction==0) {}
 		else if(queryaction<=255) fb|=1<<2;

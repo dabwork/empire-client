@@ -1038,6 +1038,11 @@ public class FormStd extends Sprite
 		return m_TabArray.length - 1;
 	}
 
+	public function TabGet(i:int):Object
+	{
+		return m_TabArray[i];
+	}
+	
 	public function LayerTabBuild():void
 	{
 		var i:int, u:int;

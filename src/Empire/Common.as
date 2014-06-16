@@ -1641,14 +1641,14 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		0,0
 	];
 	
-	static public const UnionTypeName:Array =	["None", "Альянс", "Пираты", "Клан", "Наемники", "Торговцы", "Империя", "Республика"];
+	static public const UnionTypeName:Array = [];//@	["None", "Альянс", "Пираты", "Клан", "Наемники", "Торговцы", "Империя", "Республика"];
 
 	static public const ItemBonusName:Array =	[];// ["None", "Armour corvette", "Armour cruiser", "Armour dreadnought", "Armour devastator", "Accuracy corvette", "Accuracy cruiser", "Accuracy dreadnought", "Accuracy devastator"];
 
-	static public const TxtMonthForDate:Array = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+	static public const TxtMonthForDate:Array = [];//@ ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
 
 	static public const News:Object = {
-		Export:"Продажа <Cnt> <Goods> по цене <Price> cr за <Step> ед. Созвездие игрока <F> (<FUnion>).",
+	/*@	Export:"Продажа <Cnt> <Goods> по цене <Price> cr за <Step> ед. Созвездие игрока <F> (<FUnion>).",
 		Import:"Покупка <Cnt> <Goods> по цене <Price> cr за <Step> ед. Созвездие игрока <F> (<FUnion>).",
 		Export2:"Продажа <Cnt> <Goods> по цене <Price> cr за <Step> ед. Созвездие <Cotl>. Игрок <F> (<FUnion>).",
 		Import2:"Покупка <Cnt> <Goods> по цене <Price> cr за <Step> ед. Созвездие <Cotl>. Игрок <F> (<FUnion>).",
@@ -1672,12 +1672,12 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		HomeworldCapture:"Игрок <F> (<FUnion>) захватил столицу игрока <S> (<SUnion>). Получено <Exp> опыта.",
 		Invasion:"Вторжение игрока <F> (<FUnion>) в созвездие игрока <S> (<SUnion>).",
 		Battle:"Столкновение между <F> (<FUnion>) и <S> (<SUnion>) в созвездии <Cotl>.",
-		Battle2:"Столкновение между <F> (<FUnion>) и <S> (<SUnion>) в созвездии игрока <Cotl>."
+		Battle2:"Столкновение между <F> (<FUnion>) и <S> (<SUnion>) в созвездии игрока <Cotl>."@*/
 	};
 
 	static public const Txt:Object = {
 		FormatDate:"<D> <M> <Y>",
-		Select:"Выбрать",
+	/*@	Select:"Выбрать",
 		Build:"Построить",
 		BuildFlagship:"Построить флагман для",
 		Count:"Количество",
@@ -2315,10 +2315,10 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		FormEnterTxtTraining:"[justify]Начав обучение, вы в интерактивном режиме познакомитесь со многими аспектами достаточно сложной, но интересной игры. По завершению обучения вам предложат создать новый аккаунт, после чего вы сможете совместно играть с другими игроками.[/justify]",
 		FormEnterTabTraining:"обучение",
 		FormEnterTabLogin:"логин",
-		FormEnterTabSet:"настройки",
+		FormEnterTabSet:"настройки",@*/
 		FormEnterProtocolRaw:"Raw",
-		FormEnterProtocolDefaultHTTP:"Default HTTP",
-		FormEnterNewNameCaption:"ИМЯ",
+		FormEnterProtocolDefaultHTTP:"Default HTTP"
+		/*@FormEnterNewNameCaption:"ИМЯ",
 		FormEnterNewNameCaptionNewName:"НОВОЕ ИМЯ",
 		FormEnterNewNameTxtNewName:"Ваш псевдоним купил другой игрок. Введите ваш новый псевдоним:",
 		FormEnterNewNameTxt:"Введите ваш публичный псевдоним, чтобы отличать вас от других игроков:",
@@ -3058,11 +3058,11 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		Zone3:"Защищенная зона",
 		ZoneModuleMul:"Приход модулей",
 		ZoneRatingRange:"Если разместить свое созвездие в этой зоне, то на вас сможет напасть игрок с рейтингом развития в диапазоне [clr]<Min>[/clr]...[clr]<Max>[/clr].",
-		ZoneRatingRangeAny:"Если разместить свое созвездие в дальнем космосе, то на вас сможет напасть любой игрок."
+		ZoneRatingRangeAny:"Если разместить свое созвездие в дальнем космосе, то на вас сможет напасть любой игрок."@*/
 	};
 	
 	static public const TxtQuest:Object = {
-		BreakQuestQuery:"Вы действительно хотите отказаться от задания?",
+		/*@BreakQuestQuery:"Вы действительно хотите отказаться от задания?",
 		Task:"Цель",
 		TaskPlanet:"на <Val> планетах",
 		TaskPlanetNeutral:"нейтральных",
@@ -3084,13 +3084,13 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		ErrHoldPlace:"Не хватает места в трюме для получения награды!",
 		Reward:"Награда",
 		RewardExp:"Опыт",
-		RewardMoney:"Деньги"
+		RewardMoney:"Деньги"@*/
 	};
 	
 
-	public static const PlanetAtmName:Array = ["Разряженная", "Водородная", "Углекислотная", "Кислородная", "Азотная"];
-	public static const PlanetTmpName:Array = ["Холодная", "Теплая", "Горячая"];
-	public static const PlanetTecName:Array = ["Пассивная", "Динамическая", "Сейсмическая"];
+	public static const PlanetAtmName:Array = [];//@["Разряженная", "Водородная", "Углекислотная", "Кислородная", "Азотная"];
+	public static const PlanetTmpName:Array = [];//@["Холодная", "Теплая", "Горячая"];
+	public static const PlanetTecName:Array = [];//@["Пассивная", "Динамическая", "Сейсмическая"];
 
 	public static const kwImport:int = 1;
 	public static const kwExport:int = 2;
@@ -3172,7 +3172,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 	public static const WarningHideTime:int = 4000;
 
 	static public const TxtChat:Object = {
-		LikeLetter:""
+	/*@	LikeLetter:""
 			+"еёe"
 			+",оo"
 			+",аa"
@@ -3263,11 +3263,11 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		IgnoreOut:"Удалить из списка",
 		IgnoreGeneral:"Игнорировать: Общий чат",
 		IgnoreClan:"Игнорировать: Альянсовый чат",
-		IgnoreWhisper:"Игнорировать: Личные сообщения"
+		IgnoreWhisper:"Игнорировать: Личные сообщения"@*/
 	};
 
 	static public const TxtEdit:Object = {
-		ChangeCnt:"Изменить количество",
+	/*@	ChangeCnt:"Изменить количество",
 		CotlSet:"Параметры созвездия",
 		MapEdit:"Редактировать карту",
 		MapSave:"Сохранить карту",
@@ -3517,11 +3517,11 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		StatMaxSize: "Размер карты",
 		StatShipKeys: "Ключи кораблей",
 		ConsumptionCaption:"Потребление"
-//		Consumption:""
+//		Consumption:""@*/
 	};
 
 	static public const Hint:Object={
-		Load:"Загрузка",
+		/*@Load:"Загрузка",
 		ConnectServer:"Соединение с сервером",
 		NoServer:"Связь с сервером прервана.",
 		IncorrectNameOrPassword:"Связь с сервером прервана. Неправильное имя или пароль.",
@@ -3529,7 +3529,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		ErrorNo:"Ошибка",
 		ErrorVersion:"Неправильная версия клиента.",
 		FirstNewHomeworld:"New Homeworld",
-		WaitBeginGame:"Wait while game begins"
+		WaitBeginGame:"Wait while game begins"@*/
 	};
 	
 	public static const HintWormhole:int = 1;
@@ -3544,41 +3544,41 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 	public static const HintTiny:int = 10;
 
 	public static const HintList:Array = [
-		HintWormhole,		"Через червоточины могут проходить корабли.",0,
-		HintWormhole,		"Если поблизости есть занятые планеты, то из червоточин появляются клисаны.",0,
-		HintWormhole,		"Чем больше занятых планет, тем больше клисан.", 0,
-		HintWormholeRoam,	"Блуждающие червоточины открываются в наименее защищенном месте созвездия.", 0,
-		HintWormholeRoam,	"На орбиту открытой блуждающей червоточины всегда могут выходить корабли из флота.", 0,
-		HintSun,			"Во время битвы корабли могут покинуть орбиту звезды.", 0,
-		HintSun,			"Если активирован гравитор, то невозможно покинуть орбиту где идет бой.", 0,
-		HintPulsar,			"Если на орбите пульсара разместить научную базу и активировать гравитор, то тогда на ее орбиту не сможет выйти ни один корабль.", 0,
-		HintGigant,			"С газового гиганта сервисная платформа может добывать водород.", 0,
-		HintGigant,			"Чтобы построить сервисную платформу нужно разместить на орбите транспорты с модулями.", 0,
-		HintGigant,			"Во время битвы корабли могут покинуть орбиту газового гиганта, если нет вражеского флагмана с перехватом.", 0,
-		HintGigant,			"Если активирован гравитор, то невозможно покинуть орбиту где идет бой.", 0,
-		HintTiny,			"Во время битвы корабли могут покинуть орбиту карликовой планеты, если нет вражеского флагмана с перехватом.", 0,
-		HintTiny,			"Если активирован гравитор, то невозможно покинуть орбиту где идет бой.", 0,
-		HintPlanetNormal,	"Между планетами можно проложить транспортный маршрут. Для этого нужно кликнуть по планете и протянуть линию до другой планеты.", 0,
-		HintPlanetNormal,	"Транспортный маршрут предназначен для автоматической перевозки товаров с помощью транспортов.", 0,
-		HintPlanetNormal,	"Если на обитаемой или малой планете находится военная база в боевом режиме, то орбиту боя не могут покинуть корветы и девастаторы.", 0,
-		HintPlanetNormal,	"Если активирован гравитор, то невозможно покинуть орбиту где идет бой.", 0,
-		HintKling,			"Против клисан эффективно строить военные базы.",0,
-		HintKling,			"Если вы не справляетесь с клисанами, то уменьшите количество захваченных планет.",0,
-		HintKling,			"Клисаны летят на ту планету, где больше звеньев кораблей.",0,
-		HintKling,			"В первую очередь клисаны летят на самый большой анклав.",0,
-		HintShip,			"Кликнув по кораблю и при этом удерживая кнопку мышки, можно указать орбитальный слот в который полетит корабль.",0,
-		HintShip,			"Ctrl - разделить эскадру.",0,
-		HintShip,			"Ctrl - прокладка маршрута.",0,
-		HintShip,			"Пробел - горячая клавиша быстрого перемещения кораблей во флот.",0,
-		HintShip,			"1,2,3,4,5,6 - горячие клавиши быстрого извлечения кораблей из флота.",0,
-		HintShip,			"Звено кораблей можно привязать к планете, тогда оно будет автоматически выполнять свою основную функцию.",0,
-		HintTransport,		"Если привязать транспорты, то тогда они будут автоматически обслуживать планету, перевозя грузы по транспортному маршруту.", 0,
-		HintTransport,		"Если привязанный транспорт не перевозит груз, то скорей всего он не требуется на планетах по транспортному маршруту или просто на планете не хватает места.",0,
-		HintTransport,		"С помощью транспортов и горячей клавиши Ctrl можно извлекать модули из флота.",0
+		HintWormhole,		""/*@"Через червоточины могут проходить корабли."@*/,0,
+		HintWormhole,		""/*@"Если поблизости есть занятые планеты, то из червоточин появляются клисаны."@*/,0,
+		HintWormhole,		""/*@"Чем больше занятых планет, тем больше клисан."@*/, 0,
+		HintWormholeRoam,	""/*@"Блуждающие червоточины открываются в наименее защищенном месте созвездия."@*/, 0,
+		HintWormholeRoam,	""/*@"На орбиту открытой блуждающей червоточины всегда могут выходить корабли из флота."@*/, 0,
+		HintSun,			""/*@"Во время битвы корабли могут покинуть орбиту звезды."@*/, 0,
+		HintSun,			""/*@"Если активирован гравитор, то невозможно покинуть орбиту где идет бой."@*/, 0,
+		HintPulsar,			""/*@"Если на орбите пульсара разместить научную базу и активировать гравитор, то тогда на ее орбиту не сможет выйти ни один корабль."@*/, 0,
+		HintGigant,			""/*@"С газового гиганта сервисная платформа может добывать водород."@*/, 0,
+		HintGigant,			""/*@"Чтобы построить сервисную платформу нужно разместить на орбите транспорты с модулями."@*/, 0,
+		HintGigant,			""/*@"Во время битвы корабли могут покинуть орбиту газового гиганта, если нет вражеского флагмана с перехватом."@*/, 0,
+		HintGigant,			""/*@"Если активирован гравитор, то невозможно покинуть орбиту где идет бой."@*/, 0,
+		HintTiny,			""/*@"Во время битвы корабли могут покинуть орбиту карликовой планеты, если нет вражеского флагмана с перехватом."@*/, 0,
+		HintTiny,			""/*@"Если активирован гравитор, то невозможно покинуть орбиту где идет бой."@*/, 0,
+		HintPlanetNormal,	""/*@"Между планетами можно проложить транспортный маршрут. Для этого нужно кликнуть по планете и протянуть линию до другой планеты."@*/, 0,
+		HintPlanetNormal,	""/*@"Транспортный маршрут предназначен для автоматической перевозки товаров с помощью транспортов."@*/, 0,
+		HintPlanetNormal,	""/*@"Если на обитаемой или малой планете находится военная база в боевом режиме, то орбиту боя не могут покинуть корветы и девастаторы."@*/, 0,
+		HintPlanetNormal,	""/*@"Если активирован гравитор, то невозможно покинуть орбиту где идет бой."@*/, 0,
+		HintKling,			""/*@"Против клисан эффективно строить военные базы."@*/,0,
+		HintKling,			""/*@"Если вы не справляетесь с клисанами, то уменьшите количество захваченных планет."@*/,0,
+		HintKling,			""/*@"Клисаны летят на ту планету, где больше звеньев кораблей."@*/,0,
+		HintKling,			""/*@"В первую очередь клисаны летят на самый большой анклав."@*/,0,
+		HintShip,			""/*@"Кликнув по кораблю и при этом удерживая кнопку мышки, можно указать орбитальный слот в который полетит корабль."@*/,0,
+		HintShip,			""/*@"Ctrl - разделить эскадру."@*/,0,
+		HintShip,			""/*@"Ctrl - прокладка маршрута."@*/,0,
+		HintShip,			""/*@"Пробел - горячая клавиша быстрого перемещения кораблей во флот."@*/,0,
+		HintShip,			""/*@"1,2,3,4,5,6 - горячие клавиши быстрого извлечения кораблей из флота."@*/,0,
+		HintShip,			""/*@"Звено кораблей можно привязать к планете, тогда оно будет автоматически выполнять свою основную функцию."@*/,0,
+		HintTransport,		""/*@"Если привязать транспорты, то тогда они будут автоматически обслуживать планету, перевозя грузы по транспортному маршруту."@*/, 0,
+		HintTransport,		""/*@"Если привязанный транспорт не перевозит груз, то скорей всего он не требуется на планетах по транспортному маршруту или просто на планете не хватает места."@*/,0,
+		HintTransport,		""/*@"С помощью транспортов и горячей клавиши Ctrl можно извлекать модули из флота."@*/,0
 	];
 	
 	public static const Hist:Object = {
-		Battle:"Битва между игроками [clr]<Owner1>[/clr] и [clr]<Owner2>[/clr].", 
+	/*@	Battle:"Битва между игроками [clr]<Owner1>[/clr] и [clr]<Owner2>[/clr].", 
 		Defence:"Защита игрока [clr]<Owner1>[/clr] от игрока [clr]<Owner2>[/clr].", 
 		Period:"Продолжительность", 
 		UserRecv:"Игрок [clr]<Owner>[/clr] заработал [clr]<Score>[/clr] очков боевой славы, а также [clr]<Exp>[/clr] ед. опыта.", 
@@ -3610,14 +3610,14 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		Sack:"Грабёж игроком <User>",
 		Goods:"Товар",
 		GoodsCnt:"Количество",
-		GoodsSum:"Сумма"
+		GoodsSum:"Сумма"@*/
 		};
 
 	// (прошло 1,2,5) (через 1,2,5)
-	public static const ScSecond:Array = 	['секунда',	'секунды',	'секунд',			'секунду',	'секунды',	'секунд'];
-    public static const ScMinute:Array = 	['минута',	'минуты',	'минут',			'минуту',	'минуты',	'минут'];
-    public static const ScHour:Array = 		['час',		'часа',		'часов',			'час',		'часа',		'часов'];
-	public static const ScDay:Array = 		['день',	'дня',		'дней',				'день',		'дня',		'дней'];
+	public static const ScSecond:Array = [];//@	['секунда',	'секунды',	'секунд',			'секунду',	'секунды',	'секунд'];
+    public static const ScMinute:Array = [];//@	['минута',	'минуты',	'минут',			'минуту',	'минуты',	'минут'];
+    public static const ScHour:Array = [];//@		['час',		'часа',		'часов',			'час',		'часа',		'часов'];
+	public static const ScDay:Array = [];//@		['день',	'дня',		'дней',				'день',		'дня',		'дней'];
 	
 	public static const RomanNum:Array = 	["0", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 	
@@ -3627,7 +3627,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 
 	public static function LangInitRus():void
 	{
-		ShipName[ShipTypeTransport]="Транспорт";
+	/*@	ShipName[ShipTypeTransport]="Транспорт";
 		ShipName[ShipTypeCorvette]="Корвет";
 		ShipName[ShipTypeCruiser]="Крейсер";
 		ShipName[ShipTypeDreadnought]="Дредноут";
@@ -4543,7 +4543,7 @@ static public const ShipHitPriorCorvette:Array =[   0,      8,                  
 		ChangeWordForNews5["Инженеры"] = "инженеров";
 		ChangeWordForNews5["Механик"] = "механиков";
 		ChangeWordForNews5["Навигатор"] = "навигаторов";
-		ChangeWordForNews5["Кварковые ядра"] = "кварковых ядер";
+		ChangeWordForNews5["Кварковые ядра"] = "кварковых ядер";@*/
 	}
 
 	public static function ChangeWord(w:String, dl:Dictionary):String
